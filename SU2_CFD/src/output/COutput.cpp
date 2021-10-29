@@ -346,18 +346,41 @@ void COutput::WriteToFile(CConfig *config, CGeometry *geometry, unsigned short f
 
     case RESTART_BINARY:
 
+    /* Should profile this for specific I/O bottleneck */
+    /* Restart files are written using MPI I/O */
+    /* MPI I/O Arguments are defined in respective Binary file writers */
+    /* Above applies to Mesh Binary writes as well */
+
       if (fileName.empty())
         fileName = config->GetFilename(restartFilename, "", curTimeIter);
 
-      if (rank == MASTER_NODE) {
+      if (rank == MASTER_NODE) 
+      {
           (*fileWritingTable) << "SU2 restart" << fileName + CSU2BinaryFileWriter::fileExt;
       }
 
+      double data_wrt_time, startTime, stopTime;
+
+      /* Profile this I/O operation */
+
+      startTime = SU2_MPI::Wtime();
+
       fileWriter = new CSU2BinaryFileWriter(fileName, volumeDataSorter);
+
+      stopTime = SU2_MPI::Wtime();
+
+      data_wrt_time = (stopTime- startTime);
+
+      if ( rank == MASTER_NODE)
+      {
+        std::cout << " Binary Restart Write time : " << data_wrt_time << std::endl;
+      }
 
       break;
 
     case MESH:
+
+     /* Should profile this for specific I/O bottleneck */
 
       if (fileName.empty())
         fileName = volumeFilename;
