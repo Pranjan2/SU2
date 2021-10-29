@@ -683,6 +683,10 @@ protected:
    */
   void AllocateDataSorters(CConfig *config, CGeometry *geometry);
 
+  /* Public method to compute the restart file write time */
+
+  double prof_Rest_Wrt(double startTime, double stopTime);
+
   /*--------------------------------- Virtual functions ---------------------------------------- */
 public:
 
@@ -805,5 +809,7 @@ protected:
    * \param[in] config - Definition of the particular problem per zone.
    */
   inline virtual void SetAdditionalScreenOutput(const CConfig *config){}
+
+
 
 };
