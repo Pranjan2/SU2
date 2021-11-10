@@ -367,11 +367,13 @@ void COutput::WriteToFile(CConfig *config, CGeometry *geometry, unsigned short f
       stopTime = SU2_MPI::Wtime();
       
       /* Restart file write profiling ends here */
-
       
-      Restart_Wrt_Time = prof_Rest_Wrt(startTime,stopTime);
 
-      if ( rank == MASTER_NODE)
+      Restart_Wrt_Time = prof_Rest_Wrt(startTime,stopTime);
+      
+     
+
+      if (config->GetWrt_Performance() && (rank == MASTER_NODE))
       {
         
         std::cout.precision(6);

@@ -106,20 +106,23 @@ int main(int argc, char *argv[]) {
    cases, nZone is equal to one. This represents the solution of a partial
    differential equation on a single block, unstructured mesh. ---*/
 
-  for (iZone = 0; iZone < nZone; iZone++) {
+  for (iZone = 0; iZone < nZone; iZone++) 
+  {
 
     /*--- Definition of the configuration option class for all zones. In this
      constructor, the input configuration file is parsed and all options are
      read and stored. ---*/
 
-    if (driver_config->GetnConfigFiles() > 0){
-      strcpy(zone_file_name, driver_config->GetConfigFilename(iZone).c_str());
-      config_container[iZone] = new CConfig(driver_config, zone_file_name, SU2_COMPONENT::SU2_DOT, iZone, nZone, true);
-    }
-    else{
-      config_container[iZone] = new CConfig(driver_config, config_file_name, SU2_COMPONENT::SU2_DOT, iZone, nZone, true);
-    }
-    config_container[iZone]->SetMPICommunicator(MPICommunicator);
+      if (driver_config->GetnConfigFiles() > 0)
+        {
+          strcpy(zone_file_name, driver_config->GetConfigFilename(iZone).c_str());
+          config_container[iZone] = new CConfig(driver_config, zone_file_name, SU2_COMPONENT::SU2_DOT, iZone, nZone, true);
+        }
+      else
+      {
+        config_container[iZone] = new CConfig(driver_config, config_file_name, SU2_COMPONENT::SU2_DOT, iZone, nZone, true);
+      }
+        config_container[iZone]->SetMPICommunicator(MPICommunicator);
 
   }
 
@@ -685,6 +688,8 @@ void SetProjection_FD(CGeometry *geometry, CConfig *config, CSurfaceMovement *su
 
 }
 
+// Computes and prints the gradient information to a file hwne using discrete AD
+
 
 void SetProjection_AD(CGeometry *geometry, CConfig *config, CSurfaceMovement *surface_movement, su2double** Gradient){
 
@@ -701,7 +706,7 @@ void SetProjection_AD(CGeometry *geometry, CConfig *config, CSurfaceMovement *su
   /*--- Discrete adjoint gradient computation ---*/
 
   if (rank == MASTER_NODE)
-    cout  << endl << "Evaluate functional gradient using Algorithmic Differentiation (ZONE " << config->GetiZone() << ")." << endl;
+    cout  << endl << "Evaluate functional gradient using Reverse AD (ZONE " << config->GetiZone() << ")." << endl;
 
   /*--- Start recording of operations ---*/
 
@@ -721,6 +726,8 @@ void SetProjection_AD(CGeometry *geometry, CConfig *config, CSurfaceMovement *su
   }
 
   /*--- Call the surface deformation routine ---*/
+  // Returns Total deformation applied, which may be less than target if intersection prevention is used.
+
 
   surface_movement->SetSurface_Deformation(geometry, config);
 
@@ -752,12 +759,16 @@ void SetProjection_AD(CGeometry *geometry, CConfig *config, CSurfaceMovement *su
           }
           Area = sqrt(Area);
 
-          for (iDim = 0; iDim < nDim; iDim++){
-            if (config->GetDiscrete_Adjoint()){
+          for (iDim = 0; iDim < nDim; iDim++)
+          {
+            if (config->GetDiscrete_Adjoint())
+            {
               Sensitivity = geometry->GetSensitivity(iPoint, iDim);
-            } else {
-              Sensitivity = -Normal[iDim]*geometry->vertex[iMarker][iVertex]->GetAuxVar()/Area;
-            }
+            } 
+            else 
+              {
+                Sensitivity = -Normal[iDim]*geometry->vertex[iMarker][iVertex]->GetAuxVar()/Area;
+              }
             SU2_TYPE::SetDerivative(VarCoord[iDim], SU2_TYPE::GetValue(Sensitivity));
           }
           visited[iPoint] = true;

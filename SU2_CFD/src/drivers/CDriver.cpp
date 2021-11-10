@@ -509,7 +509,7 @@ void CDriver::Postprocessing() {
 
   if ((rank == MASTER_NODE) && (wrt_perf)) {
     su2double TotalTime = UsedTimePreproc + UsedTimeCompute + UsedTimeOutput;
-    cout.precision(6);
+    
     cout << endl << endl <<"-------------------------- Performance Summary --------------------------" << endl;
     cout << " SU2 Naive Profiling Results:" << endl;
     cout << setw(25) << "Wall-clock time (hrs):" << setw(12) << (TotalTime)/(60.0*60.0) << " | ";
