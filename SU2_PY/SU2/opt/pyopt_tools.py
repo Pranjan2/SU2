@@ -141,7 +141,7 @@ def pyopt_optimization(project,x0=None,xb=None,its=100,accu=1e-10, optimizer='PS
         pyopt_optimizer.setOption('MIT', its)
         pyopt_optimizer.setOption('TOLX', accu)
         [fstr, xstr, inform] = pyopt_optimizer(opt_prob,sens_type=grad_func,p1=project)
-        print (opt_prob.solution(0))
+        #print (opt_prob.solution(0))
         return fstr
       #pyopt_optimizer = pyIPOPT.IPOPT()
       #pyopt_optimizer.setOption('output_file', 'ipopt.out')
@@ -185,8 +185,8 @@ def obj_func(x, *args, **kwargs):
     project = kwargs['p1']
     if isinstance(x, dict):
         x = x['x']
-    print ("EVAL OBJFUNC")
-    print (x)
+    #print ("EVAL OBJFUNC")
+    #print (x)
     f = obj_f(x,project)
     eqcons = con_ceq(x, project)
     ieqcons = con_cieq(x, project)
@@ -199,8 +199,8 @@ def grad_func(x,f,g, *args, **kwargs):
     if isinstance(x, dict):
         x = x['x']
     g_obj = [0.0]*project.n_dv
-    print ("EVAL GRAD_OBJFUNC")
-    print (x)
+    #print ("EVAL GRAD_OBJFUNC")
+    #print (x)
     grad = obj_df(x,project)
     for i in range(project.n_dv):
         g_obj[i] =grad[i]
