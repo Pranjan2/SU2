@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ## \file pyoptsparse_tools.py
 #  \brief tools for interfacing with pyoptsparse
