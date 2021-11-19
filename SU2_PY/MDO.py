@@ -1,16 +1,22 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-## \file MDO.py
-#  \brief Python script for performing MDO.
-#  \author Prateek Ranjan
-#  \version 7.2.0 "Blackbird"
+## \file shape_optimization.py
+#  \brief Python script for performing the shape optimization.
+#  \author T. Economon, T. Lukaczyk, F. Palacios
+#  \version 5.0.0 "Raven"
 #
-# SU2 Project Website: https://su2code.github.io
+# SU2 Original Developers: Dr. Francisco D. Palacios.
+#                          Dr. Thomas D. Economon.
 #
-# The SU2 Project is maintained by the SU2 Foundation
-# (http://su2foundation.org)
+# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
+#                 Prof. Piero Colonna's group at Delft University of Technology.
+#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
+#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
+#                 Prof. Rafael Palacios' group at Imperial College London.
+#                 Prof. Edwin van der Weide's group at the University of Twente.
+#                 Prof. Vincent Terrapon's group at the University of Liege.
 #
-# Copyright 2012-2021, SU2 Contributors (cf. AUTHORS.md)
+# Copyright (C) 2012-2017 SU2, the open-source CFD code.
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -31,7 +37,7 @@ sys.path.append(os.environ['SU2_RUN'])
 import SU2
 
 # -------------------------------------------------------------------
-#  Main
+#  Main 
 # -------------------------------------------------------------------
 
 def main():
@@ -43,7 +49,7 @@ def main():
                       help="try to restart from project file NAME", metavar="NAME")
     parser.add_option("-n", "--partitions", dest="partitions", default=1,
                       help="number of PARTITIONS", metavar="PARTITIONS")
-    parser.add_option("-g", "--gradient", dest="gradient", default="DISCRETE_ADJOINT",
+    parser.add_option("-g", "--gradient", dest="gradient", default="CONTINUOUS_ADJOINT",
                       help="Method for computing the GRADIENT (CONTINUOUS_ADJOINT, DISCRETE_ADJOINT, FINDIFF, NONE)", metavar="GRADIENT")
     parser.add_option("-o", "--optimization", dest="optimization", default="SLSQP",
                       help="OPTIMIZATION techique (SLSQP, CG, BFGS, POWELL)", metavar="OPTIMIZATION")
@@ -54,27 +60,34 @@ def main():
 
 
     (options, args)=parser.parse_args()
-
+    
     # process inputs
     options.partitions  = int( options.partitions )
     options.quiet       = options.quiet.upper() == 'TRUE'
     options.gradient    = options.gradient.upper()
     options.nzones      = int( options.nzones )
-
+    
     sys.stdout.write('\n-------------------------------------------------------------------------\n')
     sys.stdout.write('|    ___ _   _ ___                                                      |\n')
-    sys.stdout.write('|   / __| | | |_  )   Release 7.2.0 \"Blackbird\"                         |\n')
+    sys.stdout.write('|   / __| | | |_  )   Release 5.0.0 \"Raven\"                             |\n')
     sys.stdout.write('|   \\__ \\ |_| |/ /                                                      |\n')
-    sys.stdout.write('|   |___/\\___//___|    Multi-Disciplinary Design Optimization Script     |\n')
-    sys.stdout.write('|                                                                        |\n')
-    sys.stdout.write('-------------------------------------------------------------------------\n')
-    sys.stdout.write('| SU2 Project Website: https://su2code.github.io                        |\n')
+    sys.stdout.write('|   |___/\\___//___|   Aerodynamic Shape Optimization Script             |\n')
     sys.stdout.write('|                                                                       |\n')
-    sys.stdout.write('| The SU2 Project is maintained by the SU2 Foundation                   |\n')
-    sys.stdout.write('| (http://su2foundation.org)                                            |\n')
     sys.stdout.write('-------------------------------------------------------------------------\n')
-    sys.stdout.write('| Copyright 2012-2021, SU2 Contributors (cf. AUTHORS.md)                |\n')
-    sys.stdout.write('| CAUTION : You are runnning an adapted version of SU2!                 |\n')
+    sys.stdout.write('| SU2 Original Developers: Dr. Francisco D. Palacios.                   |\n')
+    sys.stdout.write('|                          Dr. Thomas D. Economon.                      |\n')
+    sys.stdout.write('-------------------------------------------------------------------------\n')
+    sys.stdout.write('| SU2 Developers:                                                       |\n')
+    sys.stdout.write('| - Prof. Juan J. Alonso\'s group at Stanford University.                |\n')
+    sys.stdout.write('| - Prof. Piero Colonna\'s group at Delft University of Technology.      |\n')
+    sys.stdout.write('| - Prof. Nicolas R. Gauger\'s group at Kaiserslautern U. of Technology. |\n')
+    sys.stdout.write('| - Prof. Alberto Guardone\'s group at Polytechnic University of Milan.  |\n')
+    sys.stdout.write('| - Prof. Rafael Palacios\' group at Imperial College London.            |\n')
+    sys.stdout.write('| - Prof. Edwin van der Weide\' group at the University of Twente.       |\n')
+    sys.stdout.write('| - Prof. Vincent Terrapon\' group at the University of Liege.           |\n')
+    sys.stdout.write('-------------------------------------------------------------------------\n')
+    sys.stdout.write('| Copyright (C) 2012-2017 SU2, the open-source CFD code.                |\n')
+    sys.stdout.write('|                                                                       |\n')
     sys.stdout.write('| SU2 is free software; you can redistribute it and/or                  |\n')
     sys.stdout.write('| modify it under the terms of the GNU Lesser General Public            |\n')
     sys.stdout.write('| License as published by the Free Software Foundation; either          |\n')
@@ -87,93 +100,96 @@ def main():
     sys.stdout.write('|                                                                       |\n')
     sys.stdout.write('| You should have received a copy of the GNU Lesser General Public      |\n')
     sys.stdout.write('| License along with SU2. If not, see <http://www.gnu.org/licenses/>.   |\n')
-    sys.stdout.write('| SU2 adapted and modifed by Prateek Ranjan, University of Illinois UC  |\n')
     sys.stdout.write('-------------------------------------------------------------------------\n')
 
-
-    pyOptSparse_optimization( options.filename    ,
+    shape_optimization( options.filename    ,
                         options.projectname ,
                         options.partitions  ,
                         options.gradient    ,
                         options.optimization ,
                         options.quiet       ,
                         options.nzones      )
+    
+#: main()
 
-def pyOptSparse_optimization( filename                           ,
+def shape_optimization( filename                           ,
                         projectname = ''                   ,
                         partitions  = 0                    ,
-                        gradient    = 'DISCRETE_ADJOINT' ,
+                        gradient    = 'CONTINUOUS_ADJOINT' ,
                         optimization = 'SLSQP'             ,
                         quiet       = False                ,
                         nzones      = 1                    ):
-
+  
     # Config
     config = SU2.io.Config(filename)
     config.NUMBER_PART = partitions
     config.NZONES      = int( nzones )
     if quiet: config.CONSOLE = 'CONCISE'
     config.GRADIENT_METHOD = gradient
-
-    its               = int ( config.OPT_ITERATIONS )                      # number of opt iterations
-    bound_upper       = float ( config.OPT_BOUND_UPPER )                   # variable bound to be scaled by the line search
-    bound_lower       = float ( config.OPT_BOUND_LOWER )                   # variable bound to be scaled by the line search
-    relax_factor      = float ( config.OPT_RELAX_FACTOR )                  # line search scale
-    gradient_factor   = float ( config.OPT_GRADIENT_FACTOR )               # objective function and gradient scale
-    def_dv            = config.DEFINITION_DV                               # complete definition of the desing variable
-    n_dv              = sum(def_dv['SIZE'])                                # number of design variables
-    accu              = float ( config.OPT_ACCURACY ) * gradient_factor    # optimizer accuracy
-    x0                = [0.0]*n_dv # initial design
-    xb_low            = [float(bound_lower)/float(relax_factor)]*n_dv      # lower dv bound it includes the line search acceleration factor
-    xb_up             = [float(bound_upper)/float(relax_factor)]*n_dv      # upper dv bound it includes the line search acceleration fa
-    xb                = list(zip(xb_low, xb_up)) # design bounds
-
+    
+    its              = int ( config.OPT_ITERATIONS )                      # number of opt iterations
+    bound_upper      = float ( config.OPT_BOUND_UPPER )                   # variable bound to be scaled by the line search
+    bound_lower      = float ( config.OPT_BOUND_LOWER )                   # variable bound to be scaled by the line search
+    relax_factor     = float ( config.OPT_RELAX_FACTOR )                  # line search scale
+    gradient_factor  = float ( config.OPT_GRADIENT_FACTOR )               # objective function and gradient scale
+    def_dv           = config.DEFINITION_DV                               # complete definition of the desing variable
+    n_dv             = sum(def_dv['SIZE'])                                # number of design variables
+    accu             = float ( config.OPT_ACCURACY ) * gradient_factor    # optimizer accuracy
+    x0          = [0.0]*n_dv # initial design
+    xb_low           = [float(bound_lower)/float(relax_factor)]*n_dv      # lower dv bound it includes the line search acceleration factor
+    xb_up            = [float(bound_upper)/float(relax_factor)]*n_dv      # upper dv bound it includes the line search acceleration fa
+    xb          = list(zip(xb_low, xb_up)) # design bounds
+    
     # State
     state = SU2.io.State()
     state.find_files(config)
-
-    # add restart files to state.FILES
-    if config.get('TIME_DOMAIN', 'NO') == 'YES' and config.get('RESTART_SOL', 'NO') == 'YES' and gradient != 'CONTINUOUS_ADJOINT':
-        restart_name = config['RESTART_FILENAME'].split('.')[0]
-        restart_filename = restart_name + '_' + str(int(config['RESTART_ITER'])-1).zfill(5) + '.dat'
-        if not os.path.isfile(restart_filename): # throw, if restart files does not exist
-            sys.exit("Error: Restart file <" + restart_filename + "> not found.")
-        state['FILES']['RESTART_FILE_1'] = restart_filename
-
-
+    
     # Project
-
-    print("Setting up project class ....")
-
     if os.path.exists(projectname):
         project = SU2.io.load_data(projectname)
         project.config = config
     else:
         project = SU2.opt.Project(config,state)
-
-
+    
     # Optimize
-    if optimization=='SLSQP':
-      SU2.opt.PYOPTSPRS(project,x0,xb,its,accu, 'SLSQP')
+    #if optimization == 'SLSQP':
+    #  SU2.opt.SLSQP(project,x0,xb,its,accu)
+    #elif optimization == 'CG':
+    #  SU2.opt.CG(project,x0,xb,its,accu)
+    #elif optimization == 'BFGS':
+    #  SU2.opt.BFGS(project,x0,xb,its,accu)
+    #elif optimization == 'POWELL':
+    #  SU2.opt.POWELL(project,x0,xb,its,accu)
+    if optimization=='PYOPTSLSQP':
+      print (" NOTE: pyopt_slsqp requires installation of pyopt and its dependencies.")
+      SU2.opt.PYOPT(project,x0,xb,its,accu, 'SLSQP')
     elif optimization=='SNOPT':
-      SU2.opt.PYOPTSPRS(project,x0,xb,its,accu, 'SNOPT')
+      print (" NOTE: pyopt_snopt requires installation of pyopt, snopt, and their dependencies.")
+      SU2.opt.PYOPT(project,x0,xb,its,accu, 'SNOPT')
     elif optimization=='SNOPT2':
-      SU2.opt.PYOPTSPRS(project,x0,xb,its,accu, 'SNOPT2')
-    elif optimization=='PSQP':
-      SU2.opt.PYOPTSPRS(project,x0,xb,its,accu, 'PSQP')
-    elif optimization=='CONMIN':
-      SU2.opt.PYOPTSPRS(project,x0,xb,its,accu, 'CONMIN')
-    elif optimization=='IPOPT':
-      SU2.opt.PYOPTSPRS(project,x0,xb,its,accu, 'IPOPT')
+      print (" NOTE: pyopt_snopt requires installation of pyopt, snopt, and their dependencies.")
+      SU2.opt.PYOPT(project,x0,xb,its,accu, 'SNOPT2')
+    elif optimization=='NLPQLP':
+      print (" NOTE: pyopt_snopt requires installation of pyopt, snopt, and their dependencies.")
+      SU2.opt.PYOPT(project,x0,xb,its,accu, 'NLPQLP')
+    else:
+      SU2.opt.SLSQP(project,x0,xb,its,accu)
 
     # rename project file
     if projectname:
         shutil.move('project.pkl',projectname)
-
+    
     return project
+
+#: shape_optimization()
+
+
 # -------------------------------------------------------------------
 #  Run Main Program
 # -------------------------------------------------------------------
-#print(" Pre-prosessing steps for MDO Complete !")
+
 # this is only accessed if running from command prompt
 if __name__ == '__main__':
     main()
+
+

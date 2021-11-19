@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python3 
 
 ## \file shape_optimization.py
 #  \brief Python script for performing the shape optimization.

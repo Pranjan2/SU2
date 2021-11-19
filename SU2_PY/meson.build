@@ -14,7 +14,8 @@ install_data(['continuous_adjoint.py',
 	     'direct_differentiation.py',
 	     'fsi_computation.py',
 	     'SU2_CFD.py',
-	     'MDO_NLOPT.py'],
+	     'MDO_NLOPT.py',
+           'MDO.py'],
 	     install_dir: join_paths(get_option('bindir')))
 
 install_data(['SU2/__init__.py'], install_dir: join_paths(get_option('bindir'), 'SU2/'))
@@ -38,6 +39,7 @@ install_data(['SU2/io/config.py',
 
 install_data(['SU2/opt/project.py',
               'SU2/opt/scipy_tools.py',
+              'SU2/opt/pyopt_tools.py',
               'SU2/opt/__init__.py',
 	      'SU2/opt/nlopt_tools.py'],
 	      install_dir: join_paths(get_option('bindir'), 'SU2/opt'))

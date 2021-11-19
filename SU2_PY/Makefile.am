@@ -57,6 +57,7 @@ bin_SCRIPTS = \
     MDO_NLOPT.py
 
 
+
 mypkgdir = $(prefix)/bin
 nobase_dist_mypkg_DATA= \
     SU2/__init__.py \
@@ -75,7 +76,8 @@ nobase_dist_mypkg_DATA= \
     SU2/io/__init__.py \
     SU2/opt/project.py \
     SU2/opt/scipy_tools.py \
-    SU2/opt/nlopt_tools.py
+    SU2/opt/nlopt_tools.py \
+    SU2/opt/pyopt_tools.py \
     SU2/opt/__init__.py \
     SU2/run/adjoint.py \
     SU2/run/deform.py \
