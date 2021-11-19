@@ -133,11 +133,16 @@ def pyopt_optimization(project,x0=None,xb=None,its=100,accu=1e-10, optimizer='PS
     opt_prob.addConGroup('Eq', len(project.config.OPT_CONSTRAINT['EQUALITY']), 'e')
     opt_prob.addConGroup('Ieq', len(project.config.OPT_CONSTRAINT['INEQUALITY']), 'i')
 
-    print (opt_prob)
+    #print (opt_prob)
     
     if (optimizer == 'PSQP'):
         pyopt_optimizer = PSQP()
-        pyopt_optimizer.setOption('IPRINT',0)
+        pyopt_optimizer.setOption('IPRINT',2)
+        pyopt_optimizer.setOption('MIT', its)
+        pyopt_optimizer.setOption('TOLX', accu)
+        [fstr, xstr, inform] = pyopt_optimizer(opt_prob,sens_type=grad_func,p1=project)
+        print (opt_prob.solution(0))
+        return fstr
       #pyopt_optimizer = pyIPOPT.IPOPT()
       #pyopt_optimizer.setOption('output_file', 'ipopt.out')
       #pyopt_optimizer.setOption('max_iter', 5)
@@ -160,12 +165,10 @@ def pyopt_optimization(project,x0=None,xb=None,its=100,accu=1e-10, optimizer='PS
     #pyopt_optimizer.setOption('IPRINT',2)
     #pyopt_optimizer.setOption('MAXIT', its)
     # Run Optimizer
-        [fstr, xstr, inform] = pyopt_optimizer(opt_prob,sens_type=grad_func,p1=project)
-
-        print (opt_prob.solution(0))
+        
 
     # Done
-        return fstr
+        #return fstr
 
 def print_summary(optimizer_name, n_dv, obj_scale, its, accu, x0, xb):
   # optimizer summary
