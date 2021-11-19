@@ -38,13 +38,15 @@ from .. import eval as su2eval
 from numpy import array, zeros, concatenate
 #sys.path.append(os.environ['PYOPT_PATH'])
 import pyOpt
-from pyOpt import pySLSQP
-from pyOpt import pySNOPT
-from pyOpt import pyNLPQLP
-from pyOpt import pySOLVOPT
-from pyOpt import pyPSQP
-from pyOpt import pyIPOPT
-from pyOpt import pyALGENCAN
+from pyOpt import Optimization
+from pyOpt import PSQP
+#from pyOpt import pySLSQP
+#from pyOpt import pySNOPT
+#from pyOpt import pyNLPQLP
+#from pyOpt import pySOLVOPT
+#from pyOpt import pyPSQP
+#from pyOpt import pyIPOPT
+#from pyOpt import pyALGENCAN
 
 # -------------------------------------------------------------------
 #  pyOpt Optimizers
@@ -54,7 +56,7 @@ from pyOpt import pyALGENCAN
 # -------------------------------------------------------------------
 #  pyOpt SLSQP
 # -------------------------------------------------------------------
-def pyopt_optimization(project,x0=None,xb=None,its=100,accu=1e-10, optimizer = 'SLSQP'):
+def pyopt_optimization(project,x0=None,xb=None,its=100,accu=1e-10, optimizer='PSQP'):
     """ result = scipy_slsqp(project,x0=[],xb=[],its=100,accu=1e-10)
     
         Runs the Scipy implementation of SLSQP with
@@ -133,35 +135,37 @@ def pyopt_optimization(project,x0=None,xb=None,its=100,accu=1e-10, optimizer = '
 
     print (opt_prob)
     
-    if (optimizer == 'SLSQP'):
-      pyopt_optimizer = pyIPOPT.IPOPT()
-      pyopt_optimizer.setOption('output_file', 'ipopt.out')
-      pyopt_optimizer.setOption('max_iter', 5)
-      pyopt_optimizer.setOption('linear_system_scaling', 'none')
-      pyopt_optimizer.setOption('tol', 1e-2)
-      pyopt_optimizer.setOption("max_cpu_time", 20.)
-    if (optimizer == 'SNOPT2'):
-      partialprice = 0.005
-      maxstep = 100
-      pyopt_optimizer = pySNOPT.SNOPT(options = {'Partial price': partialprice,'Elastic mode':'Yes','Linesearch tolerance':0.99,'Major step limit':maxstep,'Major optimality tolerance':accu, 'Elastic weight':1.0e-6, 'Verify level':-1})
-    if (optimizer == 'SNOPT'):
-      partialprice = 0.01
-      maxstep = 1
-      pyopt_optimizer = pySNOPT.SNOPT(options = {'Partial price': partialprice,'Elastic mode':'Yes','Linesearch tolerance':0.99,'Major step limit':maxstep,'Major optimality tolerance':accu, 'Elastic weight':1.0e-6, 'Verify level':-1, 'Nonderivative linesearch':None})
-    if (optimizer == 'NLPQLP'):
-      pyopt_optimizer = pyALGENCAN.ALGENCAN()
+    if (optimizer == 'PSQP'):
+        pyopt_optimizer = PSQP()
+        pyopt_optimizer.setOption('IPRINT',0)
+      #pyopt_optimizer = pyIPOPT.IPOPT()
+      #pyopt_optimizer.setOption('output_file', 'ipopt.out')
+      #pyopt_optimizer.setOption('max_iter', 5)
+      #pyopt_optimizer.setOption('linear_system_scaling', 'none')
+      #pyopt_optimizer.setOption('tol', 1e-2)
+      #pyopt_optimizer.setOption("max_cpu_time", 20.)
+   #if (optimizer == 'SNOPT2'):
+    #  partialprice = 0.005
+    #  maxstep = 100
+    #  pyopt_optimizer = pySNOPT.SNOPT(options = {'Partial price': partialprice,'Elastic mode':'Yes','Linesearch tolerance':0.99,'Major step limit':maxstep,'Major optimality tolerance':accu, 'Elastic weight':1.0e-6, 'Verify level':-1})
+   # if (optimizer == 'SNOPT'):
+   #   partialprice = 0.01
+   #   maxstep = 1
+   #   pyopt_optimizer = pySNOPT.SNOPT(options = {'Partial price': partialprice,'Elastic mode':'Yes','Linesearch tolerance':0.99,'Major step limit':maxstep,'Major optimality tolerance':accu, 'Elastic weight':1.0e-6, 'Verify level':-1, 'Nonderivative linesearch':None})
+   # if (optimizer == 'NLPQLP'):
+   #   pyopt_optimizer = pyALGENCAN.ALGENCAN()
       
     
     #pyopt_optimizer.setOption('ACC', accu)
-    pyopt_optimizer.setOption('IPRINT',2)
+    #pyopt_optimizer.setOption('IPRINT',2)
     #pyopt_optimizer.setOption('MAXIT', its)
     # Run Optimizer
-    [fstr, xstr, inform] = pyopt_optimizer(opt_prob,sens_type=grad_func,p1=project)
+        [fstr, xstr, inform] = pyopt_optimizer(opt_prob,sens_type=grad_func,p1=project)
 
-    print (opt_prob.solution(0))
+        print (opt_prob.solution(0))
 
     # Done
-    return fstr
+        return fstr
 
 def print_summary(optimizer_name, n_dv, obj_scale, its, accu, x0, xb):
   # optimizer summary
