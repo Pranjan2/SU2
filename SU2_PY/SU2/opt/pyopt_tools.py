@@ -185,8 +185,8 @@ def obj_func(x, *args, **kwargs):
     project = kwargs['p1']
     if isinstance(x, dict):
         x = x['x']
-    #print ("EVAL OBJFUNC")
-    #print (x)
+    print ("EVAL OBJFUNC")
+    print (x)
     f = obj_f(x,project)
     eqcons = con_ceq(x, project)
     ieqcons = con_cieq(x, project)
@@ -199,8 +199,8 @@ def grad_func(x,f,g, *args, **kwargs):
     if isinstance(x, dict):
         x = x['x']
     g_obj = [0.0]*project.n_dv
-    #print ("EVAL GRAD_OBJFUNC")
-    #print (x)
+    print ("EVAL GRAD_OBJFUNC")
+    print (x)
     grad = obj_df(x,project)
     for i in range(project.n_dv):
         g_obj[i] =grad[i]

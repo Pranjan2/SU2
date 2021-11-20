@@ -49,10 +49,10 @@ def main():
                       help="try to restart from project file NAME", metavar="NAME")
     parser.add_option("-n", "--partitions", dest="partitions", default=1,
                       help="number of PARTITIONS", metavar="PARTITIONS")
-    parser.add_option("-g", "--gradient", dest="gradient", default="CONTINUOUS_ADJOINT",
+    parser.add_option("-g", "--gradient", dest="gradient", default="DISCRETE_ADJOINT_",
                       help="Method for computing the GRADIENT (CONTINUOUS_ADJOINT, DISCRETE_ADJOINT, FINDIFF, NONE)", metavar="GRADIENT")
     parser.add_option("-o", "--optimization", dest="optimization", default="SLSQP",
-                      help="OPTIMIZATION techique (SLSQP, CG, BFGS, POWELL)", metavar="OPTIMIZATION")
+                      help="OPTIMIZATION techique (SLSQP, CG, BFGS, POWELL, PSQP, CONMIN, SNOPT, IPOPT, MMA, GCMMA)", metavar="OPTIMIZATION")
     parser.add_option("-q", "--quiet", dest="quiet", default="True",
                       help="True/False Quiet all SU2 output (optimizer output only)", metavar="QUIET")
     parser.add_option("-z", "--zones", dest="nzones", default="1",
@@ -69,11 +69,12 @@ def main():
     
     sys.stdout.write('\n-------------------------------------------------------------------------\n')
     sys.stdout.write('|    ___ _   _ ___                                                      |\n')
-    sys.stdout.write('|   / __| | | |_  )   Release 5.0.0 \"Raven\"                             |\n')
+    sys.stdout.write('|   / __| | | |_  )   Release 7.1.0 \"Columbia\"                          |\n')
     sys.stdout.write('|   \\__ \\ |_| |/ /                                                      |\n')
-    sys.stdout.write('|   |___/\\___//___|   Aerodynamic Shape Optimization Script             |\n')
+    sys.stdout.write('|   |___/\\___//___|    Multi-Physics  Optimization Script             |\n')
     sys.stdout.write('|                                                                       |\n')
     sys.stdout.write('-------------------------------------------------------------------------\n')
+    sys.stdout.write('| SU2 MDO Developers: Prateek Ranjan Ghanendra K. Das                   |\n')
     sys.stdout.write('| SU2 Original Developers: Dr. Francisco D. Palacios.                   |\n')
     sys.stdout.write('|                          Dr. Thomas D. Economon.                      |\n')
     sys.stdout.write('-------------------------------------------------------------------------\n')
@@ -115,7 +116,7 @@ def main():
 def shape_optimization( filename                           ,
                         projectname = ''                   ,
                         partitions  = 0                    ,
-                        gradient    = 'CONTINUOUS_ADJOINT' ,
+                        gradient    = 'DISCRETE_ADJOINT' ,
                         optimization = 'SLSQP'             ,
                         quiet       = False                ,
                         nzones      = 1                    ):
