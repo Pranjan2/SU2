@@ -56,7 +56,7 @@ from pyOpt import PSQP
 # -------------------------------------------------------------------
 #  pyOpt SLSQP
 # -------------------------------------------------------------------
-def pyopt_optimization(project,x0=None,xb=None,its=100,accu=1e-10, optimizer='PSQP'):
+def pyopt_optimization(project,x0=None,xb=None,its=100,accu=1e-10, optimizer='SLSQP'):
     """ result = scipy_slsqp(project,x0=[],xb=[],its=100,accu=1e-10)
     
         Runs the Scipy implementation of SLSQP with
@@ -134,6 +134,14 @@ def pyopt_optimization(project,x0=None,xb=None,its=100,accu=1e-10, optimizer='PS
     opt_prob.addConGroup('Ieq', len(project.config.OPT_CONSTRAINT['INEQUALITY']), 'i')
 
     #print (opt_prob)
+
+    if (optimizer == 'SLSQP'):
+        pyopt_optimizer = SLSQP()
+        pyopt_optimizer.setOption('IPRINT',1)
+        pyopt_optimizer.setOption('MAXIT', its)
+        pyopt_optimizer.setOption('ACC', accu)
+        [fstr, xstr, inform] = pyopt_optimizer(opt_prob,sens_type=grad_func,p1=project)
+        return fstr
     
     if (optimizer == 'PSQP'):
         pyopt_optimizer = PSQP()
@@ -141,8 +149,34 @@ def pyopt_optimization(project,x0=None,xb=None,its=100,accu=1e-10, optimizer='PS
         pyopt_optimizer.setOption('MIT', its)
         pyopt_optimizer.setOption('TOLX', accu)
         [fstr, xstr, inform] = pyopt_optimizer(opt_prob,sens_type=grad_func,p1=project)
-        #print (opt_prob.solution(0))
         return fstr
+
+    if (optimizer == 'CONMIN'):
+        pyopt_optimizer = CONMIN()
+        pyopt_optimizer.setOption('IPRINT',2)
+        pyopt_optimizer.setOption('ITMAX', its)
+        pyopt_optimizer.setOption('DELFUN', accu)
+        [fstr, xstr, inform] = pyopt_optimizer(opt_prob,sens_type=grad_func,p1=project)
+        return fstr
+
+    if (optimizer == 'MMA'):
+        pyopt_optimizer = MMA()
+        pyopt_optimizer.setOption('IPRINT',1)
+        pyopt_optimizer.setOption('MAXIT', its)
+        pyopt_optimizer.setOption('DELOBJ', accu)
+        [fstr, xstr, inform] = pyopt_optimizer(opt_prob,sens_type=grad_func,p1=project)
+        return fstr
+
+    if (optimizer == 'GCMMA'):
+        pyopt_optimizer = GCMMA()
+        pyopt_optimizer.setOption('IPRINT',1)
+        pyopt_optimizer.setOption('MAXIT', its)
+        pyopt_optimizer.setOption('DELOBJ', accu)
+        [fstr, xstr, inform] = pyopt_optimizer(opt_prob,sens_type=grad_func,p1=project)
+        return fstr
+
+
+
       #pyopt_optimizer = pyIPOPT.IPOPT()
       #pyopt_optimizer.setOption('output_file', 'ipopt.out')
       #pyopt_optimizer.setOption('max_iter', 5)
