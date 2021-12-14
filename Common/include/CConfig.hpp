@@ -1128,7 +1128,7 @@ private:
   POD_KIND POD_Basis_Gen;                   /*!< \brief Type of POD basis generation (static or incremental). */
   unsigned short maxBasisDim,               /*!< \brief Maximum number of POD basis dimensions. */
   rom_save_freq;                            /*!< \brief Frequency of unsteady time steps to save. */
-  
+
   /* other NEMO configure options*/
   unsigned short nSpecies,                  /*!< \brief No of species present in flow */
   iWall_Catalytic,
@@ -1159,6 +1159,16 @@ private:
    there would be no list of all the config file options. ---*/
 
   map<string, bool> all_options;
+
+  /* Options for preCICE */
+ bool precice_usage;	/*!< \brief Usage of preCICE for FSI simulations */
+ bool precice_verbosityLevel_high;	/*!< \brief Verbosity level of the preCICE adapter for FSI simulations */
+ bool precice_loadRamping; /*!< \brief Usage of preCICE load ramping procedure for FSI simulations */
+ unsigned long precice_loadRampingDuration; /*!< \brief Number of physical time steps for which the load ramping procedure is applied */
+ unsigned long precice_numberWetSurfaces; /*!< \brief Number of different wet surfaces */
+ string preciceConfigFileName;	/*!< \brief Name of the preCICE configuration file */
+ string preciceWetSurfaceMarkerName;	/*!< \brief Name of the wet surface marker (from the mesh file) that the preCICE adapter will use for identification of the wet surface */
+
 
   /*--- brief param is a map from the option name (config file string) to its decoder (the specific child
    class of COptionBase that turns the string into a value) ---*/
@@ -8840,6 +8850,48 @@ public:
   bool GetAD_Preaccumulation(void) const { return AD_Preaccumulation;}
 
   /*!
+   * \brief Check if the simulation we are running uses preCICE for FSI
+   * \return True if we use preCICE, false otherwise.
+   */
+  bool GetpreCICE_Usage(void);
+
+  /*!
+   * \brief Check if the verbosity level of the preCICE adapter is high or not
+   * \return True if verbosity level is high, false otherwise.
+   */
+  bool GetpreCICE_VerbosityLevel_High(void);
+
+  /*!
+   * \brief Check if the load ramping procedure of the preCICE adapter is activated or not
+   * \return True if the procedure is applied, false otherwise.
+   */
+  bool GetpreCICE_LoadRamping(void);
+
+  /*!
+   * \brief Get the name of the preCICE configuration file
+   * \return preCICE configuration file name as string
+   */
+  string GetpreCICE_ConfigFileName(void);
+
+  /*!
+   * \brief Get the name of the wet surface marker used in the mesh file
+   * \return Wet surface marker name as string
+   */
+  string GetpreCICE_WetSurfaceMarkerName(void);
+
+  /*!
+   * \brief Get the number of physical time steps for which the load ramping is applied
+   * \return Number of corresponding time steps for which the force vector is continuously increased up to the original value
+   */
+  unsigned long GetpreCICE_LoadRampingDuration(void);
+
+  /*!
+   * \brief Get the number of wet surfaces in the FSI simulation
+   * \return Number of wet surfaces
+   */
+  unsigned long GetpreCICE_NumberWetSurfaces(void);
+
+  /*!
    * \brief Get the heat equation.
    * \return YES if weakly coupled heat equation for inc. flow is enabled.
    */
@@ -9296,25 +9348,25 @@ public:
    * \return True if specified in config file.
    */
   bool GetSave_libROM(void) const {return libROM; }
-  
+
   /*!
    * \brief Get the name of the file for libROM to save.
    * \return Filename prefix for libROM to save to (default: "su2").
    */
   string GetlibROMbase_FileName(void) const { return libROMbase_FileName; }
-  
+
   /*!
    * \brief Static or incremental toggle for POD basis generation type.
    * \return Type of POD generation type
    */
   POD_KIND GetKind_PODBasis(void) const { return POD_Basis_Gen; }
-  
+
   /*!
    * \brief Get maximum number of POD basis dimensions (default: 100).
    * \return Maximum number of POD basis vectors.
    */
   unsigned short GetMax_BasisDim(void) const { return maxBasisDim; }
-  
+
   /*!
    * \brief Get frequency of unsteady time steps to save (default: 1).
    * \return Save frequency for unsteady time steps.

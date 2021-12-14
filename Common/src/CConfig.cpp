@@ -547,6 +547,20 @@ void CConfig::addPythonOption(const string name) {
   option_map.insert(pair<string, COptionBase *>(name, val));
 }
 
+inline bool CConfig::GetpreCICE_Usage(void) { return precice_usage; }
+
+inline bool CConfig::GetpreCICE_VerbosityLevel_High(void) { return precice_verbosityLevel_high; }
+
+inline bool CConfig::GetpreCICE_LoadRamping(void) { return precice_loadRamping; }
+
+inline string CConfig::GetpreCICE_ConfigFileName(void) { return preciceConfigFileName; }
+
+inline string CConfig::GetpreCICE_WetSurfaceMarkerName(void) { return preciceWetSurfaceMarkerName; }
+
+inline unsigned long CConfig::GetpreCICE_LoadRampingDuration(void) { return precice_loadRampingDuration; }
+
+inline unsigned long CConfig::GetpreCICE_NumberWetSurfaces(void) { return precice_numberWetSurfaces; }
+
 unsigned short CConfig::GetnZone(string val_mesh_filename, unsigned short val_format) {
 
   int nZone = 1; /* Default value if nothing is specified. */
@@ -2769,25 +2783,48 @@ void CConfig::SetConfig_Options() {
 
   /* DESCRIPTION: Size of the edge groups colored for thread parallel edge loops (0 forces the reducer strategy). */
   addUnsignedLongOption("EDGE_COLORING_GROUP_SIZE", edgeColorGroupSize, 512);
-  
+
   /*--- options that are used for libROM ---*/
   /*!\par CONFIG_CATEGORY:libROM options \ingroup Config*/
-  
+
   /*!\brief SAVE_LIBROM \n DESCRIPTION: Flag for saving data with libROM. */
   addBoolOption("SAVE_LIBROM", libROM, false);
-  
+
   /*!\brief LIBROM_BASE_FILENAME \n DESCRIPTION: Output base file name for libROM   \ingroup Config*/
   addStringOption("LIBROM_BASE_FILENAME", libROMbase_FileName, string("su2"));
-  
+
   /*!\brief BASIS_GENERATION \n DESCRIPTION: Flag for saving data with libROM. */
   addEnumOption("BASIS_GENERATION", POD_Basis_Gen, POD_Map, POD_KIND::STATIC);
-  
+
   /*!\brief MAX_BASIS_DIM \n DESCRIPTION: Maximum number of basis vectors.*/
   addUnsignedShortOption("MAX_BASIS_DIM", maxBasisDim, 100);
-  
+
   /*!\brief MAX_BASIS_DIM \n DESCRIPTION: Maximum number of basis vectors.*/
   addUnsignedShortOption("ROM_SAVE_FREQ", rom_save_freq, 1);
-  
+
+
+  /*--- options related to preCICE ---*/
+  /* DESCRIPTION: Activate preCICE for FSI coupling */
+  addBoolOption("PRECICE_USAGE", precice_usage, false);
+
+  /* DESCRIPTION: Activate high verbosity level of preCICE adapter for FSI coupling */
+  addBoolOption("PRECICE_VERBOSITYLEVEL_HIGH", precice_verbosityLevel_high, false);
+
+  /* DESCRIPTION: Activate preCICE load ramping procedure to stabilize simulations during the first time steps */
+  addBoolOption("PRECICE_LOADRAMPING", precice_loadRamping, false);
+
+  /* DESCRIPTION:  preCICE configuration file name */
+  addStringOption("PRECICE_CONFIG_FILENAME", preciceConfigFileName, string("precice.xml"));
+
+  /* DESCRIPTION:  preCICE wet surface marker name (specified in the mesh file) */
+  addStringOption("PRECICE_WETSURFACE_MARKER_NAME", preciceWetSurfaceMarkerName, string("wetSurface"));
+
+  /* DESCRIPTION: Number of time steps to apply the load ramping precedure of the preCICE adapter. */
+  addUnsignedLongOption("PRECICE_LOADRAMPING_DURATION", precice_loadRampingDuration, 1);
+
+  /* DESCRIPTION: Number of wet surfaces in the preCICE FSI simulation. */
+  addUnsignedLongOption("PRECICE_NUMBER_OF_WETSURFACES", precice_numberWetSurfaces, 1);
+
   /* END_CONFIG_OPTIONS */
 
 }
