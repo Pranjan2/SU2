@@ -38,6 +38,10 @@
 
 using namespace std;
 
+//preCICE
+//This forward declaration of the Precice class is necessary to avoid a cyclic inclusion issue
+class Precice;
+
 class COutputLegacy;
 class CInterpolator;
 class CIteration;
@@ -98,6 +102,11 @@ protected:
   interpolator_container;                       /*!< \brief Definition of the interpolation method between non-matching discretizations of the interface. */
   CInterface ***interface_container;            /*!< \brief Definition of the interface of information and physics. */
   bool dry_run;                                 /*!< \brief Flag if SU2_CFD was started as dry-run via "SU2_CFD -d <config>.cfg" */
+
+    //preCICE
+  bool precice_usage;
+  Precice *precice;
+  double *max_precice_dt, *dt;
 
 public:
 
@@ -344,6 +353,14 @@ public:
    * \brief Output the solution in solution file.
    */
   virtual void Output(unsigned long TimeIter){ }
+
+    /*!
+   * \brief Output the solution in solution file.
+   */
+  //preCICE: Adaption such that output is only written if preCICE converged.
+   //virtual void Output(unsigned long TimeIter, bool suppress_output_by_preCICE);
+
+
 
   /*!
    * \brief Perform a dynamic mesh deformation, including grid velocity computation and update of the multigrid structure.

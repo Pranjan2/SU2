@@ -39,7 +39,8 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
   unsigned short val_iZone = config->GetiZone();
 
   /*--- Perform mesh movement depending on specified type ---*/
-  switch (Kind_Grid_Movement) {
+  switch (Kind_Grid_Movement)
+  {
     case RIGID_MOTION:
 
       if (rank == MASTER_NODE) cout << endl << " Performing rigid mesh transformation." << endl;
@@ -63,6 +64,25 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
       /*--- Already initialized in the static mesh movement routine at driver level. ---*/
     case STEADY_TRANSLATION:
     case ROTATING_FRAME:
+      break;   
+
+
+
+     /* --- Case for mesh motion with external elastic solver during MDO ---*/
+    case PRECICE_MOVEMENT:
+
+      if (rank == MASTER_NODE)
+        cout << " Deforming the volume grid due to preCICE simulation." << endl;
+      grid_movement->SetVolume_Deformation(geometry[MESH_0], config, true);
+
+      if (rank == MASTER_NODE)
+        cout << " Computing grid velocities by finite differencing due to preCICE simulation." << endl;
+      geometry[MESH_0]->SetGridVelocity(config);
+
+      /*--- Update the multigrid structure after moving the finest grid,
+       including computing the grid velocities on the coarser levels. ---*/
+      grid_movement->UpdateMultiGrid(geometry, config);
+
       break;
   }
 

@@ -547,19 +547,19 @@ void CConfig::addPythonOption(const string name) {
   option_map.insert(pair<string, COptionBase *>(name, val));
 }
 
-inline bool CConfig::GetpreCICE_Usage(void) { return precice_usage; }
+bool CConfig::GetpreCICE_Usage(void) { return precice_usage; }
 
-inline bool CConfig::GetpreCICE_VerbosityLevel_High(void) { return precice_verbosityLevel_high; }
+bool CConfig::GetpreCICE_VerbosityLevel_High(void) { return precice_verbosityLevel_high; }
 
-inline bool CConfig::GetpreCICE_LoadRamping(void) { return precice_loadRamping; }
+bool CConfig::GetpreCICE_LoadRamping(void) { return precice_loadRamping; }
 
-inline string CConfig::GetpreCICE_ConfigFileName(void) { return preciceConfigFileName; }
+string CConfig::GetpreCICE_ConfigFileName(void) { return preciceConfigFileName; }
 
-inline string CConfig::GetpreCICE_WetSurfaceMarkerName(void) { return preciceWetSurfaceMarkerName; }
+string CConfig::GetpreCICE_WetSurfaceMarkerName(void) { return preciceWetSurfaceMarkerName; }
 
-inline unsigned long CConfig::GetpreCICE_LoadRampingDuration(void) { return precice_loadRampingDuration; }
+unsigned long CConfig::GetpreCICE_LoadRampingDuration(void) { return precice_loadRampingDuration; }
 
-inline unsigned long CConfig::GetpreCICE_NumberWetSurfaces(void) { return precice_numberWetSurfaces; }
+unsigned long CConfig::GetpreCICE_NumberWetSurfaces(void) { return precice_numberWetSurfaces; }
 
 unsigned short CConfig::GetnZone(string val_mesh_filename, unsigned short val_format) {
 

@@ -90,6 +90,7 @@
 #include "../../../Common/include/parallelization/omp_structure.hpp"
 
 #include <cassert>
+#include "../../include/mdo/precice.hpp"
 
 #ifdef VTUNEPROF
 #include <ittnotify.h>
@@ -548,6 +549,24 @@ void CDriver::Postprocessing() {
     cout << "-------------------------------------------------------------------------" << endl;
     cout << endl;
   }
+
+    //preCICE - Finalize
+  //if(precice_usage)
+  //{
+  //  precice->finalize();
+  //  if (dt != NULL)
+  //   {
+  //      delete dt;
+  //   }
+  //  if (max_precice_dt != NULL) 
+  //  {
+  //      delete max_precice_dt;
+  //  }
+    if (precice != NULL)
+     {
+        delete precice;
+    }
+  //}
 
   /*--- Exit the solver cleanly ---*/
 
@@ -2673,6 +2692,17 @@ void CFluidDriver::StartSolver(){
   __itt_resume();
 #endif
 
+  //preCICE
+precice_usage = config_container[ZONE_0]->GetpreCICE_Usage();
+if (precice_usage) 
+{
+  //precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(), rank, size, geometry_container, solver_container, config_container, grid_movement);
+  precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(), rank, size, solver_container, config_container, grid_movement);
+  //precice ->check();
+  //dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
+  //max_precice_dt = new double(precice->initialize());
+}
+
   /*--- Main external loop of the solver. Within this loop, each iteration ---*/
 
   if (rank == MASTER_NODE){
@@ -2712,7 +2742,9 @@ void CFluidDriver::StartSolver(){
 
     /*--- Output the solution in files. ---*/
 
+    bool suppress_output_by_preCICE = false;
     Output(Iter);
+    //Output(Iter,suppress_output_by_preCICE);
 
     /*--- If the convergence criteria has been met, terminate the simulation. ---*/
 
@@ -2900,7 +2932,10 @@ bool CFluidDriver::Monitor(unsigned long ExtIter) {
 }
 
 
-void CFluidDriver::Output(unsigned long InnerIter) {
+//void CFluidDriver::Output(unsigned long InnerIter, bool suppress_output_by_preCICE ) 
+void CFluidDriver::Output(unsigned long InnerIter ) 
+
+{
 
   for (iZone = 0; iZone < nZone; iZone++) {
     const auto inst = config_container[iZone]->GetiInst();

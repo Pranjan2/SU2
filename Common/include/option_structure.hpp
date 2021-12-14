@@ -640,6 +640,7 @@ enum ENUM_GRIDMOVEMENT {
   STEADY_TRANSLATION = 11,  /*!< \brief Simulation in a steadily translating frame. */
   GUST = 12,                /*!< \brief Simulation on a static mesh with a gust. */
   MOVING_HTP = 13,          /*!< \brief Simulation with moving HTP (rotation). */
+  PRECICE_MOVEMENT = 15 /*!< \brief Simulation with dynamically deforming meshes for coupled simulation with preCICE. */
 };
 static const MapType<std::string, ENUM_GRIDMOVEMENT> GridMovement_Map = {
   MakePair("NONE", NO_MOVEMENT)
@@ -649,6 +650,7 @@ static const MapType<std::string, ENUM_GRIDMOVEMENT> GridMovement_Map = {
   MakePair("MOVING_HTP", MOVING_HTP)
   MakePair("STEADY_TRANSLATION", STEADY_TRANSLATION)
   MakePair("GUST", GUST)
+  MakePair("PRECICE_MOVEMENT", PRECICE_MOVEMENT)
 };
 
 enum ENUM_SURFACEMOVEMENT {

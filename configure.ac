@@ -49,6 +49,8 @@ AM_PROG_CC_C_O
 AC_PROG_RANLIB
 AC_PROG_MKDIR_P
 AC_PROG_CXX
+# preCICE: Check whether C++11 support needs to be added for compiler
+AX_CXX_COMPILE_STDCXX([11],[noext],[mandatory])
 
 # Python configuration
 AM_PATH_PYTHON
