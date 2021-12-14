@@ -90,7 +90,7 @@
 #include "../../../Common/include/parallelization/omp_structure.hpp"
 
 #include <cassert>
-#include "../../include/mdo/precice.hpp"
+#include "../mdo/precice.hpp"
 
 #ifdef VTUNEPROF
 #include <ittnotify.h>
@@ -551,8 +551,8 @@ void CDriver::Postprocessing() {
   }
 
     //preCICE - Finalize
-  //if(precice_usage)
-  //{
+  if(precice_usage)
+  {
   //  precice->finalize();
   //  if (dt != NULL)
   //   {
@@ -564,9 +564,13 @@ void CDriver::Postprocessing() {
   //  }
     if (precice != NULL)
      {
+        if (rank == MASTER_NODE)
+        {
+          std::cout << " Deleting MDO object " <<std::endl;
+        }
         delete precice;
-    }
-  //}
+     }
+  }
 
   /*--- Exit the solver cleanly ---*/
 
@@ -2697,8 +2701,9 @@ precice_usage = config_container[ZONE_0]->GetpreCICE_Usage();
 if (precice_usage) 
 {
   //precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(), rank, size, geometry_container, solver_container, config_container, grid_movement);
-  precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(), rank, size, solver_container, config_container, grid_movement);
-  //precice ->check();
+ // precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(), rank, size, solver_container, config_container, grid_movement);
+    precice = new Precice(rank, size);
+    precice ->check();
   //dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
   //max_precice_dt = new double(precice->initialize());
 }
