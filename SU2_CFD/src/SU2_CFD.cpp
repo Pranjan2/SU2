@@ -142,7 +142,8 @@ int main(int argc, char *argv[]) {
     driver = new CHBDriver(config_file_name, nZone, MPICommunicator);
 
   }
-  else if (turbo) {
+  else if (turbo)
+  {
 
     /*--- Turbomachinery problem. ---*/
     driver = new CTurbomachineryDriver(config_file_name, nZone, MPICommunicator);

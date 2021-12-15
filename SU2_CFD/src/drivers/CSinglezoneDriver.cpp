@@ -30,6 +30,10 @@
 #include "../../include/output/COutput.hpp"
 #include "../../include/iteration/CIteration.hpp"
 
+#include "../mdo/precice.hpp"
+
+#include <string.h>
+
 CSinglezoneDriver::CSinglezoneDriver(char* confFile,
                        unsigned short val_nZone,
                        SU2_Comm MPICommunicator) : CDriver(confFile,
@@ -41,7 +45,8 @@ CSinglezoneDriver::CSinglezoneDriver(char* confFile,
   TimeIter = 0;
 }
 
-CSinglezoneDriver::~CSinglezoneDriver(void) {
+CSinglezoneDriver::~CSinglezoneDriver(void) 
+{
 
 }
 
@@ -54,9 +59,23 @@ void CSinglezoneDriver::StartSolver() {
   /*--- Main external loop of the solver. Runs for the number of time steps required. ---*/
 
   if (rank == MASTER_NODE)
-    cout << endl <<"------------------------------ Begin Solver -----------------------------" << endl;
+    cout << endl <<"------------------------------ Begin Forward Analysis -----------------------------" << endl;
 
-  if (rank == MASTER_NODE){
+  /*---Initialize precice object */
+
+  /*---See if MDA/MDO object needs to be created ---*/
+  precice_usage = config_container[ZONE_0]->GetpreCICE_Usage();
+
+
+  if (precice_usage) 
+  {
+  //precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(), rank, size, geometry_container, solver_container, config_container, grid_movement);
+ // precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(), rank, size, solver_container, config_container, grid_movement);
+    precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size, geometry_container);
+    precice ->check();
+  }
+  if (rank == MASTER_NODE)
+  {
     cout << endl <<"Simulation Run using the Single-zone Driver" << endl;
     if (driver_config->GetTime_Domain())
       cout << "The simulation will run for "
@@ -67,8 +86,11 @@ void CSinglezoneDriver::StartSolver() {
   if (config_container[ZONE_0]->GetRestart() && driver_config->GetTime_Domain())
     TimeIter = config_container[ZONE_0]->GetRestart_Iter();
 
+
+
   /*--- Run the problem until the number of time iterations required is reached. ---*/
-  while ( TimeIter < config_container[ZONE_0]->GetnTime_Iter() ) {
+  while ( TimeIter < config_container[ZONE_0]->GetnTime_Iter() ) 
+  {
 
     /*--- Perform some preprocessing before starting the time-step simulation. ---*/
 
@@ -106,6 +128,18 @@ void CSinglezoneDriver::StartSolver() {
 
     TimeIter++;
 
+  }
+
+  if (precice_usage)
+  {
+    if (precice != NULL)
+    {
+      if (rank == MASTER_NODE)
+      {
+        std::cout << " Deleted MDO object" << std::endl;
+      }
+      delete precice;
+    }
   }
 
 }

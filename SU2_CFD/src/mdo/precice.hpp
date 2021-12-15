@@ -5,8 +5,10 @@
 */
 
 
-#include <string>
+#include <string.h>
 #include <stdlib.h>
+
+#include "../../include/SU2_CFD.hpp"
 
 class Precice {
 private:
@@ -17,7 +19,7 @@ private:
 
   //Precice( const string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CGeometry*** geometry_container, CSolver**** solver_container, CConfig** config_container, CVolumetricMovement** grid_movement );
   // Override default constructor for class Precice
-  Precice(int solverProcessIndex, int solverProcessSize)
+  Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CGeometry**** geometry_container)
   {
     procid = solverProcessIndex;
     numprocs = solverProcessSize;
@@ -27,9 +29,6 @@ private:
 
   void check();
 
-  
-
-  
 
 };
 
