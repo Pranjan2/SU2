@@ -179,7 +179,7 @@ su2_cfd_src += files(['iteration/CIteration.cpp',
 
 su2_cfd_src += files(['limiters/CLimiterDetails.cpp'])
 
-su2_cfd_src += files(['mdo/precice.cpp'])
+su2_cfd_src += files(['mdo/precice.cpp', 'mdo/precice.hpp'])
 
 if get_option('enable-normal')
   su2_cfd_lib = static_library('SU2core',

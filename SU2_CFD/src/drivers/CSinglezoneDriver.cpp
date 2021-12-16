@@ -71,7 +71,7 @@ void CSinglezoneDriver::StartSolver() {
   {
   //precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(), rank, size, geometry_container, solver_container, config_container, grid_movement);
  // precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(), rank, size, solver_container, config_container, grid_movement);
-    precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size, geometry_container);
+    precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size, config_container, geometry_container, solver_container, grid_movement);
     precice ->check();
   }
   if (rank == MASTER_NODE)
@@ -136,7 +136,10 @@ void CSinglezoneDriver::StartSolver() {
     {
       if (rank == MASTER_NODE)
       {
+        std::cout <<"---------------------------------------------------------"<<std::endl;
         std::cout << " Deleted MDO object" << std::endl;
+        std::cout <<"---------------------------------------------------------"<<std::endl;
+
       }
       delete precice;
     }

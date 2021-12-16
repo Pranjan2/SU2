@@ -1,5 +1,5 @@
 project('SU2', 'c', 'cpp',
-        version: '7.2.0 "Blackbird"',
+        version: '7.2.0 "Columbia"',
         license: 'LGPL2',
         default_options: ['buildtype=release',
                           'warning_level=0',
@@ -157,6 +157,20 @@ if get_option('enable-pastix')
   su2_deps += pastix_dep
 endif
 
+# MDO dependencies
+
+
+if get_option('enable-mdo')
+  mdo_dep = dependency('libprecice', required: true, version : '>=2', method : 'pkg-config') 
+  if not mdo_dep.found()
+    mdo_root = get_option('mdo_root')
+    mdo_dep = declare_dependency(include_directories: mdo_root+'/include', link_args: ['-L'+mdo_root+'lib/', '-lprecice'])
+  endif
+  su2_deps +=mdo_dep
+endif
+  
+
+
 # blas-type dependencies
 if get_option('enable-mkl')
 
@@ -246,7 +260,7 @@ endif
 
 message('''-------------------------------------------------------------------------
          |    ___ _   _ ___                                                      |
-         |   / __| | | |_  )   Release 7.2.0 "Blackbird"                         |
+         |   / __| | | |_  )   Release 7.2.0 "Columbia"                          |
          |   \__ \ |_| |/ /                                                      |
          |   |___/\___//___|   Meson Configuration Summary                       |
          |                                                                       |
