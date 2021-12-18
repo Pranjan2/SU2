@@ -216,8 +216,7 @@ libSU2Core_sources = ../src/definition_structure.cpp \
   ../src/variables/CDiscAdjVariable.cpp \
   ../src/variables/CIncNSVariable.cpp \
   ../src/variables/CEulerVariable.cpp \
-  ../src/mdo/precice.hpp \
-  ../src/mdo/precice.cpp 
+  ../src/precice.cpp 
 
 su2_cfd_sources = \
   ../src/SU2_CFD.cpp
@@ -228,15 +227,24 @@ libSU2Core_libadd =
 su2_cfd_cxx_flags = -fPIC -std=c++11
 su2_cfd_ldadd =
 
+# libSU2Core_cxx_flags = -fPIC
+# libSU2Core_libadd =
+
+su2_cfd_cxx_flags =
+su2_cfd_ldadd =
+
 # get preCICE CFLAGS and LIBS from pkg-config
 libSU2Core_cxx_flags += @preCICE_CFLAGS@
 su2_cfd_ldadd += @preCICE_LIBS@
+
 
 # always link to built dependencies from ./externals
 su2_cfd_cxx_flags += @su2_externals_INCLUDES@
 su2_cfd_ldadd += @su2_externals_LIBS@
 su2_cfd_ldadd += @su2_externals_LIBPTHREAD@
 libSU2Core_cxx_flags += @su2_externals_INCLUDES@
+
+
 
 # if BUILD_MUTATIONPP
 su2_cfd_cxx_flags += @MUTATIONPP_CXX@

@@ -157,17 +157,10 @@ if get_option('enable-pastix')
   su2_deps += pastix_dep
 endif
 
-# MDO dependencies
 
 
-if get_option('enable-mdo')
-  mdo_dep = dependency('libprecice', required: true, version : '>=2', method : 'pkg-config') 
-  if not mdo_dep.found()
-    mdo_root = get_option('mdo_root')
-    mdo_dep = declare_dependency(include_directories: mdo_root+'/include', link_args: ['-L'+mdo_root+'lib/', '-lprecice'])
-  endif
-  su2_deps +=mdo_dep
-endif
+
+
   
 
 
@@ -210,6 +203,24 @@ if get_option('enable-librom')
 
    su2_deps += librom_dep
 
+endif
+
+
+# MDO dependencies
+
+if get_option('enable-mdo')
+  mdo_dep = dependency('libprecice', required: true, version : '>=2', method : 'pkg-config')
+  #mdo_dep = dependency('libprecice', required: true, version : '>=2', method : 'cmake')  
+  #if not mdo_dep.found()
+  #mdo_root = get_option('mdo_root')
+  #mdo_root = /home/prateek/Software/PreCICE
+  #my_inc = include_directories(/home/prateek/Software/PreCICE/include)
+  #my_lib = static_library(/home/prateek/Software/PreCICE/lib)
+  #mdo_dep = declare_dependency(link_with : my_lib, include_directories : my_inc)
+  #mdo_dep = declare_dependency(include_directories: mdo_root+'/include', link_with: ['-L'+mdo_root+'lib/', '-lprecice'])
+  #endif
+  su2_deps += mdo_dep
+  #su2_deps += dependency('libprecice', required: true, version : '>=2', method : 'pkg-config') 
 endif
 
 extra_deps = get_option('extra-deps').split(',')
@@ -292,7 +303,7 @@ message('''---------------------------------------------------------------------
          Use './ninja -C @12@ install' to compile and install SU2
 '''.format(get_option('prefix')+'/bin', meson.source_root(), get_option('enable-tecio'), get_option('enable-cgns'),
            get_option('enable-autodiff'), get_option('enable-directdiff'), get_option('enable-pywrapper'), get_option('enable-mkl'),
-           get_option('enable-openblas'), get_option('enable-pastix'), get_option('enable-mixedprec'), get_option('enable-librom'), meson.build_root().split('/')[-1]))
+           get_option('enable-openblas'), get_option('enable-pastix'), get_option('enable-mixedprec'), get_option('enable-librom'), get_option('enable-mdo'),  meson.build_root().split('/')[-1]))
 
 if get_option('enable-mpp')
   message(''' To run SU2 with Mutation++ library, add these lines to your .bashrc file:
