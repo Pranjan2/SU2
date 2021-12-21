@@ -9,16 +9,18 @@
 
 #include "../include/precice.hpp"
 
+
 /*---Main class description -----*/
 
   Precice::Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement)
-  {
+  :coric(precice::constants::actionReadIterationCheckpoint()), cowic(precice::constants::actionWriteIterationCheckpoint())
+{
     solverProcessIndex = solverProcessIndex;
     solverProcessSize = solverProcessSize;
     SolverInterface solverInterface("SU2_CFD", preciceConfigurationFileName, solverProcessIndex, solverProcessSize);
 
 
-    coric = precice::constants::actionReadIterationCheckpoint();
+   // coric = precice::constants::actionReadIterationCheckpoint();
    // cowic = precice::constants::actionWriteIterationCheckpoint();
   
     /* Get dimension of the problem */

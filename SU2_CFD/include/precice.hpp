@@ -44,8 +44,8 @@ private:
   double *forces;
   double *displacements;
   double *displacementDeltas;
-  //const std::string& coric;
-  //const std::string& cowic;
+  const std::string& coric;
+  const std::string& cowic;
   bool processWorkingOnWetSurface;
   bool verbosityLevel_high;
   unsigned long globalNumberWetSurfaces; //Number of wet surfaces of the whole problem
