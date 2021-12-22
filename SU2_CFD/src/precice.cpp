@@ -13,16 +13,9 @@
 /*---Main class description -----*/
 
   Precice::Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement)
-  :coric(precice::constants::actionReadIterationCheckpoint()), cowic(precice::constants::actionWriteIterationCheckpoint())
+  :coric(precice::constants::actionReadIterationCheckpoint()), cowic(precice::constants::actionWriteIterationCheckpoint()), solverProcessIndex(solverProcessIndex), solverProcessSize(solverProcessSize),solverInterface("SU2_CFD", preciceConfigurationFileName, solverProcessIndex, solverProcessSize)
+
 {
-    solverProcessIndex = solverProcessIndex;
-    solverProcessSize = solverProcessSize;
-    SolverInterface solverInterface("SU2_CFD", preciceConfigurationFileName, solverProcessIndex, solverProcessSize);
-
-
-   // coric = precice::constants::actionReadIterationCheckpoint();
-   // cowic = precice::constants::actionWriteIterationCheckpoint();
-  
     /* Get dimension of the problem */
     nDim = geometry_container[ZONE_0][INST_0][MESH_0]->GetnDim();
   
@@ -33,6 +26,7 @@
     grid_movement = grid_movement;
 
     /* Initialize the coupling datasets to NULL */
+    
     vertexIDs = NULL;
     forceID = NULL;
     displDeltaID = NULL;
@@ -225,4 +219,174 @@ void Precice::check()
     std::cout << " Precice being called " << std::endl;
 }
 
+
+
+
+double Precice::initialize()
+{
+  /* Check for dimensional consistency between SU2 and .xml file */
+
+  if (solverInterface.getDimensions() != nDim)
+  {
+    std::cout << "Fluid Domain dimension mismatch " <<std::endl;
+    std::cout << "Dimension in SU2: " << nDim << std::endl;
+    std::cout << "Dimension in MDA config file: " << solverInterface.getDimensions() << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  /* Check for total number of aero-elastic interfaces */
+
+  if ( globalNumberWetSurfaces < 1)
+  {
+    std::cout << "Invalid number of aero-elastic interfaces." << std::endl;
+    std::cout << "Number of aero-elastic surfaces: " << globalNumberWetSurfaces << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  else
+  {
+    meshID = new int[globalNumberWetSurfaces];
+    forceID = new int[globalNumberWetSurfaces];
+    displDeltaID = new int[globalNumberWetSurfaces];
+
+    /* Get meshIDs from preCICE */
+
+    for ( int i = 0; i < globalNumberWetSurfaces; i++)
+    {
+      meshID[i] = solverInterface.getMeshID("SU2_Mesh" + to_string(i));
+    }
+  }
+
+  /*Determine the number of wet surfaces, that this process is working on, then loop over this number for all respective preCICE-related tasks */
+  for (int i = 0; i < globalNumberWetSurfaces; i++) 
+  {
+    if (config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(i)) == -1) 
+    {
+      std::cout << "Process #" << solverProcessIndex << "/" << solverProcessSize-1 << ": Does not work on " << config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() << i << endl;
+    } 
+    else 
+    {
+      localNumberWetSurfaces++;
+    }
+  }
+
+  if (localNumberWetSurfaces < 1) 
+  {
+    std::cout << "Process #" << solverProcessIndex << "/" << solverProcessSize-1 << ": Does not work on the wet surface at all." << endl;
+    processWorkingOnWetSurface = false;
+  }
+
+  if (processWorkingOnWetSurface) 
+  {
+    std::cout << " Discretizing Aero-elastic Interface! \n";
+
+    /*--Store the wet surface marker values in an array, which has the size equal to the number of wet surfaces actually being worked on by this process*/
+    valueMarkerWet = new short[localNumberWetSurfaces];
+    indexMarkerWetMappingLocalToGlobal = new short[localNumberWetSurfaces];
+    int j = 0;
+    for (int i = 0; i < globalNumberWetSurfaces; i++) 
+    {
+      if (config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(i)) != -1) {
+        valueMarkerWet[j] = config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(i));
+        indexMarkerWetMappingLocalToGlobal[j] = i;
+        j++;
+      }
+    }
+    vertexIDs = new int*[localNumberWetSurfaces];
+  }
+   
+  double *vector = NULL; 
+  if (processWorkingOnWetSurface) 
+  {
+    vertexSize = new unsigned long[localNumberWetSurfaces];
+    for (int i = 0; i < localNumberWetSurfaces; i++) 
+    {
+      vertexSize[i] = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[valueMarkerWet[i]];
+
+      /*--- coordinates of all nodes at the wet surface ---*/
+      double coupleNodeCoord[vertexSize[i]][nDim]; 
+
+      /*--- variable for storing the node indices - one at the time ---*/
+      unsigned long iNode;  
+
+
+      //Loop over the vertices of the (each) boundary
+      for (int iVertex = 0; iVertex < vertexSize[i]; iVertex++) 
+      {
+        //Get node number (= index) to vertex (= node)
+        iNode = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[valueMarkerWet[i]][iVertex]->GetNode();
+
+  
+         vector = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord(iNode);
+
+        /*---Get coordinates for nodes at aero-elastic interface --*/
+        for (int iDim = 0; iDim < nDim; iDim++) 
+        {
+                    
+                    
+          coupleNodeCoord[iVertex][iDim] = vector[iDim];
+
+          //coupleNodeCoord[iVertex][iDim] = geometry_container[ZONE_0][INST_0][MESH_0]->nodes[iNode]->GetCoord(iDim);
+        }
+      }
+
+      /*--Deallocate memeory for vector --- */
+
+      if ( vector !=NULL)
+      {
+        delete vector;
+      }
+
+      
+
+      //preCICE conform the coordinates of vertices (= points = nodes) at wet surface
+      double coords[vertexSize[i]*nDim];
+      for (int iVertex = 0; iVertex < vertexSize[i]; iVertex++) 
+      {
+        for (int iDim = 0; iDim < nDim; iDim++) 
+        {
+          coords[iVertex*nDim + iDim] = coupleNodeCoord[iVertex][iDim];
+        }
+      }
+
+      //preCICE internal
+      vertexIDs[i] = new int[vertexSize[i]];
+
+      solverInterface.setMeshVertices(meshID[indexMarkerWetMappingLocalToGlobal[i]], vertexSize[i], coords, vertexIDs[i]);
+
+
+      forceID[indexMarkerWetMappingLocalToGlobal[i]] = solverInterface.getDataID("Forces" + to_string(indexMarkerWetMappingLocalToGlobal[i]), meshID[indexMarkerWetMappingLocalToGlobal[i]]);
+
+
+      displDeltaID[indexMarkerWetMappingLocalToGlobal[i]] = solverInterface.getDataID("DisplacementDeltas" + to_string(indexMarkerWetMappingLocalToGlobal[i]), meshID[indexMarkerWetMappingLocalToGlobal[i]]);
+    }
+
+    for (int i = 0; i < globalNumberWetSurfaces; i++) 
+    {
+      bool flag = false;
+      for (int j = 0; j < localNumberWetSurfaces; j++) 
+      {
+        if (indexMarkerWetMappingLocalToGlobal[j] == i) 
+        {
+          flag = true;
+        }
+      }
+      if (!flag) 
+      {
+        solverInterface.setMeshVertices(meshID[i], 0, NULL, NULL);
+        forceID[i] = solverInterface.getDataID("Forces" + to_string(i), meshID[i]);
+        displDeltaID[i] = solverInterface.getDataID("DisplacementDeltas" + to_string(i), meshID[i]);
+      }
+    }
+  }
+
+  /* Obtain Timestep across the interface */
+
+  double precice_dt;
+
+  precice_dt = solverInterface.initialize();
+
+  return precice_dt;
+
+}
 

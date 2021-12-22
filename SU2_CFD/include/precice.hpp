@@ -21,7 +21,7 @@ private:
   int solverProcessIndex, solverProcessSize;
 
   /* Coupling interface object */
-  //SolverInterface solverInterface;
+  SolverInterface solverInterface;
 
   /* Fluid mesh and boundary information */
   CGeometry**** geometry_container;
@@ -40,6 +40,7 @@ private:
   short *valueMarkerWet; //List of wet surface marker values
   int **vertexIDs;
   int *forceID;
+  int *meshID;
   int *displDeltaID;
   double *forces;
   double *displacements;
