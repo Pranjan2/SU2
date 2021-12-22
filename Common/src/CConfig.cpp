@@ -3690,7 +3690,8 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
     }
   }
 
-  if (nKind_SurfaceMovement != nMarker_Moving) {
+  if (nKind_SurfaceMovement != nMarker_Moving)
+  {
     SU2_MPI::Error("Number of SURFACE_MOVEMENT must match number of MARKER_MOVING", CURRENT_FUNCTION);
   }
 
@@ -5754,6 +5755,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
         case MOVING_HTP:      cout << "HTP moving." << endl; break;
         case ROTATING_FRAME:  cout << "rotating reference frame." << endl; break;
         case EXTERNAL:        cout << "externally prescribed motion." << endl; break;
+        case PRECICE_MOVEMENT:cout << "MDA prescribed motion." << endl; break;
       }
     }
 
@@ -8484,9 +8486,11 @@ bool CConfig::GetVolumetric_Movement() const {
   if (GetSurface_Movement(AEROELASTIC) ||
       GetSurface_Movement(AEROELASTIC_RIGID_MOTION)||
       GetSurface_Movement(EXTERNAL) ||
-      GetSurface_Movement(EXTERNAL_ROTATION)){
-    volumetric_movement = true;
-  }
+      GetSurface_Movement(EXTERNAL_ROTATION) ||
+      GetSurface_Movement(MDO_SURFACE))
+      {
+        volumetric_movement = true;
+      }
 
   if (Kind_SU2 == SU2_COMPONENT::SU2_DEF ||
       Kind_SU2 == SU2_COMPONENT::SU2_DOT ||

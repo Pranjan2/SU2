@@ -1,7 +1,7 @@
 /*!
 * \file precice.cpp
 * \brief Adapter class for coupling SU2 with preCICE for FSI.
-* \author Alexander Rusch
+* \author Prateek Ranjan ( adapted from Rush )
 */
 #include <iostream>
 #include <string.h>
