@@ -66,30 +66,49 @@ void CSinglezoneDriver::StartSolver() {
   /*---See if MDA/MDO object needs to be created ---*/
   precice_usage = config_container[ZONE_0]->GetpreCICE_Usage();
 
+  
+  /*---If MDA is required, create a coupling object ----*/
 
   if (precice_usage) 
   {
-  //precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(), rank, size, geometry_container, solver_container, config_container, grid_movement);
- // precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(), rank, size, solver_container, config_container, grid_movement);
     precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size, config_container, geometry_container, solver_container, grid_movement);
-    precice ->check();
+    //precice ->check();
+    
+    dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
+
+    if (rank == MASTER_NODE)
+    {
+      std::cout << "------------------------------ Initialize Interface I/O --------------------------------" << std::endl;
+    }
+    max_precice_dt = new double(precice->initialize());
+
+    if (rank == MASTER_NODE)
+    {
+      std::cout << "------------------------------- Interface I/O Complete ---------------------------------" << std::endl;
+    }
   }
   if (rank == MASTER_NODE)
   {
     cout << endl <<"Simulation Run using the Single-zone Driver" << endl;
     if (driver_config->GetTime_Domain())
+    {
       cout << "The simulation will run for "
            << driver_config->GetnTime_Iter() - config_container[ZONE_0]->GetRestart_Iter() << " time steps." << endl;
+    }
   }
 
   /*--- Set the initial time iteration to the restart iteration. ---*/
   if (config_container[ZONE_0]->GetRestart() && driver_config->GetTime_Domain())
+  {
     TimeIter = config_container[ZONE_0]->GetRestart_Iter();
+  }
 
 
 
   /*--- Run the problem until the number of time iterations required is reached. ---*/
-  while ( TimeIter < config_container[ZONE_0]->GetnTime_Iter() ) 
+  //while ( TimeIter < config_container[ZONE_0]->GetnTime_Iter() ) 
+  //while ( (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage && precice->isCouplingOngoing() ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage)
+  while ( (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage)  
   {
 
     /*--- Perform some preprocessing before starting the time-step simulation. ---*/
@@ -137,11 +156,21 @@ void CSinglezoneDriver::StartSolver() {
       if (rank == MASTER_NODE)
       {
         std::cout <<"---------------------------------------------------------"<<std::endl;
-        std::cout << " Deleted MDO object" << std::endl;
+        std::cout << "-------------------Deleted MDO object-------------------"<<std::endl;
         std::cout <<"---------------------------------------------------------"<<std::endl;
 
       }
       delete precice;
+    }
+
+    if (dt != NULL)
+    {
+      delete dt;
+    }
+
+    if (max_precice_dt != NULL)
+    {
+      delete max_precice_dt;
     }
   }
 

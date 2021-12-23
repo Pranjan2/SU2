@@ -555,7 +555,10 @@ bool CConfig::GetpreCICE_LoadRamping(void) { return precice_loadRamping; }
 
 string CConfig::GetpreCICE_ConfigFileName(void) { return preciceConfigFileName; }
 
-string CConfig::GetpreCICE_WetSurfaceMarkerName(void) { return preciceWetSurfaceMarkerName; }
+string CConfig::GetpreCICE_WetSurfaceMarkerName(void) 
+{
+   return preciceWetSurfaceMarkerName;
+}
 
 unsigned long CConfig::GetpreCICE_LoadRampingDuration(void) { return precice_loadRampingDuration; }
 

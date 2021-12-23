@@ -13,7 +13,7 @@
 /*---Main class description -----*/
 
   Precice::Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement)
-  :coric(precice::constants::actionReadIterationCheckpoint()), cowic(precice::constants::actionWriteIterationCheckpoint()), solverProcessIndex(solverProcessIndex), solverProcessSize(solverProcessSize),solverInterface("SU2_CFD", preciceConfigurationFileName, solverProcessIndex, solverProcessSize)
+  :coric(precice::constants::actionReadIterationCheckpoint()), cowic(precice::constants::actionWriteIterationCheckpoint()), solverProcessIndex(solverProcessIndex), solverProcessSize(solverProcessSize),solverInterface("SU2_CFD", preciceConfigurationFileName, solverProcessIndex, solverProcessSize),config_container(config_container),geometry_container(geometry_container)
 
 {
     /* Get dimension of the problem */
@@ -21,8 +21,8 @@
   
     /* Set the relevant containers */
     solver_container = solver_container;
-    geometry_container = geometry_container;
-    config_container = config_container;
+  //  geometry_container = geometry_container;
+   // config_container = config_container;
     grid_movement = grid_movement;
 
     /* Initialize the coupling datasets to NULL */
@@ -220,8 +220,6 @@ void Precice::check()
 }
 
 
-
-
 double Precice::initialize()
 {
   /* Check for dimensional consistency between SU2 and .xml file */
@@ -234,8 +232,10 @@ double Precice::initialize()
     exit(EXIT_FAILURE);
   }
 
+  std::cout << " Dimension check complete " << std::endl;
+  
   /* Check for total number of aero-elastic interfaces */
-
+  
   if ( globalNumberWetSurfaces < 1)
   {
     std::cout << "Invalid number of aero-elastic interfaces." << std::endl;
@@ -257,9 +257,23 @@ double Precice::initialize()
     }
   }
 
+  std::cout << " Mesh iD allocation complete " << std::endl;
+
+ // std::cout << " Number of global wetsurfaces: " << globalNumberWetSurfaces << std::endl;
+
+ // std::cout << " Testing functions " << std::endl;
+
+  //string sample;
+
+ // std::cout << config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName()) << std::endl;
+  
+ // std::cout << " Testing complete " << std::endl;
+
+   
+
   /*Determine the number of wet surfaces, that this process is working on, then loop over this number for all respective preCICE-related tasks */
   for (int i = 0; i < globalNumberWetSurfaces; i++) 
-  {
+  {       
     if (config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(i)) == -1) 
     {
       std::cout << "Process #" << solverProcessIndex << "/" << solverProcessSize-1 << ": Does not work on " << config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() << i << endl;
@@ -269,6 +283,10 @@ double Precice::initialize()
       localNumberWetSurfaces++;
     }
   }
+
+
+  std::cout << " Finished determining number of wet surfaces " << std::endl;
+
 
   if (localNumberWetSurfaces < 1) 
   {
@@ -286,7 +304,8 @@ double Precice::initialize()
     int j = 0;
     for (int i = 0; i < globalNumberWetSurfaces; i++) 
     {
-      if (config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(i)) != -1) {
+      if (config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(i)) != -1) 
+      {
         valueMarkerWet[j] = config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(i));
         indexMarkerWetMappingLocalToGlobal[j] = i;
         j++;
@@ -294,11 +313,16 @@ double Precice::initialize()
     }
     vertexIDs = new int*[localNumberWetSurfaces];
   }
+
+  std::cout << " Finished setting indices " << std::endl;
    
   double *vector = NULL; 
+
+
   if (processWorkingOnWetSurface) 
   {
     vertexSize = new unsigned long[localNumberWetSurfaces];
+
     for (int i = 0; i < localNumberWetSurfaces; i++) 
     {
       vertexSize[i] = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[valueMarkerWet[i]];
@@ -321,24 +345,16 @@ double Precice::initialize()
 
         /*---Get coordinates for nodes at aero-elastic interface --*/
         for (int iDim = 0; iDim < nDim; iDim++) 
-        {
-                    
-                    
+        {  
           coupleNodeCoord[iVertex][iDim] = vector[iDim];
-
           //coupleNodeCoord[iVertex][iDim] = geometry_container[ZONE_0][INST_0][MESH_0]->nodes[iNode]->GetCoord(iDim);
         }
       }
 
-      /*--Deallocate memeory for vector --- */
+      std::cout << " Finished acquiring node IDs and coordinates" << std::endl;
 
-      if ( vector !=NULL)
-      {
-        delete vector;
-      }
-
+      /*---------preCICE Internal Calculations -----*/
       
-
       //preCICE conform the coordinates of vertices (= points = nodes) at wet surface
       double coords[vertexSize[i]*nDim];
       for (int iVertex = 0; iVertex < vertexSize[i]; iVertex++) 
@@ -384,9 +400,12 @@ double Precice::initialize()
 
   double precice_dt;
 
+  std::cout << " Initialize the interface " << std::endl;
+
   precice_dt = solverInterface.initialize();
+
+  std::cout << " Interface initialization complete " << std::endl;
 
   return precice_dt;
 
 }
-
