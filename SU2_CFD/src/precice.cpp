@@ -7,6 +7,9 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "../../../Common/include/toolboxes/geometry_toolbox.hpp"
+
+
 #include "../include/precice.hpp"
 
 
@@ -303,7 +306,7 @@ double Precice::initialize()
 
   std::cout << " Finished setting indices " << std::endl;
    
-  double* vector = NULL; 
+
 
 
   if (processWorkingOnWetSurface) 
@@ -341,9 +344,9 @@ double Precice::initialize()
         std::cout << "Vertex: " << iVertex << " Node index: " << iNode << " x: " << coupleNodeCoord[iVertex][0] << " y: " << coupleNodeCoord[iVertex][1] <<" z: " << coupleNodeCoord[iVertex][2] << std::endl; 
 
         /* -- Extract the exture node indices vector --*/
-        unsigned long nodeVertex[vertexSize[i]];
-        nodeVertex[iVertex] = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[valueMarkerWet[i]][iVertex]->GetNode(); /*--- Store all nodes (indices) in a vector ---*/
-        std::cout << nodeVertex[iVertex] << std::endl;
+       /// unsigned long nodeVertex[vertexSize[i]];
+      //  nodeVertex[iVertex] = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[valueMarkerWet[i]][iVertex]->GetNode(); /*--- Store all nodes (indices) in a vector ---*/
+      //  std::cout << nodeVertex[iVertex] << std::endl;
       }
 
 
@@ -402,216 +405,237 @@ double Precice::initialize()
 
   std::cout << " Interface initialization complete " << std::endl;
 
+  //double Pn = 0.0;
+
+  //Pn = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->nodes->GetPressure();
+  //std::cout << " Pressure at node: " << Pn << std::endl;
   return precice_dt;
 
 }
 
-// double Precice::advance( double computedTimestepLength )
-// {
-//   if (processWorkingOnWetSurface) 
-//   {
-//     /*-- If the current process if working on the Aero-elastic surface, flow variables ---*/
+ double Precice::advance( double computedTimestepLength )
+ {
+   if (processWorkingOnWetSurface) 
+   {
+     /*-- If the current process if working on the Aero-elastic surface, flow variables ---*/
 
-//     /*-- Get simulation information --*/
-//     bool incompressible = (config_container[ZONE_0]->GetKind_Regime() == INCOMPRESSIBLE);
-//     bool viscous_flow = ((config_container[ZONE_0]->GetKind_Solver() == NAVIER_STOKES) || (config_container[ZONE_0]->GetKind_Solver() == RANS));
+     /*-- Get simulation information --*/
+     //bool incompressible = (config_container[ZONE_0]->ENUM_REGIME::GetKind_Regime() == INCOMPRESSIBLE);
+     bool viscous_flow = config_container[ZONE_0]->GetViscous();
 
-//     /*-- Compute variables for re-dimensionalizing forces (ND := Non-Dimensional) ---*/
-//     double* Velocity_Real = config_container[ZONE_0]->GetVelocity_FreeStream();
-//     double Density_Real = config_container[ZONE_0]->GetDensity_FreeStream();
-//     double* Velocity_ND = config_container[ZONE_0]->GetVelocity_FreeStreamND();
-//     double Density_ND = config_container[ZONE_0]->GetDensity_FreeStreamND();
-//     double Velocity2_Real = 0.0;  /*--- denotes squared real velocity ---*/
-//     double Velocity2_ND = 0.0;  /*--- denotes squared non-dimensional velocity ---*/
+     /*-- Compute variables for re-dimensionalizing forces (ND := Non-Dimensional) ---*/
+     double* Velocity_Real = config_container[ZONE_0]->GetVelocity_FreeStream();
+     double Density_Real = config_container[ZONE_0]->GetDensity_FreeStream();
+     double* Velocity_ND = config_container[ZONE_0]->GetVelocity_FreeStreamND();
+     double Density_ND = config_container[ZONE_0]->GetDensity_FreeStreamND();
+     double Velocity2_Real = 0.0;  /*--- denotes squared real velocity ---*/
+     double Velocity2_ND = 0.0;  /*--- denotes squared non-dimensional velocity ---*/
 
-//     /* -- Compute squared values --*/
-//     for (int iDim = 0; iDim < nDim; iDim++)
-//     {
-//       Velocity2_Real += Velocity_Real[iDim]*Velocity_Real[iDim];
-//       Velocity2_ND += Velocity_ND[iDim]*Velocity_ND[iDim];
-//     }
+     /* -- Compute squared values --*/
+     for (int iDim = 0; iDim < nDim; iDim++)
+     {
+       Velocity2_Real += Velocity_Real[iDim]*Velocity_Real[iDim];
+       Velocity2_ND += Velocity_ND[iDim]*Velocity_ND[iDim];
+     }
 
-//     /* -- Compute factors for re-dimensionalizing forces --*/
-//     double factorForces = Density_Real*Velocity2_Real/(Density_ND*Velocity2_ND);
+     /* -- Compute factors for re-dimensionalizing forces --*/
+     double factorForces = Density_Real*Velocity2_Real/(Density_ND*Velocity2_ND);
 
-//     /* -- Loop over each local aero-elastic surface to perform operations --*/
-//     for (int i = 0; i < localNumberWetSurfaces; i++)
-//     {
-//       /* -- Define temporary variables for calculations --*/
-//       unsigned long nodeVertex[vertexSize[i]];
-//       double normalsVertex[vertexSize[i]][nDim];
-//       double normalsVertex_Unit[vertexSize[i]][nDim];
-//       double Area;
-//       double Pn = 0.0;  /*--- denotes pressure at a node ---*/
-//       double Pinf = 0.0;  /*--- denotes environmental (farfield) pressure ---*/
-//       double** Grad_PrimVar = NULL; /*--- denotes (u.A. velocity) gradients needed for computation of viscous forces ---*/
-//       double Viscosity = 0.0;
-//       double Tau[3][3];
-//       double TauElem[3];
-//       double forces_su2[vertexSize[i]][nDim];  /*--- forces will be stored such, before converting to simple array ---*/
+     /* -- Loop over each local aero-elastic surface to perform operations --*/
+     for (int i = 0; i < localNumberWetSurfaces; i++)
+     {
+       /* -- Define temporary variables for calculations --*/
+       unsigned long nodeVertex[vertexSize[i]];
+       double normalsVertex[vertexSize[i]][nDim];
+       double normalsVertex_Unit[vertexSize[i]][nDim];
+       double Area;
+       double Pn = 0.0;  /*--- denotes pressure at a node ---*/
+       double Pinf = 0.0;  /*--- denotes environmental (farfield) pressure ---*/
+       //double** Grad_PrimVar = NULL; /*--- denotes (u.A. velocity) gradients needed for computation of viscous forces ---*/
+       //double Viscosity = 0.0;
+       //double Tau[3][3];
+       //double TauElem[3];
+       double forces_su2[vertexSize[i]][nDim];  /*--- forces will be stored such, before converting to simple array ---*/
 
-//       /* -- Loop over vertices of coupled boundary -- */
-//       for (int iVertex = 0; iVertex < vertexSize[i]; iVertex++) 
-//       {
-//         //Get node number (= index) to vertex (= node)
-//         nodeVertex[iVertex] = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[valueMarkerWet[i]][iVertex]->GetNode(); /*--- Store all nodes (indices) in a vector ---*/
-//         // Get normal vector
-//         for (int iDim = 0; iDim < nDim; iDim++)
-//         {
-//           normalsVertex[iVertex][iDim] = (geometry_container[ZONE_0][INST_0][MESH_0]->vertex[valueMarkerWet[i]][iVertex]->GetNormal())[iDim];
-//         }
-//         // Unit normals
-//         Area = 0.0;
-//         for (int iDim = 0; iDim < nDim; iDim++) 
-//         {
-//           Area += normalsVertex[iVertex][iDim]*normalsVertex[iVertex][iDim];
-//         }
-//         Area = sqrt(Area);
+       /* -- Loop over vertices of coupled boundary -- */
+       for (int iVertex = 0; iVertex < vertexSize[i]; iVertex++) 
+       {
+         //Get node number (= index) to vertex (= node)
+         nodeVertex[iVertex] = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[valueMarkerWet[i]][iVertex]->GetNode(); /*--- Store all nodes (indices) in a vector ---*/
+         // Get normal vector
+         for (int iDim = 0; iDim < nDim; iDim++)
+         {
+           normalsVertex[iVertex][iDim] = (geometry_container[ZONE_0][INST_0][MESH_0]->vertex[valueMarkerWet[i]][iVertex]->GetNormal())[iDim];
+         }
+         // Unit normals
+         Area = 0.0;
+         for (int iDim = 0; iDim < nDim; iDim++) 
+         {
+           Area += normalsVertex[iVertex][iDim]*normalsVertex[iVertex][iDim];
+         }
+         Area = sqrt(Area);
 
-//         for (int iDim = 0; iDim < nDim; iDim++) 
-//         {
-//           normalsVertex_Unit[iVertex][iDim] = normalsVertex[iVertex][iDim]/Area;
-//         }
+         for (int iDim = 0; iDim < nDim; iDim++) 
+         {
+           normalsVertex_Unit[iVertex][iDim] = normalsVertex[iVertex][iDim]/Area;
+         }
 
-//         /* -- Get the values of pressure and viscosity --*/
+         /* -- Get the values of pressure and viscosity --*/
 
-//         // Nodes pointer in SU2 corresponds to all nodes in the domain. Extract a set of nodes ( interface nodes) from nodes
+         // Nodes pointer in SU2 corresponds to all nodes in the domain. Extract a set of nodes ( interface nodes) from nodes
 //         double *IFNodes;
 //         IFNodes = nodes[nodeVertex[iVertex]];
 
-//         /* -- Compute the pressure at each node at aero-elastic interface -- */
-//         //Pn = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->nodes[nodeVertex[iVertex]]->GetPressure();
+         /* -- Compute the pressure at each node at aero-elastic interface -- */
+           Pn = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetPressure(nodeVertex[iVertex]);
+         //Pn = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->nodes[nodeVertex[iVertex]]->GetPressure(nodeVertex[iVertex]);
 //         Pn = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->IFNodes->GetPressure();
-//         Pinf = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetPressure_Inf();
+           Pinf = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetPressure_Inf();
 
-//         if (viscous_flow)
-//         {
+       //  if (viscous_flow)
+      //   {
+      //     Viscosity = solver_container[ZONE_0][MESH_0][INST_0][FLOW_SOL]->GetNodes()->GetLaminarViscosity(nodeVertex[iVertex]);
+      //     Grad_PrimVar = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetGradient_Primitive(nodeVertex[iVertex]);
+            // Viscosity = solver_container[ZONE_0][MESH_0][INST_0][FLOW_SOL]->GetNodes()->GetLaminarViscosity(nodeVertex[iVertex]);
 //           Grad_PrimVar = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->IFNodes->GetGradient_Primitive();
 //           Viscosity = solver_container[ZONE_0][MESH_0][INST_0][FLOW_SOL]->IFNodes->GetLaminarViscosity();
-//         }
+    //     }
 
-//          /* -- Compute the forces_su2 in the nodes for the inviscid term -- */
+          /* -- Compute the forces_su2 in the nodes for the inviscid term -- */
 
-//         for (int iDim = 0; iDim < nDim; iDim++) 
-//         {
-//           forces_su2[iVertex][iDim] = -(Pn-Pinf)*normalsVertex[iVertex][iDim];
-//         }
+         for (int iDim = 0; iDim < nDim; iDim++) 
+         {
+           forces_su2[iVertex][iDim] = -(Pn-Pinf)*normalsVertex[iVertex][iDim];
+         }
 
-//         /* -- Compute the forces_su2 in the nodes for the viscous term -- */
+         /* -- Compute the viscous contributions --*/
 
-//         if (viscous_flow)
-//         {
-//           // Divergence of the velocity
-//           double div_vel = 0.0;
-//           for (int iDim = 0; iDim < nDim; iDim++)
-//           {
-//             div_vel += Grad_PrimVar[iDim+1][iDim];
-//           }
+         if (viscous_flow)
+         {
+           double Viscosity = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetLaminarViscosity(nodeVertex[iVertex]);
+           double Tau[3][3];
+           CNumerics::ComputeStressTensor(nDim, Tau, solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetGradient_Primitive(nodeVertex[iVertex])+1, Viscosity);
+           //for (int iDim = 0; iDim < nDim; iDim++) 
+          // {
+          //  forces_su2[iVertex][iDim] += GeometryToolbox::DotProduct(nDim, Tau[iDim],normalsVertex[iVertex][iDim]);
+          // }
+         }
 
-//           if (incompressible)
-//           {
-//             div_vel = 0.0;  /*--- incompressible flow is divergence-free ---*/
-//           }
-//           for (int iDim = 0; iDim < nDim; iDim++)
-//           {
-//             for (int jDim = 0 ; jDim < nDim; jDim++) 
-//             {
-//               // Dirac delta
-//               double Delta = 0.0;
-//               if (iDim == jDim)
-//               {
-//                 Delta = 1.0;
-//               }
+         /* -- Compute the forces_su2 in the nodes for the viscous term -- */
 
-//               // Viscous stress
-//               Tau[iDim][jDim] = Viscosity*(Grad_PrimVar[jDim+1][iDim] + Grad_PrimVar[iDim+1][jDim]) -2/3*Viscosity*div_vel*Delta;
-//               // Add Viscous component in the forces_su2 vector --> Units of force (non-dimensional).
-//               forces_su2[iVertex][iDim] += Tau[iDim][jDim]*normalsVertex[iVertex][jDim];
-//             }
-//           }
-//         }
+        // if (viscous_flow)
+        // {
+           // Divergence of the velocity
+        //   double div_vel = 0.0;
+        //   for (int iDim = 0; iDim < nDim; iDim++)
+        //   {
+        //     div_vel += Grad_PrimVar[iDim+1][iDim];
+        //   }
 
-//         // Rescale forces_su2 to SI units
-//         for (int iDim = 0; iDim < nDim; iDim++)
-//         {
-//           forces_su2[iVertex][iDim] = forces_su2[iVertex][iDim]*factorForces;
-//         }
-//       }
+           //if (incompressible)
+          // {
+          //   div_vel = 0.0;  /*--- incompressible flow is divergence-free ---*/
+          // }
+        //   for (int iDim = 0; iDim < nDim; iDim++)
+        //   {
+        //     for (int jDim = 0 ; jDim < nDim; jDim++) 
+        //     {
+               // Dirac delta
+        //       double Delta = 0.0;
+        //       if (iDim == jDim)
+        //       {
+        //         Delta = 1.0;
+        //       }
 
-//       /* -- Convert the force vector in row-major format --*/
-//       forces = new double[vertexSize[i]*nDim];
+        //       // Viscous stress
+        //       Tau[iDim][jDim] = Viscosity*(Grad_PrimVar[jDim+1][iDim] + Grad_PrimVar[iDim+1][jDim]) -2/3*Viscosity*div_vel*Delta;
+               // Add Viscous component in the forces_su2 vector --> Units of force (non-dimensional).
+        //       forces_su2[iVertex][iDim] += Tau[iDim][jDim]*normalsVertex[iVertex][jDim];
+        //     }
+        //   }
+       //  }
 
-//       for (int iVertex = 0; iVertex < vertexSize[i]; iVertex++)
-//       {
-//         for (int iDim = 0; iDim < nDim; iDim++) 
-//         {
-//           //Do not write forces for duplicate nodes! -> Check wether the color of the node matches the MPI-rank of this process. Only write forces, if node originally belongs to this process.
-//           if (geometry_container[ZONE_0][INST_0][MESH_0]->IFNodes->GetColor() == solverProcessIndex) 
-//           {
-//             forces[iVertex*nDim + iDim] = forces_su2[iVertex][iDim];
-//           }
-//           else
-//           {
-//             forces[iVertex*nDim + iDim] = 0;
-//           }
-//         }
-//       }
+         // Rescale forces_su2 to SI units
+         for (int iDim = 0; iDim < nDim; iDim++)
+         {
+           forces_su2[iVertex][iDim] = forces_su2[iVertex][iDim]*factorForces;
+         }
+       }
 
-//       solverInterface.writeBlockVectorData(forceID[indexMarkerWetMappingLocalToGlobal[i]], vertexSize[i], vertexIDs[i], forces);
+       /* -- Convert the force vector in row-major format --*/
+       forces = new double[vertexSize[i]*nDim];
 
-//       if (forces != NULL)
-//       {
-//         delete [] forces;
-//       }
-//     }
+       for (int iVertex = 0; iVertex < vertexSize[i]; iVertex++)
+       {
+         for (int iDim = 0; iDim < nDim; iDim++) 
+         {
+           //Do not write forces for duplicate nodes! -> Check wether the color of the node matches the MPI-rank of this process. Only write forces, if node originally belongs to this process.
+           if (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetColor(nodeVertex[iVertex]) == solverProcessIndex) 
+           {
+             forces[iVertex*nDim + iDim] = forces_su2[iVertex][iDim];
+           }
+           else
+           {
+             forces[iVertex*nDim + iDim] = 0;
+           }
+         }
+       }
 
-//     /* -- Advance solver interface --*/
+       solverInterface.writeBlockVectorData(forceID[indexMarkerWetMappingLocalToGlobal[i]], vertexSize[i], vertexIDs[i], forces);
 
-//     double max_precice_dt;
-//     max_precice_dt = solverInterface.advance( computedTimestepLength );
+       if (forces != NULL)
+       {
+         delete [] forces;
+       }
+     }
 
-//     for (int i = 0; i < localNumberWetSurfaces; i++) 
-//     {
-//       //4. Read displacements/displacementDeltas
-//       double displacementDeltas_su2[vertexSize[i]][nDim]; /*--- displacementDeltas will be stored such, before converting to simple array ---*/
-//       displacementDeltas = new double[vertexSize[i]*nDim];
-//       solverInterface.readBlockVectorData(displDeltaID[indexMarkerWetMappingLocalToGlobal[i]], vertexSize[i], vertexIDs[i], displacementDeltas);
+     /* -- Advance solver interface --*/
 
-//         //5. Set displacements/displacementDeltas
+     double max_precice_dt;
+     max_precice_dt = solverInterface.advance( computedTimestepLength );
+
+     for (int i = 0; i < localNumberWetSurfaces; i++) 
+     {
+       //4. Read displacements/displacementDeltas
+       double displacementDeltas_su2[vertexSize[i]][nDim]; /*--- displacementDeltas will be stored such, before converting to simple array ---*/
+       displacementDeltas = new double[vertexSize[i]*nDim];
+       solverInterface.readBlockVectorData(displDeltaID[indexMarkerWetMappingLocalToGlobal[i]], vertexSize[i], vertexIDs[i], displacementDeltas);
+
+         //5. Set displacements/displacementDeltas
     
-//       //convert displacementDeltas into displacementDeltas_su2
-//       for (int iVertex = 0; iVertex < vertexSize[i]; iVertex++) 
-//       {
-//         for (int iDim = 0; iDim < nDim; iDim++)
-//         {
-//           displacementDeltas_su2[iVertex][iDim] = displacementDeltas[iVertex*nDim + iDim];
-//         }
-//       }
-//       if (displacementDeltas != NULL) 
-//       {
-//         delete [] displacementDeltas;
-//       }
+       //convert displacementDeltas into displacementDeltas_su2
+       for (int iVertex = 0; iVertex < vertexSize[i]; iVertex++) 
+       {
+         for (int iDim = 0; iDim < nDim; iDim++)
+         {
+           displacementDeltas_su2[iVertex][iDim] = displacementDeltas[iVertex*nDim + iDim];
+         }
+       }
+       if (displacementDeltas != NULL) 
+       {
+         delete [] displacementDeltas;
+       }
 
-//       //Set change of coordinates (i.e. displacementDeltas)
-//       for (int iVertex = 0; iVertex < vertexSize[i]; iVertex++) 
-//       {
-//         geometry_container[ZONE_0][INST_0][MESH_0]->vertex[valueMarkerWet[i]][iVertex]->SetVarCoord(displacementDeltas_su2[iVertex]);
-//       }
-//     }
+       //Set change of coordinates (i.e. displacementDeltas)
+       for (int iVertex = 0; iVertex < vertexSize[i]; iVertex++) 
+       {
+                  geometry_container[ZONE_0][INST_0][MESH_0]->vertex[valueMarkerWet[i]][iVertex]->SetVarCoord(displacementDeltas_su2[iVertex]);
+       }
+     }
     
-//     return max_precice_dt;
-//   }
+     return max_precice_dt;
+   }
 
 
-//   else
-//   {
-//     double max_precice_dt;
-//     max_precice_dt = solverInterface.advance( computedTimestepLength );
-//     return max_precice_dt;
-//   }
+   else
+   {
+     double max_precice_dt;
+     max_precice_dt = solverInterface.advance( computedTimestepLength );
+     return max_precice_dt;
+   }
 
 
-// }
+}
 
 
 
