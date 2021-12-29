@@ -4245,7 +4245,7 @@ public:
    * \param[in] geometry - Geometrical definition.
    * \param[in] config   - Definition of the particular problem.
    */
-  void ComputeVertexTractions(CGeometry *geometry, const CConfig *config);
+  void ComputeVertexTractions(CGeometry *geometry,  CConfig *config);
 
   /*!
    * \brief Set the adjoints of the vertex tractions.

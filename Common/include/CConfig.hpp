@@ -8877,7 +8877,8 @@ public:
    * \brief Get the name of the wet surface marker used in the mesh file
    * \return Wet surface marker name as string
    */
-  string GetpreCICE_WetSurfaceMarkerName(void);
+  string GetpreCICE_WetSurfaceMarkerName(void) const {return preciceWetSurfaceMarkerName;}
+
 
   /*!
    * \brief Get the number of physical time steps for which the load ramping is applied

@@ -3925,8 +3925,9 @@ void CSolver::LoadInletProfile(CGeometry **geometry,
 
 }
 
-
-void CSolver::ComputeVertexTractions(CGeometry *geometry, const CConfig *config){
+void CSolver::ComputeVertexTractions(CGeometry *geometry, CConfig *config)
+//void CSolver::ComputeVertexTractions(CGeometry *geometry, const CConfig *config)
+{
 
   /*--- Compute the constant factor to dimensionalize pressure and shear stress. ---*/
   const su2double *Velocity_ND, *Velocity_Real;
@@ -3959,24 +3960,29 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, const CConfig *config)
 
   factor = Density_Real * Velocity2_Real / ( Density_ND * Velocity2_ND );
 
-  for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
+  /*-- Begin loop through all MARKERS --*/
+
+  for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) 
+  {
 
     /*--- If this is defined as a wall ---*/
     if (!config->GetSolid_Wall(iMarker)) continue;
 
     // Loop over the vertices
-    for (iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++) {
-
+    for (iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++) 
+    {
       // Recover the point index
       iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
       // Get the normal at the vertex: this normal goes inside the fluid domain.
       iNormal = geometry->vertex[iMarker][iVertex]->GetNormal();
 
       /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
-      if (geometry->nodes->GetDomain(iPoint)) {
+      if (geometry->nodes->GetDomain(iPoint)) 
+      {
 
         // Retrieve the values of pressure
         Pn = base_nodes->GetPressure(iPoint);
+        //std::cout << "Pressure at "<< iPoint << " is " << Pn << std::endl;
 
         // Calculate tn in the fluid nodes for the inviscid term --> Units of force (non-dimensional).
         for (iDim = 0; iDim < nDim; iDim++)
@@ -3993,12 +3999,43 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, const CConfig *config)
         }
 
         // Redimensionalize the forces
-        for (iDim = 0; iDim < nDim; iDim++) {
+        for (iDim = 0; iDim < nDim; iDim++) 
+        {
           VertexTraction[iMarker][iVertex][iDim] = factor * auxForce[iDim];
         }
+        
+
+        std:cout << " Printing vertex tractions ..." << std::endl;
+        
+        std::cout << "Marker Index " << iMarker << " Vertex Index " << iVertex << " Traction_x: " << VertexTraction[iMarker][iVertex][0] << " Traction_y: " << VertexTraction[iMarker][iVertex][1] << " Traction_z: " << VertexTraction[iMarker][iVertex][2] << std::endl;
+       
+       /*------------ FSI-SPECIFIC COMPUTATIONS -------*/
+
+
+    
+       /* Get the maker index for the wetsurface */
+
+       //int FSI_ID = config->
+
+       string FSI_NAME = config->GetpreCICE_WetSurfaceMarkerName();
+       
+       // FSI_ID;
+       //std::cout << config->GetpreCICE_WetSurfaceMarkerName() << std::endl;
+       short int FSI_ID = config->GetMarker_All_TagBound(config->GetpreCICE_WetSurfaceMarkerName()+to_string(0));
+       std::cout << FSI_NAME << " has the marker ID " << FSI_ID << std::endl; 
+       
+       //to_string(i));
+       // int IF_ID = config->GetMarker_All_TagBound(config->GetpreCICE_WetSurfaceMarkerName);
+
+       // std::cout << " The marker count ID for " << config->GetpreCICE_WetSurfaceMarkerName << " is " << IF_ID << std::endl;
+
+        /*--Print the first dimension for each marker -*/
+       // std::cout << VertexTraction[iMarker][iVertex][0] << std::endl;
       }
-      else{
-        for (iDim = 0; iDim < nDim; iDim++) {
+      else
+      {
+        for (iDim = 0; iDim < nDim; iDim++) 
+        {
           VertexTraction[iMarker][iVertex][iDim] = 0.0;
         }
       }

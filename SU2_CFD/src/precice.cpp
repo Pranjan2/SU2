@@ -8,6 +8,9 @@
 #include <stdio.h>
 
 #include "../../../Common/include/toolboxes/geometry_toolbox.hpp"
+#include "../include/variables/CEulerVariable.hpp"
+#include "../include/solvers/CEulerSolver.hpp"
+#include "../include/solvers/CFVMFlowSolverBase.inl"
 
 
 #include "../include/precice.hpp"
@@ -22,11 +25,6 @@
     /* Get dimension of the problem */
     nDim = geometry_container[ZONE_0][INST_0][MESH_0]->GetnDim();
   
-    /* Set the relevant containers */
-    solver_container = solver_container;
-  //  geometry_container = geometry_container;
-   // config_container = config_container;
-    grid_movement = grid_movement;
 
     /* Initialize the coupling datasets to NULL */
     
@@ -308,7 +306,6 @@ double Precice::initialize()
    
 
 
-
   if (processWorkingOnWetSurface) 
   {
     vertexSize = new unsigned long[localNumberWetSurfaces];
@@ -405,10 +402,6 @@ double Precice::initialize()
 
   std::cout << " Interface initialization complete " << std::endl;
 
-  //double Pn = 0.0;
-
-  //Pn = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->nodes->GetPressure();
-  //std::cout << " Pressure at node: " << Pn << std::endl;
   return precice_dt;
 
 }
@@ -421,7 +414,20 @@ double Precice::initialize()
 
      /*-- Get simulation information --*/
      //bool incompressible = (config_container[ZONE_0]->ENUM_REGIME::GetKind_Regime() == INCOMPRESSIBLE);
+
+     int procid = solverProcessIndex;
+
+     if ( procid == 0)
+     {
+       std::cout << "Checking if viscous terms need to be caluclated! " << std::endl;
+     }
+
      bool viscous_flow = config_container[ZONE_0]->GetViscous();
+
+    if ( procid == 0)
+     {
+       std::cout << "Obtaining free-stream values ..." << std::endl;
+     }
 
      /*-- Compute variables for re-dimensionalizing forces (ND := Non-Dimensional) ---*/
      double* Velocity_Real = config_container[ZONE_0]->GetVelocity_FreeStream();
@@ -431,6 +437,27 @@ double Precice::initialize()
      double Velocity2_Real = 0.0;  /*--- denotes squared real velocity ---*/
      double Velocity2_ND = 0.0;  /*--- denotes squared non-dimensional velocity ---*/
 
+     /*--Get farfield conditions from config --*/
+     double* Velocity_Inf = config_container[ZONE_0]->GetVelocity_FreeStreamND();
+     double Density_Inf = config_container[ZONE_0]->GetDensity_FreeStreamND();
+     double Energy_Inf = config_container[ZONE_0]->GetEnergy_FreeStreamND();
+
+     /* Initialize a Euler Variable class object for Pressure Calculations */
+     CEulerVariable* nodes = nullptr;
+     if (procid == 0)
+     {
+       std::cout << " Printing CEulerVariable Summary " <<std::endl;
+       std::cout << " Density_inf: " << Density_Inf << " Velocity_Inf: " << *Velocity_Inf << " Energy_Inf: " << Energy_Inf << " # Points " << nPoint << " # Dimensions " << nDim << " # Variables " << nVar << std::endl;
+     }
+     nodes = new CEulerVariable(Density_Inf, Velocity_Inf, Energy_Inf, nPoint, nDim, nVar, config_container[ZONE_0]);
+     //solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->SetBaseClassPointerToNodes();
+
+
+  if ( procid == 0)
+     {
+       std::cout << "Compute the squared values ..." << std::endl;
+     }
+     
      /* -- Compute squared values --*/
      for (int iDim = 0; iDim < nDim; iDim++)
      {
@@ -438,9 +465,18 @@ double Precice::initialize()
        Velocity2_ND += Velocity_ND[iDim]*Velocity_ND[iDim];
      }
 
+     if ( procid == 0)
+     {
+       std::cout << "Compute factor forces ..." << std::endl;
+     }
+
      /* -- Compute factors for re-dimensionalizing forces --*/
      double factorForces = Density_Real*Velocity2_Real/(Density_ND*Velocity2_ND);
 
+     if ( procid == 0)
+     {
+       std::cout << "Begin loop over " << localNumberWetSurfaces << " each local interface ..." << std::endl;
+     }
      /* -- Loop over each local aero-elastic surface to perform operations --*/
      for (int i = 0; i < localNumberWetSurfaces; i++)
      {
@@ -485,12 +521,24 @@ double Precice::initialize()
          // Nodes pointer in SU2 corresponds to all nodes in the domain. Extract a set of nodes ( interface nodes) from nodes
 //         double *IFNodes;
 //         IFNodes = nodes[nodeVertex[iVertex]];
-
+          if ( procid == 0)
+          {
+          std::cout << "Computing pressure forces ..." << std::endl;
+          }
          /* -- Compute the pressure at each node at aero-elastic interface -- */
-           Pn = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetPressure(nodeVertex[iVertex]);
+        // Pn = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->CEulerVariable::GetPressure(nodeVertex[iVertex]);
+           
+           //Pn = nodes->CEulerVariable::GetPressure(nodeVertex[iVertex]);
+           Pn = nodes->GetPressure(nodeVertex[iVertex]);
+        // Pn = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->nodes->GetPressure(nodeVertex[iVertex]);
+         // Pn = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetPressure(nodeVertex[iVertex]);
+           std::cout << " Pressure at node index: " << nodeVertex[iVertex] << " is " << Pn << std::endl;
          //Pn = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->nodes[nodeVertex[iVertex]]->GetPressure(nodeVertex[iVertex]);
 //         Pn = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->IFNodes->GetPressure();
-           Pinf = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetPressure_Inf();
+
+            std::cout << " Computng pressure at infinity ..." << std::endl;
+           //Pinf = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetPressure_Inf();
+           //su2double Pressure_Inf  = config_container[ZONE_0]->GetPressure_FreeStreamND();
 
        //  if (viscous_flow)
       //   {
@@ -502,24 +550,40 @@ double Precice::initialize()
     //     }
 
           /* -- Compute the forces_su2 in the nodes for the inviscid term -- */
+          if ( procid == 0)
+        {
+          std::cout << "Computing pressure forces for all nodes at interface ..." << std::endl;
+         }
 
          for (int iDim = 0; iDim < nDim; iDim++) 
          {
            forces_su2[iVertex][iDim] = -(Pn-Pinf)*normalsVertex[iVertex][iDim];
          }
+         if ( procid == 0)
+     {
+       std::cout << "skipping viscous contributions for now ..." << std::endl;
+     }
+      if ( procid == 0)
+     {
+       std::cout << "Deleteing nodes pointer ..." << std::endl;
+     }
 
+   //  if ( nodes!= nullptr)
+  //   {
+  //     delete[] nodes;
+  //   }
          /* -- Compute the viscous contributions --*/
 
-         if (viscous_flow)
-         {
-           double Viscosity = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetLaminarViscosity(nodeVertex[iVertex]);
-           double Tau[3][3];
-           CNumerics::ComputeStressTensor(nDim, Tau, solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetGradient_Primitive(nodeVertex[iVertex])+1, Viscosity);
+        // if (viscous_flow)
+        // {
+        //   double Viscosity = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetLaminarViscosity(nodeVertex[iVertex]);
+        //   double Tau[3][3];
+        //   CNumerics::ComputeStressTensor(nDim, Tau, solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetGradient_Primitive(nodeVertex[iVertex])+1, Viscosity);
            //for (int iDim = 0; iDim < nDim; iDim++) 
           // {
           //  forces_su2[iVertex][iDim] += GeometryToolbox::DotProduct(nDim, Tau[iDim],normalsVertex[iVertex][iDim]);
           // }
-         }
+         //}
 
          /* -- Compute the forces_su2 in the nodes for the viscous term -- */
 
@@ -554,6 +618,12 @@ double Precice::initialize()
         //     }
         //   }
        //  }
+
+
+       if ( procid == 0)
+     {
+       std::cout << "Rescaling the forces ..." << std::endl;
+     }
 
          // Rescale forces_su2 to SI units
          for (int iDim = 0; iDim < nDim; iDim++)
@@ -637,11 +707,30 @@ double Precice::initialize()
 
 }
 
+bool Precice::isCouplingOngoing()
+{
+  return solverInterface.isCouplingOngoing();
+}
 
+bool Precice::isActionRequired( const string& action )
+{
+  return solverInterface.isActionRequired(action);
+}
+
+const string& Precice::getCowic()
+{
+  return cowic;
+}
+
+const string& Precice::getCoric()
+{
+  return coric;
+}
 
 void Precice::finalize()
 {
   solverInterface.finalize();
 }
+
 
 

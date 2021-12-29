@@ -108,8 +108,14 @@ void CSinglezoneDriver::StartSolver() {
   /*--- Run the problem until the number of time iterations required is reached. ---*/
   //while ( TimeIter < config_container[ZONE_0]->GetnTime_Iter() ) 
   //while ( (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage && precice->isCouplingOngoing() ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage)
-  while ( (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage)  
+  while ( (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage)  
   {
+
+    if(precice_usage)
+    {
+      dt = min(max_precice_dt,dt);
+      config_container[ZONE_0]->SetDelta_UnstTimeND(*dt);
+    }
 
     /*--- Perform some preprocessing before starting the time-step simulation. ---*/
 
@@ -130,6 +136,12 @@ void CSinglezoneDriver::StartSolver() {
     /*--- Monitor the computations after each iteration. ---*/
 
     Monitor(TimeIter);
+
+    /*--- Advance the MDO run ---*/
+    if(precice_usage)
+    {
+      *max_precice_dt = precice->advance(*dt);
+    }
 
     /*--- Output the solution in files. ---*/
 
