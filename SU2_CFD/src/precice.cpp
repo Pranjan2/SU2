@@ -424,10 +424,15 @@ double Precice::initialize()
 double Precice::advance( double computedTimestepLength )
 {
 
-   int procid = solverProcessIndex;
+  int procid = solverProcessIndex;
+  unsigned long iPoint;
+  double *iNormal;
+  unsigned short iMarker;
+  unsigned long iVertex;
+  unsigned short iDim;
 
-   if ( processWorkingOnWetSurface)
-   {
+  if ( processWorkingOnWetSurface)
+  {
 
      /*---Get total number of markers---*/
       unsigned short Markers = config_container[ZONE_0]->GetnMarker_All();
@@ -436,7 +441,7 @@ double Precice::advance( double computedTimestepLength )
       string FSI_NAME = config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName();
 
      /*--- Get the marker ID for FSI surface---*/
-      short int FSI_ID = config_container[ZONE_0]->GetMarker_All_TagBound(FSI_NAME+to_string(0));
+      unsigned short  FSI_ID = config_container[ZONE_0]->GetMarker_All_TagBound(FSI_NAME+to_string(0));
 
      /*---Number of vertices on FSI surface---*/
 
@@ -446,121 +451,61 @@ double Precice::advance( double computedTimestepLength )
 
       std::cout << " Registering forces ..." << std::endl;
 
-      double FSI_Trac[Markers][FSI_nVert][nDim];
+     // double Trac[Markers][FSI_nVert][nDim];
      
       std::cout << " # of vertices on FSI Surface: " << FSI_nVert << std::endl;
 
-     /*--- Begin Local Calculations here---*/
+      //double FSI_Trac[FSI_nVert][nDim];
 
-      const double *Velocity_ND, *Velocity_Real;
-      double Density_ND,  Density_Real, Velocity2_Real, Velocity2_ND;
-      double factor;
+      //  if (procid == 0)
+      //  {
+      //    std::cout << " Vertex Index " << iVertex << "/"<< FSI_nVert << " Traction_x: " << FSI_Trac[iVertex][0] << " Traction_y: " << FSI_Trac[iVertex][1] << " Traction_z: " << FSI_Trac[iVertex][2] << std::endl;
+      //  }
 
-    // Check whether the problem is viscous
-      bool viscous_flow = config_container[ZONE_0]->GetViscous();
+    // Loop over all Markers to get the tractions at vertices  
 
-    // Parameters for the calculations
-      double Pn = 0.0;
-      double auxForce[3] = {1.0, 0.0, 0.0};
+    for (iMarker = 0; iMarker < Markers ; iMarker++)
+    {
 
-      unsigned short iMarker;
-      unsigned long iVertex, iPoint;
-      const double* iNormal;
+        /*--- If this is defined as a wall ---*/
+    if (!config_container[ZONE_0]->GetSolid_Wall(iMarker)) continue;
+      // Loop over all vertices for this marker
 
-      double Pressure_Inf = config_container[ZONE_0]->GetPressure_FreeStreamND();
-
-      Velocity_Real = config_container[ZONE_0]->GetVelocity_FreeStream();
-      Density_Real  = config_container[ZONE_0]->GetDensity_FreeStream();
-
-      Velocity_ND = config_container[ZONE_0]->GetVelocity_FreeStreamND();
-      Density_ND  = config_container[ZONE_0]->GetDensity_FreeStreamND();
-    
-    
-      if (procid == 0)
+      for (int iVertex = 0; iVertex < geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[iMarker]; iVertex++)
       {
-        std::cout << " P_inf " << Pressure_Inf << std::endl;
-      }
-    
-      Velocity2_Real = GeometryToolbox::SquaredNorm(nDim, Velocity_Real);
-      Velocity2_ND   = GeometryToolbox::SquaredNorm(nDim, Velocity_ND);
 
-      factor = Density_Real * Velocity2_Real / ( Density_ND * Velocity2_ND );
-
-      if (procid == 0)
-      {
-        std::cout << " factor " << factor << std::endl;
-      }
-
-   /*---Begin loop through all markers but compute only if the marker index
-   matches the index of the wetsurface ---*/
-
-      for ( int iMarker = 0; iMarker < config_container[ZONE_0]->GetnMarker_All(); iMarker++)
-      {
-         /*--- If this is defined as a wall ---*/
-        if (!config_container[ZONE_0]->GetSolid_Wall(iMarker)) continue;
-
-        std::cout << " Pass now  at iMarker: " << iMarker << std::endl;
-
-        // Loop over the vertices
-        for (iVertex = 0; iVertex < geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[iMarker]; iVertex++) 
-        {
-
-        // Recover the point index
         iPoint = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[iMarker][iVertex]->GetNode();
-      // Get the normal at the vertex: this normal goes inside the fluid domain.
-        iNormal = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[iMarker][iVertex]->GetNormal();
+      //  iNormal = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[iMarker][iVertex]->GetNormal();
 
-      /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
+        /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
+
         if (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetDomain(iPoint)) 
         {
-
-        // Retrieve the values of pressure
-       // Pn = base_nodes->GetPressure(iPoint);
-          Pn = 0;
-        //std::cout << "Pressure at "<< iPoint << " is " << Pn << std::endl;
-
-        // Calculate tn in the fluid nodes for the inviscid term --> Units of force (non-dimensional).
-          for (int iDim = 0; iDim < nDim; iDim++)
+          if (iMarker == FSI_ID)
           {
-            auxForce[iDim] = -(Pn-Pressure_Inf)*iNormal[iDim];
-          }
-        // Calculate tn in the fluid nodes for the viscous term
-       /* if (viscous_flow) {
-          su2double Viscosity = base_nodes->GetLaminarViscosity(iPoint);
-          su2double Tau[3][3];
-          CNumerics::ComputeStressTensor(nDim, Tau, base_nodes->GetGradient_Primitive(iPoint)+1, Viscosity);
-          for (iDim = 0; iDim < nDim; iDim++) {
-            auxForce[iDim] += GeometryToolbox::DotProduct(nDim, Tau[iDim], iNormal);
+            for (iDim = 0; iDim < nDim; iDim++)
+            {
+            
+           // FSI_Trac[iMarker][iVertex][iDim] = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,iDim);
+            std::cout << "MarkerID: " << iMarker << "VertexID: " << iVertex << " Tx: " << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,0) << " Ty: " << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,1) << " Tz: " << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,2) <<std::endl; 
+            }
+          //FSI_Trac[Markers][FSI_nVert][nDim]
           }
         }
-
-        */
-
-          double FSI_Trac[FSI_nVert][nDim];
-
-          if ( iMarker == FSI_ID)
-          {  
-          // Redimensionalize the forces
-            for (int iDim = 0; iDim < nDim; iDim++) 
-            {
-              FSI_Trac[iVertex][iDim] = factor * auxForce[iDim];
-            }
-          }
-
-          if (procid == 0)
-          {
-            std::cout << " Vertex Index " << iVertex << "/"<< FSI_nVert << " Traction_x: " << FSI_Trac[iVertex][0] << " Traction_y: " << FSI_Trac[iVertex][1] << " Traction_z: " << FSI_Trac[iVertex][2] << std::endl;
-          }
-        } 
       }
     }
 
+    //std::cout << "Dummy" << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(6,1,1) << std::endl;
+  } 
+      
+    
+
     // Try computing tractions from here
 
-    std::cout << " Calling CFluiditeration.cpp from precice.hpp " << std::endl;
+    //std::cout << " Calling CFluiditeration.cpp from precice.hpp " << std::endl;
 
-    solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->ComputeVertexTractions(geometry_container[ZONE_0][INST_0][MESH_0],
-                                                                           config_container[ZONE_0]);
+    //solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->ComputeVertexTractions(geometry_container[ZONE_0][INST_0][MESH_0],
+              //                                                             config_container[ZONE_0]);
   
   
   /*---Define else condition here */
@@ -568,7 +513,7 @@ double Precice::advance( double computedTimestepLength )
    /*---Advance ends here ---*/
    return 0;
 }
-}
+
 
 
 

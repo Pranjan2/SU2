@@ -3975,7 +3975,7 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, CConfig *config)
 
 
   //double FSI_trac[FSI_nVert][nDim];
-  //double FSI_Trac[FSI_nVert][nDim];
+   double FSI_Trac[FSI_nVert][nDim];
 
 
 
@@ -4025,18 +4025,18 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, CConfig *config)
           if (iMarker == FSI_ID )
           {
           //  FSITraction[iVertex][iDim] = VertexTraction[iMarker][iVertex][iDim];
-          //  FSI_Trac[iVertex][iDim]= VertexTraction[iMarker][iVertex][iDim];
+                FSI_Trac[iVertex][iDim]= VertexTraction[iMarker][iVertex][iDim];
            //   FSI_trac[iVertex][iDim]= VertexTraction[iMarker][iVertex][iDim];
              // FSI_Trac[0][iDim] = FSI_trac[iVertex][iDim];
           }
         }
 
-       // if ( iMarker == FSI_ID)
-       // {
+        if ( iMarker == FSI_ID)
+        {
        //  // std:cout << " Printing vertex tractions ..." << std::endl;
         
-       //   std::cout << " Vertex Index " << iVertex << "/"<< FSI_nVert << " Traction_x: " << FSI_trac[iVertex][0] << " Traction_y: " << FSI_trac[iVertex][1] << " Traction_z: " << FSI_trac[iVertex][2] << std::endl;
-      //  }
+          std::cout << " Vertex Index " << iVertex << "/"<< FSI_nVert << " Traction_x: " << FSI_Trac[iVertex][0] << " Traction_y: " << FSI_Trac[iVertex][1] << " Traction_z: " << FSI_Trac[iVertex][2] << std::endl;
+        }
        /*------------ FSI-SPECIFIC COMPUTATIONS -------*/
 
 

@@ -4256,7 +4256,7 @@ public:
    */
   inline su2double GetVertexTractions(unsigned short iMarker, unsigned long iVertex, unsigned short iDim)
    {
-     std::cout << "Returning tractions " << std::endl;
+     //std::cout << "Returning traction for vertexID " << iVertex << std::endl;
      //return value;
      return VertexTraction[iMarker][iVertex][iDim];
    }
