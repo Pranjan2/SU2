@@ -117,6 +117,16 @@ class CFluidIteration : public CIteration {
                    CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
                    unsigned short val_iInst) override;
 
+  /*!
+   * \brief Compute the traction at all FSI interface vertices
+   * \param[in] solver - Container vector with all the solutions.
+   * \param[in] geometry - Geometrical definition of the problem.
+   * \param[in] config - Definition of the particular problem.
+   */
+ // void Surface_Tractions(CGeometry**** geometry, CConfig** config);                 
+
+
+
  private:
 
   /*!

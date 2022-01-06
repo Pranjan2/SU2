@@ -185,13 +185,6 @@ private:
    directly instead of calling GetBaseClassPointerToNodes() or doing something equivalent. ---*/
   CVariable* base_nodes;  /*!< \brief Pointer to CVariable to allow polymorphic access to solver nodes. */
 
-  /*---Array that stores the tractions on the FSI interface---*/
-    /*---Identify the FSI marker---*/
-  //short int FSI_ID = config->GetMarker_All_TagBound(config->GetpreCICE_WetSurfaceMarkerName()+to_string(0));
-  //int FSI_nVert = geometry->nVertex[FSI_ID];
-   double **FSI_Trac;
-  //double FSI_Trac[FSI_nVert][nDim];
-
 public:
 
   CSysVector<su2double> LinSysSol;    /*!< \brief vector to store iterative solution of implicit linear system. */

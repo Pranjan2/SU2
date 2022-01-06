@@ -11,6 +11,7 @@
 #include "../include/variables/CEulerVariable.hpp"
 #include "../include/solvers/CEulerSolver.hpp"
 #include "../include/solvers/CFVMFlowSolverBase.inl"
+#include "../include/iteration/CFluidIteration.hpp"
 
 
 #include "../include/precice.hpp"
@@ -18,8 +19,22 @@
 
 /*---Main class description -----*/
 
-  Precice::Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement)
-  :coric(precice::constants::actionReadIterationCheckpoint()), cowic(precice::constants::actionWriteIterationCheckpoint()), solverProcessIndex(solverProcessIndex), solverProcessSize(solverProcessSize),solverInterface("SU2_CFD", preciceConfigurationFileName, solverProcessIndex, solverProcessSize),config_container(config_container),geometry_container(geometry_container)
+  Precice::Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement,CIntegration**** integration_container,CSurfaceMovement** surface_movement,COutput** output_container, CNumerics****** numerics_container, CFreeFormDefBox*** FFDBox)
+  :
+  coric(precice::constants::actionReadIterationCheckpoint()),
+  cowic(precice::constants::actionWriteIterationCheckpoint()),
+  solverProcessIndex(solverProcessIndex),
+  solverProcessSize(solverProcessSize),
+  solverInterface("SU2_CFD", preciceConfigurationFileName, solverProcessIndex, solverProcessSize),
+  config_container(config_container),
+  geometry_container(geometry_container),
+  solver_container(solver_container),
+  grid_movement(grid_movement),
+  integration_container(integration_container),
+  surface_movement(surface_movement),
+  output_container(output_container),
+  numerics_container(numerics_container),
+  FFDBox(FFDBox)
 
 {
     /* Get dimension of the problem */
@@ -539,13 +554,23 @@ double Precice::advance( double computedTimestepLength )
         } 
       }
     }
+
+    // Try computing tractions from here
+
+    std::cout << " Calling CFluiditeration.cpp from precice.hpp " << std::endl;
+
+    solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->ComputeVertexTractions(geometry_container[ZONE_0][INST_0][MESH_0],
+                                                                           config_container[ZONE_0]);
   
   
   /*---Define else condition here */
-  
+
    /*---Advance ends here ---*/
    return 0;
 }
+}
+
+
 
 bool Precice::isCouplingOngoing()
 {

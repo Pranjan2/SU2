@@ -71,7 +71,8 @@ void CSinglezoneDriver::StartSolver() {
 
   if (precice_usage) 
   {
-    precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size, config_container, geometry_container, solver_container, grid_movement);
+    precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement, integration_container, surface_movement, output_container,  numerics_container, FFDBox);
+   // precice = new Precice(c config_container, geometry_container, solver_container, grid_movement);
     //precice ->check();
     
     dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
@@ -119,21 +120,32 @@ void CSinglezoneDriver::StartSolver() {
 
     /*--- Perform some preprocessing before starting the time-step simulation. ---*/
 
+    std::cout << "Preprocessing..." << std::endl;
+
     Preprocess(TimeIter);
 
     /*--- Run a time-step iteration of the single-zone problem. ---*/
+    
+
+    std::cout << "Running..." << std::endl;
 
     Run();
 
-    /*--- Perform some postprocessing on the solution before the update ---*/
+    
 
+    /*--- Perform some postprocessing on the solution before the update ---*/
+  std::cout << "Postprocessing..." << std::endl;
     Postprocess();
 
     /*--- Update the solution for dual time stepping strategy ---*/
 
+      std::cout << "Updating..." << std::endl;
+
     Update();
 
     /*--- Monitor the computations after each iteration. ---*/
+
+    std::cout << "Monitoring..." << std::endl;
 
     Monitor(TimeIter);
 
