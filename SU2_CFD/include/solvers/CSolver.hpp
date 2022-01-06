@@ -125,7 +125,7 @@ protected:
   **Jacobian_ij,            /*!< \brief Auxiliary matrices for storing point to point Jacobians. */
   **Jacobian_ji,            /*!< \brief Auxiliary matrices for storing point to point Jacobians. */
   **Jacobian_jj;            /*!< \brief Auxiliary matrices for storing point to point Jacobians. */
-
+  
   /*--- End variables that need to go. ---*/
 
   su2activevector iPoint_UndLapl;  /*!< \brief Auxiliary variable for the undivided Laplacians. */
@@ -143,7 +143,8 @@ protected:
   bool implicit_periodic;  /*!< \brief Flag that controls whether the implicit system should be treated by the periodic BC comms. */
 
   bool dynamic_grid;       /*!< \brief Flag that determines whether the grid is dynamic (moving or deforming + grid velocities). */
-
+  
+ // vector<su2activematrix> FSITraction; 
   vector<su2activematrix> VertexTraction;          /*- Temporary, this will be moved to a new postprocessing structure once in place -*/
   vector<su2activematrix> VertexTractionAdjoint;   /*- Also temporary -*/
 
@@ -183,6 +184,13 @@ private:
    This variable is to avoid two virtual functions calls per call i.e. CSolver::GetNodes() returns
    directly instead of calling GetBaseClassPointerToNodes() or doing something equivalent. ---*/
   CVariable* base_nodes;  /*!< \brief Pointer to CVariable to allow polymorphic access to solver nodes. */
+
+  /*---Array that stores the tractions on the FSI interface---*/
+    /*---Identify the FSI marker---*/
+  //short int FSI_ID = config->GetMarker_All_TagBound(config->GetpreCICE_WetSurfaceMarkerName()+to_string(0));
+  //int FSI_nVert = geometry->nVertex[FSI_ID];
+   double **FSI_Trac;
+  //double FSI_Trac[FSI_nVert][nDim];
 
 public:
 
@@ -4248,14 +4256,17 @@ public:
   void ComputeVertexTractions(CGeometry *geometry,  CConfig *config);
 
   /*!
-   * \brief Set the adjoints of the vertex tractions.
+   * \brief Returns the vertex tractions.
    * \param[in] iMarker  - Index of the marker
    * \param[in] iVertex  - Index of the relevant vertex
    * \param[in] iDim     - Dimension
    */
-  inline su2double GetVertexTractions(unsigned short iMarker, unsigned long iVertex, unsigned short iDim) const {
-    return VertexTraction[iMarker][iVertex][iDim];
-  }
+  inline su2double GetVertexTractions(unsigned short iMarker, unsigned long iVertex, unsigned short iDim)
+   {
+     std::cout << "Returning tractions " << std::endl;
+     //return value;
+     return VertexTraction[iMarker][iVertex][iDim];
+   }
 
   /*!
    * \brief Register the vertex tractions as output.

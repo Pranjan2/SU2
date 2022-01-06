@@ -3929,6 +3929,8 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, CConfig *config)
 //void CSolver::ComputeVertexTractions(CGeometry *geometry, const CConfig *config)
 {
 
+  
+
   /*--- Compute the constant factor to dimensionalize pressure and shear stress. ---*/
   const su2double *Velocity_ND, *Velocity_Real;
   su2double Density_ND,  Density_Real, Velocity2_Real, Velocity2_ND;
@@ -3959,6 +3961,23 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, CConfig *config)
   Velocity2_ND   = GeometryToolbox::SquaredNorm(nDim, Velocity_ND);
 
   factor = Density_Real * Velocity2_Real / ( Density_ND * Velocity2_ND );
+
+  /*---Identify the FSI marker---*/
+  short int FSI_ID = config->GetMarker_All_TagBound(config->GetpreCICE_WetSurfaceMarkerName()+to_string(0));
+  int FSI_nVert = geometry->nVertex[FSI_ID];
+
+  //FSI_Trac = new double* [FSI_nVert];
+
+   //for ( int i = 0; i < nDim; i++)
+   //{
+   //  FSI_Trac[i] = new double [nDim];
+  // }
+
+
+  //double FSI_trac[FSI_nVert][nDim];
+  //double FSI_Trac[FSI_nVert][nDim];
+
+
 
   /*-- Begin loop through all MARKERS --*/
 
@@ -4002,13 +4021,22 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, CConfig *config)
         for (iDim = 0; iDim < nDim; iDim++) 
         {
           VertexTraction[iMarker][iVertex][iDim] = factor * auxForce[iDim];
-        }
-        
 
-        std:cout << " Printing vertex tractions ..." << std::endl;
+          if (iMarker == FSI_ID )
+          {
+          //  FSITraction[iVertex][iDim] = VertexTraction[iMarker][iVertex][iDim];
+          //  FSI_Trac[iVertex][iDim]= VertexTraction[iMarker][iVertex][iDim];
+           //   FSI_trac[iVertex][iDim]= VertexTraction[iMarker][iVertex][iDim];
+             // FSI_Trac[0][iDim] = FSI_trac[iVertex][iDim];
+          }
+        }
+
+       // if ( iMarker == FSI_ID)
+       // {
+       //  // std:cout << " Printing vertex tractions ..." << std::endl;
         
-        std::cout << "Marker Index " << iMarker << " Vertex Index " << iVertex << " Traction_x: " << VertexTraction[iMarker][iVertex][0] << " Traction_y: " << VertexTraction[iMarker][iVertex][1] << " Traction_z: " << VertexTraction[iMarker][iVertex][2] << std::endl;
-       
+       //   std::cout << " Vertex Index " << iVertex << "/"<< FSI_nVert << " Traction_x: " << FSI_trac[iVertex][0] << " Traction_y: " << FSI_trac[iVertex][1] << " Traction_z: " << FSI_trac[iVertex][2] << std::endl;
+      //  }
        /*------------ FSI-SPECIFIC COMPUTATIONS -------*/
 
 
@@ -4016,13 +4044,16 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, CConfig *config)
        /* Get the maker index for the wetsurface */
 
        //int FSI_ID = config->
+      
 
-       string FSI_NAME = config->GetpreCICE_WetSurfaceMarkerName();
+       //string FSI_NAME = config->GetpreCICE_WetSurfaceMarkerName();
        
        // FSI_ID;
        //std::cout << config->GetpreCICE_WetSurfaceMarkerName() << std::endl;
-       short int FSI_ID = config->GetMarker_All_TagBound(config->GetpreCICE_WetSurfaceMarkerName()+to_string(0));
-       std::cout << FSI_NAME << " has the marker ID " << FSI_ID << std::endl; 
+       //short int FSI_ID = config->GetMarker_All_TagBound(config->GetpreCICE_WetSurfaceMarkerName()+to_string(0));
+       //std::cout << FSI_NAME << " has the marker ID " << FSI_ID << std::endl; 
+
+       //std::cout << "Number of vertices on FSI interface:" << geometry->nVertex[FSI_ID] << std::endl;
        
        //to_string(i));
        // int IF_ID = config->GetMarker_All_TagBound(config->GetpreCICE_WetSurfaceMarkerName);
@@ -4039,9 +4070,19 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, CConfig *config)
           VertexTraction[iMarker][iVertex][iDim] = 0.0;
         }
       }
+
+
     }
   }
+      /*-- Delete the FSI_Trac array --*/
 
+   //   std::cout << " Deleteing FSI traction array " << std::endl;
+
+   //   for (int i=0; i < FSI_nVert; i++)
+   //   {
+   //     delete[] FSI_Trac[i]; 
+   //   }
+   //   delete[] FSI_Trac;
 }
 
 void CSolver::RegisterVertexTractions(CGeometry *geometry, const CConfig *config){
