@@ -153,6 +153,7 @@ void CSinglezoneDriver::StartSolver() {
     if(precice_usage)
     {
       *max_precice_dt = precice->advance(*dt);
+      precice->saveOldState();
     }
 
     /*--- Output the solution in files. ---*/

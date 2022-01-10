@@ -64,6 +64,8 @@
     /* Get the total number of nodes in the domain */
     nPoint = geometry_container[ZONE_0][INST_0][MESH_0]->GetnPoint();
 
+   
+
     /* Get the total number of variables in the domain */
     nVar = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
 
@@ -249,6 +251,8 @@ double Precice::initialize()
   }
 
   std::cout << " Dimension check complete " << std::endl;
+
+  
   
   /* Check for total number of aero-elastic interfaces */
   
@@ -444,6 +448,9 @@ double Precice::advance( double computedTimestepLength )
     /*---Number of vertices on FSI surface---*/
     unsigned long FSI_nVert = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[FSI_ID];
 
+    
+   std::cout << " Number of points : " << nPoint << " Number of vertices : " << FSI_nVert << std::endl;
+
     /* Two-dimensional array consisting of all tractions ---*/
     std::cout << " Registering forces ..." << std::endl;
      
@@ -529,9 +536,17 @@ double Precice::advance( double computedTimestepLength )
       std::cout << " Advancing interface " << std::endl;
     }
 
+    ////// Place Holder area ////
+
+    //solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Get();
+
+   // solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Get();
+
     /*---Advace solverInterface---*/
     double max_precice_dt;
-    max_precice_dt = solverInterface.advance( computedTimestepLength );
+   // max_precice_dt = solverInterface.advance( computedTimestepLength );
+
+   max_precice_dt = 0;
 
     /*---Read displacement deltas from elastic domain---*/
 
@@ -576,39 +591,54 @@ double Precice::advance( double computedTimestepLength )
     return max_precice_dt;
   }
   /* If the process does not have the AERO-elastic interface */
-  else
+ // else
   {
     /* Do not compute the forces. Just advance the solverInterface */
     double max_precice_dt;
-    max_precice_dt = solverInterface.advance( computedTimestepLength );
+   // max_precice_dt = solverInterface.advance( computedTimestepLength );
+   max_precice_dt = 0;
     return max_precice_dt;
   } 
    /*---Advance ends here ---*/
 }
 
-void Precice::saveOldState( bool *StopCalc, double *dt ){
 
-  for (int iPoint = 0; iPoint < nPoint; iPoint++) {
-    for (int iVar = 0; iVar < nVar; iVar++) {
+
+//void Precice::saveOldState( bool *StopCalc, double *dt )
+void Precice ::saveOldState()
+{
+  /*---Begin loop over ALL grid points in the fluid domain---*/
+  for (int iPoint = 0; iPoint < nPoint; iPoint++) 
+  {
+    for (int iVar = 0; iVar < nVar; iVar++) 
+    {
       //Save solutions at last and current time step
-      solution_Saved[iPoint][iVar] = (solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution())[iVar];
-      solution_time_n_Saved[iPoint][iVar] = (solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n())[iVar];
-      solution_time_n1_Saved[iPoint][iVar] = (solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1())[iVar];
+      //solution_Saved[iPoint][iVar] = (solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution())[iVar];
+      solution_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution(iPoint,iVar));
+      solution_time_n_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution_time_n(iPoint,iVar));
+      solution_time_n1_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution_time_n1(iPoint,iVar));
+     // std::cout << " Point " << iPoint << " Variable 1 " << solution_Saved[iPoint][0] << std::endl;
     }
-    for (int iDim = 0; iDim < nDim; iDim++) {
+    for (int iDim = 0; iDim < nDim; iDim++) 
+    {
       //Save coordinates at last, current and next time step
-      Coord_Saved[iPoint][iDim] = (geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord())[iDim];
-      Coord_n_Saved[iPoint][iDim] = (geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord_n())[iDim];
-      Coord_n1_Saved[iPoint][iDim] = (geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord_n1())[iDim];
-      Coord_p1_Saved[iPoint][iDim] = (geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord_p1())[iDim];
-      //Save grid velocity
-      GridVel_Saved[iPoint][iDim] = (geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetGridVel())[iDim];
-      for (int jDim = 0; jDim < nDim; jDim++) {
+      Coord_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord(iPoint))[iDim];
+      Coord_n_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord_n(iPoint))[iDim];
+      Coord_n1_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord_n1(iPoint))[iDim];
+      Coord_p1_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord_p1(iPoint))[iDim];
+
+      GridVel_Saved[iPoint][iDim] = (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel(iPoint))[iDim];
+      std::cout << " Point " << iPoint << " X " << Coord_Saved[iPoint][0] <<  std::endl;
+
+      for (int jDim = 0; jDim < nDim; jDim++) 
+      {
         //Save grid velocity gradient
-        GridVel_Grad_Saved[iPoint][iDim][jDim] = (geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetGridVel_Grad())[iDim][jDim];
+        GridVel_Grad_Saved[iPoint][iDim][jDim] = (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel_Grad(iPoint))[iDim][jDim];
       }
     }
   }
+}
+
 
 
 

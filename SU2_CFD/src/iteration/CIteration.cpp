@@ -72,11 +72,11 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
     case PRECICE_MOVEMENT:
 
       if (rank == MASTER_NODE)
-        cout << " Deforming the volume grid due to preCICE simulation." << endl;
+        cout << " Deforming fluid domain for MDO ." << endl;
       grid_movement->SetVolume_Deformation(geometry[MESH_0], config, true);
 
       if (rank == MASTER_NODE)
-        cout << " Computing grid velocities by finite differencing due to preCICE simulation." << endl;
+        cout << " Computing grid velocities by finite differencing ." << endl;
       geometry[MESH_0]->SetGridVelocity(config);
 
       /*--- Update the multigrid structure after moving the finest grid,

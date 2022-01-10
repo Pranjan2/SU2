@@ -169,7 +169,9 @@ private:
   * \param[in] StopCalc - Pointer to the bool StopCalc, which determines wether SU2 finishes computation after the current run or not. This variable must be passed so that its value can be stored and reloaded later.
   * \param[in] double - Pointer to the double dt, which is the current SU2 time step size. This variable must be passed so that its value can be stored and reloaded later.
   */
-  void saveOldState( bool *StopCalc, double *dt );
+
+    void saveOldState();
+  //void saveOldState( bool *StopCalc, double *dt );
 
   /*!
   * \brief Reload the state before the current SU2 run
