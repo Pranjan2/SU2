@@ -423,39 +423,34 @@ double Precice::initialize()
 
 double Precice::advance( double computedTimestepLength )
 {
-
-  int procid = solverProcessIndex;
-  unsigned long iPoint;
-  double *iNormal;
-  unsigned short iMarker;
-  unsigned long iVertex;
-  unsigned short iDim;
-
   if ( processWorkingOnWetSurface)
   {
+    int procid = solverProcessIndex;
+    unsigned long iPoint;
+    double *iNormal;
+    unsigned short iMarker;
+    unsigned long iVertex;
+    unsigned short iDim;
 
-     /*---Get total number of markers---*/
-      unsigned short Markers = config_container[ZONE_0]->GetnMarker_All();
+    /*---Get total number of markers---*/
+    unsigned short Markers = config_container[ZONE_0]->GetnMarker_All();
 
-     /*---Identify the marker for the FSI Interface ---*/
-      string FSI_NAME = config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName();
+    /*---Identify the marker for the FSI Interface ---*/
+    string FSI_NAME = config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName();
 
-     /*--- Get the marker ID for FSI surface---*/
-      unsigned short  FSI_ID = config_container[ZONE_0]->GetMarker_All_TagBound(FSI_NAME+to_string(0));
+    /*--- Get the marker ID for FSI surface---*/
+    unsigned short  FSI_ID = config_container[ZONE_0]->GetMarker_All_TagBound(FSI_NAME+to_string(0));
 
-     /*---Number of vertices on FSI surface---*/
+    /*---Number of vertices on FSI surface---*/
+    unsigned long FSI_nVert = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[FSI_ID];
 
-      unsigned long FSI_nVert = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[FSI_ID];
-
-     /* Tw-dimensional array consisting of all tractions ---*/
-
-      std::cout << " Registering forces ..." << std::endl;
-
-     // double Trac[Markers][FSI_nVert][nDim];
+    /* Two-dimensional array consisting of all tractions ---*/
+    std::cout << " Registering forces ..." << std::endl;
      
-      std::cout << " # of vertices on FSI Surface: " << FSI_nVert << std::endl;
-
-      //double FSI_Trac[FSI_nVert][nDim];
+    std::cout << " # of vertices on FSI Surface: " << FSI_nVert << std::endl;
+      
+    // Create an array to hold the tractions in nDIMS at the FSI Interface
+    double FSI_Trac[FSI_nVert][nDim];
 
       //  if (procid == 0)
       //  {
@@ -467,53 +462,153 @@ double Precice::advance( double computedTimestepLength )
     for (iMarker = 0; iMarker < Markers ; iMarker++)
     {
 
-        /*--- If this is defined as a wall ---*/
-    if (!config_container[ZONE_0]->GetSolid_Wall(iMarker)) continue;
+      /*--- If this is defined as a wall ---*/
+      if (!config_container[ZONE_0]->GetSolid_Wall(iMarker)) continue;
       // Loop over all vertices for this marker
 
       for (int iVertex = 0; iVertex < geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[iMarker]; iVertex++)
       {
 
         iPoint = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[iMarker][iVertex]->GetNode();
-      //  iNormal = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[iMarker][iVertex]->GetNormal();
 
         /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
-
         if (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetDomain(iPoint)) 
         {
+          /*---Record forces only for the Aeroelastic Interface---*/
           if (iMarker == FSI_ID)
           {
             for (iDim = 0; iDim < nDim; iDim++)
             {
-            
-           // FSI_Trac[iMarker][iVertex][iDim] = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,iDim);
-            std::cout << "MarkerID: " << iMarker << "VertexID: " << iVertex << " Tx: " << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,0) << " Ty: " << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,1) << " Tz: " << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,2) <<std::endl; 
+              FSI_Trac[iVertex][iDim] = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,iDim);
+              //std::cout << "MarkerID: " << iMarker << "VertexID: " << iVertex << " Tx: " << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,0) << " Ty: " << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,1) << " Tz: " << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,2) <<std::endl; 
+              //std::cout << "MarkerID: " << iMarker << "VertexID: " << iVertex << " Tx: " << FSI_Trac[iVertex][0] << " Ty: " << FSI_Trac[iVertex][1] << " Tz: " << FSI_Trac[iVertex][2] <<std::endl;
             }
-          //FSI_Trac[Markers][FSI_nVert][nDim]
+            std::cout << "MarkerID : " << iMarker << "VertexID: " << iVertex << " Tx: " << FSI_Trac[iVertex][0] << " Ty: " << FSI_Trac[iVertex][1] << " Tz: " << FSI_Trac[iVertex][2] <<std::endl;
           }
         }
       }
     }
 
-    //std::cout << "Dummy" << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(6,1,1) << std::endl;
-  } 
-      
+    /*---Convert FSI_Trac[][] to row-major form ---*/
+
+    forces = new double[FSI_nVert*nDim];
+
+    /*---Begin loop over all vertices at the FSI surface ---*/
+    for (int iVertex = 0; iVertex < FSI_nVert; iVertex++)
+    {
+      for (iDim = 0; iDim < nDim; iDim++)
+      {
+        forces[iVertex*nDim + iDim] = FSI_Trac[iVertex][iDim];
+      }
+    }
+
+    /*---Write force across the TCP I/O interface ---*/
+
+  //  for ( int i = 0; i < globalNumberWetSurfaces; i++)
+  //  {
+  //    std::cout << " IndexMappingToGlobal for i : " << i << " is " << indexMarkerWetMappingLocalToGlobal[i] <<std::endl;
+  //    std::cout << " VertexSize is " << vertexSize[i] << std::endl;
+  //    std::cout << " VertexIDs are " << vertexIDs[i]  << std::endl;
+  //  }
+    solverInterface.writeBlockVectorData(forceID[indexMarkerWetMappingLocalToGlobal[0]], vertexSize[0], vertexIDs[0], forces);
+
+    if ( procid == 0)
+    {
+      std::cout << "Aero-dynamic forces transmitted to elastic domain " << std::endl;
+    }
+
+    /*---De-allocate force pointer---*/
+
+    if ( forces != NULL)
+    {
+      delete [] forces;
+    }
+
+    if ( procid == 0)
+    {
+      std::cout << " Advancing interface " << std::endl;
+    }
+
+    /*---Advace solverInterface---*/
+    double max_precice_dt;
+    max_precice_dt = solverInterface.advance( computedTimestepLength );
+
+    /*---Read displacement deltas from elastic domain---*/
+
+    // Recieve displacement deltas in row-major form of array 
+
+    double displacementDeltas_su2[vertexSize[0]][nDim]; 
+    displacementDeltas = new double[vertexSize[0]*nDim];
+
     
+    
+    solverInterface.readBlockVectorData(displDeltaID[indexMarkerWetMappingLocalToGlobal[0]], vertexSize[0], vertexIDs[0], displacementDeltas);
 
-    // Try computing tractions from here
+        if ( procid == 0)
+    {
+      std::cout << " Recieved displacements from elastic domain " << std::endl;
+    }
 
-    //std::cout << " Calling CFluiditeration.cpp from precice.hpp " << std::endl;
+    /* Re-arrage the elastic inputs ---*/
 
-    //solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->ComputeVertexTractions(geometry_container[ZONE_0][INST_0][MESH_0],
-              //                                                             config_container[ZONE_0]);
-  
-  
-  /*---Define else condition here */
+    for (int iVertex = 0; iVertex < FSI_nVert; iVertex++) 
+    {
+      for (int iDim = 0; iDim < nDim; iDim++) 
+      {
+        displacementDeltas_su2[iVertex][iDim] = displacementDeltas[iVertex*nDim + iDim];
+      }
+    }
+    /*---De-allocate memeory---*/
 
+    if (displacementDeltas != NULL) 
+    {
+      delete [] displacementDeltas;
+    }
+
+    /*---Update the surface coordinates ---*/
+
+    // Begin looping over all vertices at the interface 
+
+    for (int iVertex = 0; iVertex < FSI_nVert; iVertex++)
+    {
+      geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID][iVertex]->SetVarCoord(displacementDeltas_su2[iVertex]);
+    }
+    return max_precice_dt;
+  }
+  /* If the process does not have the AERO-elastic interface */
+  else
+  {
+    /* Do not compute the forces. Just advance the solverInterface */
+    double max_precice_dt;
+    max_precice_dt = solverInterface.advance( computedTimestepLength );
+    return max_precice_dt;
+  } 
    /*---Advance ends here ---*/
-   return 0;
 }
 
+void Precice::saveOldState( bool *StopCalc, double *dt ){
+
+  for (int iPoint = 0; iPoint < nPoint; iPoint++) {
+    for (int iVar = 0; iVar < nVar; iVar++) {
+      //Save solutions at last and current time step
+      solution_Saved[iPoint][iVar] = (solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution())[iVar];
+      solution_time_n_Saved[iPoint][iVar] = (solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n())[iVar];
+      solution_time_n1_Saved[iPoint][iVar] = (solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution_time_n1())[iVar];
+    }
+    for (int iDim = 0; iDim < nDim; iDim++) {
+      //Save coordinates at last, current and next time step
+      Coord_Saved[iPoint][iDim] = (geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord())[iDim];
+      Coord_n_Saved[iPoint][iDim] = (geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord_n())[iDim];
+      Coord_n1_Saved[iPoint][iDim] = (geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord_n1())[iDim];
+      Coord_p1_Saved[iPoint][iDim] = (geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetCoord_p1())[iDim];
+      //Save grid velocity
+      GridVel_Saved[iPoint][iDim] = (geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetGridVel())[iDim];
+      for (int jDim = 0; jDim < nDim; jDim++) {
+        //Save grid velocity gradient
+        GridVel_Grad_Saved[iPoint][iDim][jDim] = (geometry_container[ZONE_0][MESH_0]->node[iPoint]->GetGridVel_Grad())[iDim][jDim];
+      }
+    }
+  }
 
 
 
