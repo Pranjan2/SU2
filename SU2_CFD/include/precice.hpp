@@ -179,7 +179,7 @@ private:
   * \param[in] StopCalc - Pointer to the bool StopCalc, which determines wether SU2 finishes computation after the current run or not. This variable must be passed so that its value can be reloaded from the saved state.
   * \param[in] double - Pointer to the double dt, which is the current time step size. This variable must be passed so that its value can be reloaded from the saved state.
   */
-  void reloadOldState( bool *StopCalc, double *dt );
+ // void reloadOldState( bool *StopCalc, double *dt );
 
   /*!
   * \brief Finalizes preCICE.
@@ -193,6 +193,8 @@ private:
   * - Meshes and data are deallocated.
   */
   void finalize();
+
+  void reloadOldState();
 
 
 };

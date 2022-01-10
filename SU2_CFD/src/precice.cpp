@@ -628,19 +628,45 @@ void Precice ::saveOldState()
       Coord_p1_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord_p1(iPoint))[iDim];
 
       GridVel_Saved[iPoint][iDim] = (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel(iPoint))[iDim];
-      std::cout << " Point " << iPoint << " X " << Coord_Saved[iPoint][0] <<  std::endl;
+    //  std::cout << " Point " << iPoint << " X " << Coord_Saved[iPoint][0] <<  std::endl;
 
-      for (int jDim = 0; jDim < nDim; jDim++) 
-      {
+      //for (int jDim = 0; jDim < nDim; jDim++) 
+     // {
         //Save grid velocity gradient
-        GridVel_Grad_Saved[iPoint][iDim][jDim] = (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel_Grad(iPoint))[iDim][jDim];
-      }
+     //   GridVel_Grad_Saved[iPoint][iDim][jDim] = (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel_Grad(iPoint))[iDim][jDim];
+    //  }
+      
+  
     }
+    //std::cout << geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel_Grad(iPoint) << std::endl;
   }
 }
 
 
+void Precice::reloadOldState()
+{
+  std::cout << " Relading old states ..." << std::endl;  
+  for (int iPoint = 0; iPoint < nPoint; iPoint++)
+  {
+    solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->SetSolution( iPoint, solution_Saved[iPoint]);
+    solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Set_Solution_time_n(iPoint, solution_time_n_Saved[iPoint]);
+    solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Set_Solution_time_n1( iPoint, solution_time_n1_Saved[iPoint]);
 
+    //Reload coordinates at last, current and next time step
+    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord(iPoint, Coord_n1_Saved[iPoint]);
+    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_n();
+    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_n1();
+    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord(iPoint, Coord_n_Saved[iPoint]);
+    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_n();
+    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_p1(iPoint, Coord_p1_Saved[iPoint]);
+    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord(iPoint, Coord_Saved[iPoint]);
+
+    //Reload grid velocity
+    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel(iPoint, GridVel_Saved[iPoint]);
+
+
+  }
+}
 
 bool Precice::isCouplingOngoing()
 {

@@ -154,6 +154,7 @@ void CSinglezoneDriver::StartSolver() {
     {
       *max_precice_dt = precice->advance(*dt);
       precice->saveOldState();
+      precice->reloadOldState();
     }
 
     /*--- Output the solution in files. ---*/
