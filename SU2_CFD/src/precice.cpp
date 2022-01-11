@@ -481,9 +481,9 @@ double Precice::advance( double computedTimestepLength )
       std::cout << "Fluid Grid Points : " << std::setw(6) << nPoint << "# Vertices on surface : " << std::setw(6) << FSI_nVert << std::endl;
    }
     /* Two-dimensional array consisting of all tractions ---*/
-    std::cout << " Registering forces ..." << std::endl;
+    //std::cout << " Registering forces ..." << std::endl;
      
-    std::cout << " # of vertices on FSI Surface: " << FSI_nVert << std::endl;
+    //std::cout << " # of vertices on FSI Surface: " << FSI_nVert << std::endl;
       
     // Create an array to hold the tractions in nDIMS at the FSI Interface
     double FSI_Trac[FSI_nVert][nDim];
@@ -558,7 +558,7 @@ double Precice::advance( double computedTimestepLength )
 
     if ( procid == 0)
     {
-      std::cout << " Advancing interface " << std::endl;
+      std::cout << "Advancing interface " << std::endl;
     }
 
     ////// Place Holder area ////
@@ -583,7 +583,7 @@ double Precice::advance( double computedTimestepLength )
 
     if ( procid == 0)
     {
-      std::cout << " Recieved displacements from elastic domain " << std::endl;
+      std::cout << "Recieved displacements from elastic domain " << std::endl;
     }
 
     /* Re-arrage the elastic inputs ---*/
@@ -663,7 +663,11 @@ void Precice ::saveOldState( bool *StopCalc, double *dt )
 
 void Precice::reloadOldState(bool *StopCalc, double *dt)
 {
-  std::cout << " Relading old states ..." << std::endl;  
+  if (solverProcessIndex == 0)
+  {
+    std::cout << "Relading old states for implicit calculation" << std::endl;
+  }
+
   for (int iPoint = 0; iPoint < nPoint; iPoint++)
   {
     solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->SetSolution( iPoint, solution_Saved[iPoint]);
