@@ -388,6 +388,10 @@ double Precice::initialize()
         {
           std::cout << " Vertex: " << iVertex << std::setw(6) << " Node_index: " << iNode << std::setw(6) << " x: " << coupleNodeCoord[iVertex][0] << std::setw(6) << " y: " << coupleNodeCoord[iVertex][1] << std::setw(6) << " z: " << coupleNodeCoord[iVertex][2] << std::endl; 
         }
+        /* -- Extract the exture node indices vector --*/
+       /// unsigned long nodeVertex[vertexSize[i]];
+      //  nodeVertex[iVertex] = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[valueMarkerWet[i]][iVertex]->GetNode(); /*--- Store all nodes (indices) in a vector ---*/
+      //  std::cout << nodeVertex[iVertex] << std::endl;
       }
 
       if (Debug)
@@ -498,6 +502,11 @@ double Precice::advance( double computedTimestepLength )
     // Create an array to hold the tractions in nDIMS at the FSI Interface
     double FSI_Trac[FSI_nVert][nDim];
 
+      //  if (procid == 0)
+      //  {
+      //    std::cout << " Vertex Index " << iVertex << "/"<< FSI_nVert << " Traction_x: " << FSI_Trac[iVertex][0] << " Traction_y: " << FSI_Trac[iVertex][1] << " Traction_z: " << FSI_Trac[iVertex][2] << std::endl;
+      //  }
+
     // Loop over all Markers to get the tractions at vertices  
 
     for (iMarker = 0; iMarker < Markers ; iMarker++)
@@ -521,6 +530,8 @@ double Precice::advance( double computedTimestepLength )
             for (iDim = 0; iDim < nDim; iDim++)
             {
               FSI_Trac[iVertex][iDim] = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,iDim);
+              //std::cout << "MarkerID: " << iMarker << "VertexID: " << iVertex << " Tx: " << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,0) << " Ty: " << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,1) << " Tz: " << solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,2) <<std::endl; 
+              //std::cout << "MarkerID: " << iMarker << "VertexID: " << iVertex << " Tx: " << FSI_Trac[iVertex][0] << " Ty: " << FSI_Trac[iVertex][1] << " Tz: " << FSI_Trac[iVertex][2] <<std::endl;
             }
             if (Debug)
             {
@@ -569,7 +580,9 @@ double Precice::advance( double computedTimestepLength )
 
     /*---Advace solverInterface---*/
     double max_precice_dt;
-    max_precice_dt = solverInterface.advance( computedTimestepLength );
+   // max_precice_dt = solverInterface.advance( computedTimestepLength );
+
+   max_precice_dt = 0;
 
     /*---Read displacement deltas from elastic domain---*/
 
@@ -579,9 +592,10 @@ double Precice::advance( double computedTimestepLength )
     displacementDeltas = new double[vertexSize[0]*nDim];
 
     
+    
     solverInterface.readBlockVectorData(displDeltaID[indexMarkerWetMappingLocalToGlobal[0]], vertexSize[0], vertexIDs[0], displacementDeltas);
 
-    if ( procid == 0)
+        if ( procid == 0)
     {
       std::cout << "Recieved displacements from elastic domain " << std::endl;
     }
@@ -618,7 +632,8 @@ double Precice::advance( double computedTimestepLength )
   {
     /* Do not compute the forces. Just advance the solverInterface */
     double max_precice_dt;
-    max_precice_dt = solverInterface.advance( computedTimestepLength );
+   // max_precice_dt = solverInterface.advance( computedTimestepLength );
+   max_precice_dt = 0;
     return max_precice_dt;
   } 
    /*---Advance ends here ---*/
@@ -626,7 +641,12 @@ double Precice::advance( double computedTimestepLength )
 
 
 
+<<<<<<< HEAD
 void Precice ::saveOldState( bool *StopCalc, double *dt )
+=======
+//void Precice::saveOldState( bool *StopCalc, double *dt )
+void Precice ::saveOldState()
+>>>>>>> parent of 9e91e56d15 (Aero-elastic code working -> Needs validation)
 {
   /*---Begin loop over ALL grid points in the fluid domain---*/
   for (int iPoint = 0; iPoint < nPoint; iPoint++) 
@@ -634,6 +654,7 @@ void Precice ::saveOldState( bool *StopCalc, double *dt )
     for (int iVar = 0; iVar < nVar; iVar++) 
     {
       //Save solutions at last and current time step
+      //solution_Saved[iPoint][iVar] = (solver_container[ZONE_0][MESH_0][FLOW_SOL]->node[iPoint]->GetSolution())[iVar];
       solution_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution(iPoint,iVar));
       solution_time_n_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution_time_n(iPoint,iVar));
       solution_time_n1_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution_time_n1(iPoint,iVar));
@@ -647,21 +668,29 @@ void Precice ::saveOldState( bool *StopCalc, double *dt )
       Coord_n1_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord_n1(iPoint))[iDim];
       Coord_p1_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord_p1(iPoint))[iDim];
 
-      GridVel_Saved[iPoint][iDim] = (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel(iPoint))[iDim];  
-    }
-  }
-    /*---Recording GridVel_Grad using SU2 datatype---*/
-    GridVel_Grad = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel_Grad();
+      GridVel_Saved[iPoint][iDim] = (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel(iPoint))[iDim];
+    //  std::cout << " Point " << iPoint << " X " << Coord_Saved[iPoint][0] <<  std::endl;
 
-  //Save wether simulation should be stopped after the current iteration
-  StopCalc_savedState = *StopCalc;
-  //Save the time step size
-  dt_savedState = *dt;
-  //Writing task has been fulfilled successfully
-  solverInterface.markActionFulfilled(cowic);
+    //  for (int jDim = 0; jDim < nDim; jDim++) 
+    //  {
+    //    //Save grid velocity gradient
+    //    GridVel_Grad_Saved[iPoint][iDim][jDim] = (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel_Grad(iPoint))[iDim][jDim];
+    //  }
+      
+  
+    }
+    //std::cout << "Printing grid vel gradient ..." << std::endl;
+    //CVectorOfMatrix GridVel_Grad; 
+    //GridVel_Grad = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel_Grad();
+    //std::cout << geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel_Grad(iPoint)(0,3,3) << std::endl;
+  }
+    std::cout << " Recording GridVel_Grad using SU2 datatype " << std::endl;
+    
+    GridVel_Grad = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel_Grad();
 }
 
-void Precice::reloadOldState(bool *StopCalc, double *dt)
+
+void Precice::reloadOldState()
 {
   std::cout << "Relading old state for implicit formulation ..." << std::endl;  
   for (int iPoint = 0; iPoint < nPoint; iPoint++)
@@ -684,13 +713,6 @@ void Precice::reloadOldState(bool *StopCalc, double *dt)
   }
   /*--- Set the grid velocity gradient here---*/
   geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel_Grad(GridVel_Grad);
-
-    //Reload wether simulation should be stopped after current iteration
-  *StopCalc = StopCalc_savedState;
-  //Reload the time step size
-  *dt = dt_savedState;
-  //Reading task has been fulfilled successfully
-  solverInterface.markActionFulfilled(coric);
 
 }
 
