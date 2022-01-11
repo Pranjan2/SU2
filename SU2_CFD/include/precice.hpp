@@ -12,6 +12,9 @@
 
 #include "precice/SolverInterface.hpp"
 
+#include "../../Common/include/containers/C2DContainer.hpp"
+#include "../../Common/include/containers/container_decorators.hpp"
+
 using namespace precice;
 using namespace std;
 
@@ -73,6 +76,8 @@ private:
   double dt_savedState;
   bool StopCalc_savedState;
   double **solution_Saved, **solution_time_n_Saved, **solution_time_n1_Saved;
+
+  CVectorOfMatrix GridVel_Grad; 
 
   public:
 
