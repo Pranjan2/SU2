@@ -3962,22 +3962,6 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, CConfig *config)
 
   factor = Density_Real * Velocity2_Real / ( Density_ND * Velocity2_ND );
 
-  /*---Identify the FSI marker---*/
-  short int FSI_ID = config->GetMarker_All_TagBound(config->GetpreCICE_WetSurfaceMarkerName()+to_string(0));
-  int FSI_nVert = geometry->nVertex[FSI_ID];
-
-  //FSI_Trac = new double* [FSI_nVert];
-
-   //for ( int i = 0; i < nDim; i++)
-   //{
-   //  FSI_Trac[i] = new double [nDim];
-  // }
-
-
-  //double FSI_trac[FSI_nVert][nDim];
-   double FSI_Trac[FSI_nVert][nDim];
-
-
 
   /*-- Begin loop through all MARKERS --*/
 
@@ -4008,7 +3992,8 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, CConfig *config)
           auxForce[iDim] = -(Pn-Pressure_Inf)*iNormal[iDim];
 
         // Calculate tn in the fluid nodes for the viscous term
-        if (viscous_flow) {
+        if (viscous_flow) 
+        {
           su2double Viscosity = base_nodes->GetLaminarViscosity(iPoint);
           su2double Tau[3][3];
           CNumerics::ComputeStressTensor(nDim, Tau, base_nodes->GetGradient_Primitive(iPoint)+1, Viscosity);
@@ -4021,47 +4006,7 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, CConfig *config)
         for (iDim = 0; iDim < nDim; iDim++) 
         {
           VertexTraction[iMarker][iVertex][iDim] = factor * auxForce[iDim];
-
-          if (iMarker == FSI_ID )
-          {
-          //  FSITraction[iVertex][iDim] = VertexTraction[iMarker][iVertex][iDim];
-                FSI_Trac[iVertex][iDim]= VertexTraction[iMarker][iVertex][iDim];
-           //   FSI_trac[iVertex][iDim]= VertexTraction[iMarker][iVertex][iDim];
-             // FSI_Trac[0][iDim] = FSI_trac[iVertex][iDim];
-          }
-        }
-
-        if ( iMarker == FSI_ID)
-        {
-       //  // std:cout << " Printing vertex tractions ..." << std::endl;
-        
-          std::cout << " Vertex Index " << iVertex << "/"<< FSI_nVert << " Traction_x: " << FSI_Trac[iVertex][0] << " Traction_y: " << FSI_Trac[iVertex][1] << " Traction_z: " << FSI_Trac[iVertex][2] << std::endl;
-        }
-       /*------------ FSI-SPECIFIC COMPUTATIONS -------*/
-
-
-    
-       /* Get the maker index for the wetsurface */
-
-       //int FSI_ID = config->
-      
-
-       //string FSI_NAME = config->GetpreCICE_WetSurfaceMarkerName();
-       
-       // FSI_ID;
-       //std::cout << config->GetpreCICE_WetSurfaceMarkerName() << std::endl;
-       //short int FSI_ID = config->GetMarker_All_TagBound(config->GetpreCICE_WetSurfaceMarkerName()+to_string(0));
-       //std::cout << FSI_NAME << " has the marker ID " << FSI_ID << std::endl; 
-
-       //std::cout << "Number of vertices on FSI interface:" << geometry->nVertex[FSI_ID] << std::endl;
-       
-       //to_string(i));
-       // int IF_ID = config->GetMarker_All_TagBound(config->GetpreCICE_WetSurfaceMarkerName);
-
-       // std::cout << " The marker count ID for " << config->GetpreCICE_WetSurfaceMarkerName << " is " << IF_ID << std::endl;
-
-        /*--Print the first dimension for each marker -*/
-       // std::cout << VertexTraction[iMarker][iVertex][0] << std::endl;
+        } 
       }
       else
       {
@@ -4070,19 +4015,8 @@ void CSolver::ComputeVertexTractions(CGeometry *geometry, CConfig *config)
           VertexTraction[iMarker][iVertex][iDim] = 0.0;
         }
       }
-
-
     }
   }
-      /*-- Delete the FSI_Trac array --*/
-
-   //   std::cout << " Deleteing FSI traction array " << std::endl;
-
-   //   for (int i=0; i < FSI_nVert; i++)
-   //   {
-   //     delete[] FSI_Trac[i]; 
-   //   }
-   //   delete[] FSI_Trac;
 }
 
 void CSolver::RegisterVertexTractions(CGeometry *geometry, const CConfig *config){
