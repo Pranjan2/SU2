@@ -65,6 +65,8 @@
     vertexSize = NULL;
     indexMarkerWetMappingLocalToGlobal = NULL;
 
+    Debug = false;
+
 
 
     /* Get the total number of nodes in the domain */
@@ -246,7 +248,6 @@ void Precice::check()
 
 double Precice::initialize()
 {
-  bool Debug = false;
   /* Check for dimensional consistency between SU2 and .xml file */
 
   if (solverInterface.getDimensions() != nDim)
@@ -286,8 +287,11 @@ double Precice::initialize()
     }
   }
 
-  std::cout << " Mesh iD allocation complete " << std::endl;
-   
+  if (Debug)
+  {
+    std::cout << "Mesh iD allocation complete " << std::endl;
+  }
+
   /*Determine the number of wet surfaces, that this process is working on, then loop over this number for all respective preCICE-related tasks */
   for (int i = 0; i < globalNumberWetSurfaces; i++) 
   {       
@@ -309,9 +313,8 @@ double Precice::initialize()
     std::cout << " Dimensions from XML File      : " << solverInterface.getDimensions() << std::endl;
     std::cout << " MeshID for each wetsurface    : " << meshID[0] << std::endl;
     std::cout << " Marker ID for FSI surface     : " << config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(0)) << std::endl;
+    std::cout << " Finished determining number of wet surfaces " << std::endl;
   }
-  std::cout << " Finished determining number of wet surfaces " << std::endl;
-
 
   if (localNumberWetSurfaces < 1) 
   {
@@ -321,8 +324,10 @@ double Precice::initialize()
 
   if (processWorkingOnWetSurface) 
   {
-    std::cout << " Discretizing Aero-elastic Interface! \n";
-
+    if (Debug)
+    {
+      std::cout << "Discretizing Aero-elastic Interface! \n";
+    }
     /*--Store the wet surface marker values in an array, which has the size equal to the number of wet surfaces actually being worked on by this process*/
     valueMarkerWet = new short[localNumberWetSurfaces];
     indexMarkerWetMappingLocalToGlobal = new short[localNumberWetSurfaces];
@@ -338,9 +343,11 @@ double Precice::initialize()
     }
     vertexIDs = new int*[localNumberWetSurfaces];
   }
-
-  std::cout << " Finished setting indices " << std::endl;
-   
+  
+  if (Debug)
+  {
+    std::cout << "Finished setting indices " << std::endl;
+  }
 
 
   if (processWorkingOnWetSurface) 
@@ -350,7 +357,10 @@ double Precice::initialize()
     for (int i = 0; i < localNumberWetSurfaces; i++) 
     {
       vertexSize[i] = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[valueMarkerWet[i]];
-      std::cout << " Vertex Size: " << vertexSize[i] << std::endl;
+      if (Debug)
+      {
+        std::cout << "Vertex Size: " << vertexSize[i] << std::endl;
+      }
       /*--- coordinates of all nodes at the wet surface ---*/
       double coupleNodeCoord[vertexSize[i]][nDim]; 
 
@@ -374,16 +384,16 @@ double Precice::initialize()
         }
 
         /* -- Print detailed surface information --*/
-        //std::cout << " Value Markerwet: " << valueMarkerWet[i] << std::endl;
         if (Debug)
         {
           std::cout << " Vertex: " << iVertex << std::setw(6) << " Node_index: " << iNode << std::setw(6) << " x: " << coupleNodeCoord[iVertex][0] << std::setw(6) << " y: " << coupleNodeCoord[iVertex][1] << std::setw(6) << " z: " << coupleNodeCoord[iVertex][2] << std::endl; 
         }
       }
 
-
-      std::cout << " Finished acquiring node IDs and coordinates" << std::endl;
-
+      if (Debug)
+      {
+        std::cout << "Finished acquiring node IDs and coordinates" << std::endl;
+      }
       /*---------preCICE Internal Calculations -----*/
       
       //preCICE conform the coordinates of vertices (= points = nodes) at wet surface
@@ -442,11 +452,11 @@ double Precice::initialize()
 
   double precice_dt;
 
-  std::cout << " Initialize the interface " << std::endl;
+  std::cout << "Initialize the interface " << std::endl;
 
   precice_dt = solverInterface.initialize();
 
-  std::cout << " Interface initialization complete " << std::endl;
+  std::cout << "Interface initialization complete " << std::endl;
 
   return precice_dt;
 
@@ -454,7 +464,7 @@ double Precice::initialize()
 
 double Precice::advance( double computedTimestepLength )
 {
-  bool Debug = false;
+
   if ( processWorkingOnWetSurface)
   {
     int procid = solverProcessIndex;
@@ -479,12 +489,12 @@ double Precice::advance( double computedTimestepLength )
    if (Debug)
    { 
       std::cout << "Fluid Grid Points : " << std::setw(6) << nPoint << "# Vertices on surface : " << std::setw(6) << FSI_nVert << std::endl;
-   }
+   
     /* Two-dimensional array consisting of all tractions ---*/
-    std::cout << " Registering forces ..." << std::endl;
+    std::cout << "Registering forces ..." << std::endl;
      
     std::cout << " # of vertices on FSI Surface: " << FSI_nVert << std::endl;
-      
+   }   
     // Create an array to hold the tractions in nDIMS at the FSI Interface
     double FSI_Trac[FSI_nVert][nDim];
 
@@ -530,18 +540,13 @@ double Precice::advance( double computedTimestepLength )
     {                        
       for (iDim = 0; iDim < nDim; iDim++)
       {
-        forces[iVertex*nDim + iDim] = FSI_Trac[iVertex][iDim];
+       // forces[iVertex*nDim + iDim] = FSI_Trac[iVertex][iDim];
+       forces[iVertex*nDim + iDim] = 0;
       }
     }
 
     /*---Write force across the TCP I/O interface ---*/
 
-  //  for ( int i = 0; i < globalNumberWetSurfaces; i++)
-  //  {
-  //    std::cout << " IndexMappingToGlobal for i : " << i << " is " << indexMarkerWetMappingLocalToGlobal[i] <<std::endl;
-  //    std::cout << " VertexSize is " << vertexSize[i] << std::endl;
-  //    std::cout << " VertexIDs are " << vertexIDs[i]  << std::endl;
-  //  }
     solverInterface.writeBlockVectorData(forceID[indexMarkerWetMappingLocalToGlobal[0]], vertexSize[0], vertexIDs[0], forces);
 
     if ( procid == 0)
@@ -555,17 +560,12 @@ double Precice::advance( double computedTimestepLength )
     {
       delete [] forces;
     }
-
+    
     if ( procid == 0)
     {
-      std::cout << " Advancing interface " << std::endl;
+      std::cout << "Advancing interface " << std::endl;
     }
 
-    ////// Place Holder area ////
-
-    //solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Get();
-
-   // solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Get();
 
     /*---Advace solverInterface---*/
     double max_precice_dt;
@@ -583,7 +583,7 @@ double Precice::advance( double computedTimestepLength )
 
     if ( procid == 0)
     {
-      std::cout << " Recieved displacements from elastic domain " << std::endl;
+      std::cout << "Recieved displacements from elastic domain " << std::endl;
     }
 
     /* Re-arrage the elastic inputs ---*/
@@ -625,7 +625,7 @@ double Precice::advance( double computedTimestepLength )
 }
 
 
-//void Precice::saveOldState( bool *StopCalc, double *dt )
+
 void Precice ::saveOldState( bool *StopCalc, double *dt )
 {
   /*---Begin loop over ALL grid points in the fluid domain---*/
@@ -637,7 +637,7 @@ void Precice ::saveOldState( bool *StopCalc, double *dt )
       solution_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution(iPoint,iVar));
       solution_time_n_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution_time_n(iPoint,iVar));
       solution_time_n1_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution_time_n1(iPoint,iVar));
-     // std::cout << " Point " << iPoint << " Variable 1 " << solution_Saved[iPoint][0] << std::endl;
+  
     }
     for (int iDim = 0; iDim < nDim; iDim++) 
     {
@@ -663,7 +663,7 @@ void Precice ::saveOldState( bool *StopCalc, double *dt )
 
 void Precice::reloadOldState(bool *StopCalc, double *dt)
 {
-  std::cout << " Relading old states ..." << std::endl;  
+  std::cout << "Relading old state for implicit formulation ..." << std::endl;  
   for (int iPoint = 0; iPoint < nPoint; iPoint++)
   {
     solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->SetSolution( iPoint, solution_Saved[iPoint]);
