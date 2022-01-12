@@ -79,6 +79,12 @@ private:
 
   CVectorOfMatrix GridVel_Grad; 
 
+  unsigned short  FSI_ID_Global;
+  unsigned short  FSI_ID_Local;
+  unsigned short nMarkers_Global;
+  unsigned short nMarkers_Local;
+  std::string FSI_NAME;
+
   public:
 
   /*--------------- Override default constructor for class Precice ------*/

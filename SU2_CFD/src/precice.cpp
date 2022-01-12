@@ -75,6 +75,19 @@
     /* Get the total number of variables in the domain */
     nVar = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetnVar();
 
+       /*---Get total number of markers---*/
+    nMarkers_Global = config_container[ZONE_0]->GetnMarker_CfgFile();
+
+    nMarkers_Local = config_container[ZONE_0]->GetnMarker_All();
+
+    /*---Identify the marker for the FSI Interface ---*/
+    FSI_NAME = config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName();
+
+  /*--- Get the marker ID for FSI surface---*/
+  //  unsigned short  FSI_ID = config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName()+to_string(0)); 
+    FSI_ID_Global = config_container[ZONE_0]->GetMarker_CfgFile_TagBound(FSI_NAME+to_string(0));
+    FSI_ID_Local = config_container[ZONE_0]->GetMarker_All_TagBound(FSI_NAME+to_string(0));
+
     /* Initialize and allocate memory for arrays required for implicit coupling */
     Coord_Saved            = NULL;
     Coord_n_Saved          = NULL;
@@ -289,6 +302,8 @@ double Precice::initialize()
   }
 
   std::cout << " Mesh iD allocation complete " << std::endl;
+
+  std::cout << "Checking " <<config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(0)) << std::endl;
    
   /*Determine the number of wet surfaces, that this process is working on, then loop over this number for all respective preCICE-related tasks */
   for (int i = 0; i < globalNumberWetSurfaces; i++) 
@@ -314,21 +329,36 @@ double Precice::initialize()
   }
   std::cout << " Finished determining number of wet surfaces " << std::endl;
   
-            /*---Get total number of markers---*/
-    unsigned short Markers = config_container[ZONE_0]->GetnMarker_CfgFile();
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //unsigned short Markers = config_container[ZONE_0]->GetnMarker_All();
-    std::cout << " Process " << solverProcessIndex << " has " << Markers << " markers ";
-    /*---Identify the marker for the FSI Interface ---*/
-  //  string FSI_NAME = config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName();
+    std::cout << " Process " << solverProcessIndex << " has " << nMarkers_Global << " global markers and " << nMarkers_Local << " local markers " << std::endl;
+    
 
-    /*--- Get the marker ID for FSI surface---*/
-  //  unsigned short  FSI_ID = config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName()+to_string(0)); 
+    /*--- Get the marker ID for FSI surface---*/ 
 
+      std::cout << " Process " << solverProcessIndex << " has gobal FSI ID " << FSI_ID_Global << " and local FSI_ID " << FSI_ID_Local << std::endl;
+      
+     // for ( int i = 0; i < Markers; i ++)
+    //  {
+    //    std::cout << " Process " << solverProcessIndex << " has marker name " << config_container[ZONE_0]->GetMarker_CfgFile_TagBound(i) << std::endl;
+   //   }
+
+       for ( int i = 0; i < nMarkers_Local; i ++)
+      {
+        std::cout << " Process " << solverProcessIndex << " has local  marker name " << config_container[ZONE_0]->GetMarker_All_TagBound(i) << std::endl;
+      }
+
+    unsigned long FSI_nVert = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[FSI_ID_Local];
+
+    std::cout << " Process " << solverProcessIndex << " has " << FSI_nVert << " vertices on the interface " << std::endl;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   if (localNumberWetSurfaces < 1) 
   {
     std::cout << "Process #" << solverProcessIndex << "/" << solverProcessSize-1 << ": Does not work on the wet surface at all." << endl;
     processWorkingOnWetSurface = false;
   }
+
+
 
   if (processWorkingOnWetSurface) 
   {
@@ -361,13 +391,13 @@ double Precice::initialize()
     for (int i = 0; i < localNumberWetSurfaces; i++) 
     {
       vertexSize[i] = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[valueMarkerWet[i]];
-      std::cout << " Vertex Size: " << vertexSize[i] << std::endl;
+     // std::cout << " Vertex Size: " << vertexSize[i] << std::endl;
       /*--- coordinates of all nodes at the wet surface ---*/
       double coupleNodeCoord[vertexSize[i]][nDim]; 
 
       /*--- variable for storing the node indices - one at the time ---*/
       unsigned long iNode;  
-
+      int l  =0;
 
       //Loop over the vertices of the (each) boundary
       for (int iVertex = 0; iVertex < vertexSize[i]; iVertex++) 
@@ -376,14 +406,20 @@ double Precice::initialize()
         iNode = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[valueMarkerWet[i]][iVertex]->GetNode();
    
        // vector = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord(iNode);
-
-        /*---Get coordinates for nodes at aero-elastic interface --*/
-        for (int iDim = 0; iDim < nDim; iDim++) 
-        {  
+        if (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetDomain(iNode))
+        {
+         // if (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetColor(iNode) == solverProcessIndex)
+         // {
+          /*---Unpdate the counter here---*/
+          l++;
+          /*---Get coordinates for nodes at aero-elastic interface --*/
+          for (int iDim = 0; iDim < nDim; iDim++) 
+          {  
          // coupleNodeCoord[iVertex][iDim] = vector[iDim];
-         coupleNodeCoord[iVertex][iDim] = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord(iNode, iDim);
-        }
-
+          coupleNodeCoord[iVertex][iDim] = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord(iNode, iDim);
+          }
+       //   }
+        } 
         /* -- Print detailed surface information --*/
         //std::cout << " Value Markerwet:f" << valueMarkerWet[i] << std::endl;
         if (Debug)
@@ -391,21 +427,13 @@ double Precice::initialize()
           std::cout << " Vertex: " << iVertex << std::setw(6) << " Node_index: " << iNode << std::setw(6) << " x: " << coupleNodeCoord[iVertex][0] << std::setw(6) << " y: " << coupleNodeCoord[iVertex][1] << std::setw(6) << " z: " << coupleNodeCoord[iVertex][2] << std::endl; 
         }
       }
+ // geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetColor(iPoint) == solverProcessIndex)
+      std::cout <<" Process " << solverProcessIndex << " wrote " << l << " coordinates " << std::endl;
+    
 
 
       std::cout << " Finished acquiring node IDs and coordinates" << std::endl;
 
-          /*---Get total number of markers---*/
-    unsigned short Markers = config_container[ZONE_0]->GetnMarker_All();
-
-    /*---Identify the marker for the FSI Interface ---*/
-    string FSI_NAME = config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName();
-
-    /*--- Get the marker ID for FSI surface---*/
-    unsigned short  FSI_ID = config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName()+to_string(0)); 
-
-
-      std::cout << " This is process " << solverProcessIndex << " with FSI ID " << FSI_ID << std::endl;
 
       /*---------preCICE Internal Calculations -----*/
       
@@ -488,16 +516,18 @@ double Precice::advance( double computedTimestepLength )
     unsigned short iDim;
 
     /*---Get total number of markers---*/
-    unsigned short Markers = config_container[ZONE_0]->GetnMarker_All();
+    //unsigned short Markers = config_container[ZONE_0]->GetnMarker_All();
 
     /*---Identify the marker for the FSI Interface ---*/
-    string FSI_NAME = config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName();
+    //string FSI_NAME = config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName();
 
     /*--- Get the marker ID for FSI surface---*/
-    unsigned short  FSI_ID = config_container[ZONE_0]->GetMarker_All_TagBound(FSI_NAME+to_string(0));                
+    //unsigned short  FSI_ID = config_container[ZONE_0]->GetMarker_All_TagBound(FSI_NAME+to_string(0));                
 
     /*---Number of vertices on FSI surface---*/
-    unsigned long FSI_nVert = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[FSI_ID];
+    unsigned long FSI_nVert = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[FSI_ID_Local];
+
+    std::cout << " Process " << solverProcessIndex << " has " << FSI_nVert << " vertices on the interface " << std::endl;
 
    if (Debug)
    { 
@@ -520,7 +550,7 @@ double Precice::advance( double computedTimestepLength )
    //   if (!config_container[ZONE_0]->GetSolid_Wall(iMarker)) continue;
       // Loop over all vertices for this marker
 
-      for (int iVertex = 0; iVertex < geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[FSI_ID]; iVertex++)
+      for (int iVertex = 0; iVertex < FSI_nVert; iVertex++)
       {
 
        // iPoint = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[iMarker][iVertex]->GetNode();
@@ -533,11 +563,11 @@ double Precice::advance( double computedTimestepLength )
         //  {
             for (iDim = 0; iDim < nDim; iDim++)
             {
-              FSI_Trac[iVertex][iDim] = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(FSI_ID,iVertex,iDim);
+              FSI_Trac[iVertex][iDim] = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(FSI_ID_Local,iVertex,iDim);
             }
             if (Debug)
             {
-              std::cout << "MarkerID : " << std::setw(6) << FSI_ID << std::setw(6) << " VertexID: " << std::setw(6) << iVertex << std::setw(6) << " Tx: " << std::setw(6) << FSI_Trac[iVertex][0] << std::setw(6) << " Ty: " << std::setw(6) << FSI_Trac[iVertex][1] << std::setw(6) << " Tz: " << std::setw(6) << FSI_Trac[iVertex][2] <<std::endl;
+              std::cout << "MarkerID : " << std::setw(6) << FSI_ID_Local << std::setw(6) << " VertexID: " << std::setw(6) << iVertex << std::setw(6) << " Tx: " << std::setw(6) << FSI_Trac[iVertex][0] << std::setw(6) << " Ty: " << std::setw(6) << FSI_Trac[iVertex][1] << std::setw(6) << " Tz: " << std::setw(6) << FSI_Trac[iVertex][2] <<std::endl;
             }  
 
             
@@ -558,7 +588,7 @@ double Precice::advance( double computedTimestepLength )
       {
         /*---Check if the color of the node matches the MPI rank of this proces.
              Only write forces if the node originally belongs to this process---*/
-        iPoint = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID][iVertex]->GetNode();
+        iPoint = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID_Local][iVertex]->GetNode();
 
         if (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetColor(iPoint) == solverProcessIndex)
         {
@@ -640,7 +670,7 @@ double Precice::advance( double computedTimestepLength )
 
     for (int iVertex = 0; iVertex < FSI_nVert; iVertex++)
     {
-      geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID][iVertex]->SetVarCoord(displacementDeltas_su2[iVertex]);
+      geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID_Local][iVertex]->SetVarCoord(displacementDeltas_su2[iVertex]);
     }
     return max_precice_dt;
   }
