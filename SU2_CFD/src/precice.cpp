@@ -663,7 +663,7 @@ void Precice ::saveOldState( bool *StopCalc, double *dt )
 
 void Precice::reloadOldState(bool *StopCalc, double *dt)
 {
-  std::cout << " Relading old states ..." << std::endl;  
+  std::cout << "Relading old states for implicit calculations" << std::endl;  
   for (int iPoint = 0; iPoint < nPoint; iPoint++)
   {
     solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->SetSolution( iPoint, solution_Saved[iPoint]);
