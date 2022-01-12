@@ -259,6 +259,8 @@ double Precice::initialize()
 
   std::cout << " Dimension check complete " << std::endl;
 
+
+
   
   
   /* Check for total number of aero-elastic interfaces */
@@ -311,7 +313,16 @@ double Precice::initialize()
     std::cout << " Marker ID for FSI surface     : " << config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(0)) << std::endl;
   }
   std::cout << " Finished determining number of wet surfaces " << std::endl;
+  
+            /*---Get total number of markers---*/
+    unsigned short Markers = config_container[ZONE_0]->GetnMarker_CfgFile();
+    //unsigned short Markers = config_container[ZONE_0]->GetnMarker_All();
+    std::cout << " Process " << solverProcessIndex << " has " << Markers << " markers ";
+    /*---Identify the marker for the FSI Interface ---*/
+  //  string FSI_NAME = config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName();
 
+    /*--- Get the marker ID for FSI surface---*/
+  //  unsigned short  FSI_ID = config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName()+to_string(0)); 
 
   if (localNumberWetSurfaces < 1) 
   {
@@ -374,7 +385,7 @@ double Precice::initialize()
         }
 
         /* -- Print detailed surface information --*/
-        //std::cout << " Value Markerwet: " << valueMarkerWet[i] << std::endl;
+        //std::cout << " Value Markerwet:f" << valueMarkerWet[i] << std::endl;
         if (Debug)
         {
           std::cout << " Vertex: " << iVertex << std::setw(6) << " Node_index: " << iNode << std::setw(6) << " x: " << coupleNodeCoord[iVertex][0] << std::setw(6) << " y: " << coupleNodeCoord[iVertex][1] << std::setw(6) << " z: " << coupleNodeCoord[iVertex][2] << std::endl; 
@@ -383,6 +394,18 @@ double Precice::initialize()
 
 
       std::cout << " Finished acquiring node IDs and coordinates" << std::endl;
+
+          /*---Get total number of markers---*/
+    unsigned short Markers = config_container[ZONE_0]->GetnMarker_All();
+
+    /*---Identify the marker for the FSI Interface ---*/
+    string FSI_NAME = config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName();
+
+    /*--- Get the marker ID for FSI surface---*/
+    unsigned short  FSI_ID = config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName()+to_string(0)); 
+
+
+      std::cout << " This is process " << solverProcessIndex << " with FSI ID " << FSI_ID << std::endl;
 
       /*---------preCICE Internal Calculations -----*/
       
@@ -471,7 +494,7 @@ double Precice::advance( double computedTimestepLength )
     string FSI_NAME = config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName();
 
     /*--- Get the marker ID for FSI surface---*/
-    unsigned short  FSI_ID = config_container[ZONE_0]->GetMarker_All_TagBound(FSI_NAME+to_string(0));
+    unsigned short  FSI_ID = config_container[ZONE_0]->GetMarker_All_TagBound(FSI_NAME+to_string(0));                
 
     /*---Number of vertices on FSI surface---*/
     unsigned long FSI_nVert = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[FSI_ID];
@@ -490,36 +513,39 @@ double Precice::advance( double computedTimestepLength )
 
     // Loop over all Markers to get the tractions at vertices  
 
-    for (iMarker = 0; iMarker < Markers ; iMarker++)
-    {
+   // for (iMarker = 0; iMarker < Markers ; iMarker++)
+  //  {
 
       /*--- If this is defined as a wall ---*/
-      if (!config_container[ZONE_0]->GetSolid_Wall(iMarker)) continue;
+   //   if (!config_container[ZONE_0]->GetSolid_Wall(iMarker)) continue;
       // Loop over all vertices for this marker
 
-      for (int iVertex = 0; iVertex < geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[iMarker]; iVertex++)
+      for (int iVertex = 0; iVertex < geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[FSI_ID]; iVertex++)
       {
 
-        iPoint = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[iMarker][iVertex]->GetNode();
+       // iPoint = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[iMarker][iVertex]->GetNode();
 
         /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
-        if (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetDomain(iPoint)) 
-        {
+       // if (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetDomain(iPoint)) 
+       // {
           /*---Record forces only for the Aeroelastic Interface---*/
-          if (iMarker == FSI_ID)
-          {
+        //  if (iMarker == FSI_ID)
+        //  {
             for (iDim = 0; iDim < nDim; iDim++)
             {
-              FSI_Trac[iVertex][iDim] = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(iMarker,iVertex,iDim);
+              FSI_Trac[iVertex][iDim] = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(FSI_ID,iVertex,iDim);
             }
             if (Debug)
             {
-              std::cout << "MarkerID : " << std::setw(6) << iMarker << std::setw(6) << " VertexID: " << std::setw(6) << iVertex << std::setw(6) << " Tx: " << std::setw(6) << FSI_Trac[iVertex][0] << std::setw(6) << " Ty: " << std::setw(6) << FSI_Trac[iVertex][1] << std::setw(6) << " Tz: " << std::setw(6) << FSI_Trac[iVertex][2] <<std::endl;
+              std::cout << "MarkerID : " << std::setw(6) << FSI_ID << std::setw(6) << " VertexID: " << std::setw(6) << iVertex << std::setw(6) << " Tx: " << std::setw(6) << FSI_Trac[iVertex][0] << std::setw(6) << " Ty: " << std::setw(6) << FSI_Trac[iVertex][1] << std::setw(6) << " Tz: " << std::setw(6) << FSI_Trac[iVertex][2] <<std::endl;
             }  
-          }
-        }
+
+            
+       //   }
+       // }
       }
-    }
+
+    //}
 
     /*---Convert FSI_Trac[][] to row-major form ---*/
 
@@ -572,11 +598,6 @@ double Precice::advance( double computedTimestepLength )
       std::cout << " Advancing interface " << std::endl;
     }
 
-    ////// Place Holder area ////
-
-    //solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Get();
-
-   // solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Get();
 
     /*---Advace solverInterface---*/
     double max_precice_dt;
