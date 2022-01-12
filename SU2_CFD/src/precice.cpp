@@ -530,7 +530,18 @@ double Precice::advance( double computedTimestepLength )
     {                        
       for (iDim = 0; iDim < nDim; iDim++)
       {
-        forces[iVertex*nDim + iDim] = FSI_Trac[iVertex][iDim];
+        /*---Check if the color of the node matches the MPI rank of this proces.
+             Only write forces if the node originally belongs to this process---*/
+        iPoint = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID][iVertex]->GetNode();
+
+        if (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetColor(iPoint) == solverProcessIndex)
+        {
+          forces[iVertex*nDim + iDim] = FSI_Trac[iVertex][iDim];
+        }
+        else
+        {
+          forces[iVertex*nDim + iDim] = 0;
+        }
       }
     }
 
