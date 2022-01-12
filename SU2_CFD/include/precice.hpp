@@ -77,8 +77,6 @@ private:
   bool StopCalc_savedState;
   double **solution_Saved, **solution_time_n_Saved, **solution_time_n1_Saved;
 
-  bool Debug;
-
   CVectorOfMatrix GridVel_Grad; 
 
   public:
@@ -177,7 +175,7 @@ private:
   * \param[in] double - Pointer to the double dt, which is the current SU2 time step size. This variable must be passed so that its value can be stored and reloaded later.
   */
 
-    void saveOldState();
+  void saveOldState( bool *StopCalc, double *dt );
   //void saveOldState( bool *StopCalc, double *dt );
 
   /*!
@@ -201,7 +199,7 @@ private:
   */
   void finalize();
 
-  void reloadOldState();
+  void reloadOldState( bool *StopCalc, double *dt );
 
 
 };

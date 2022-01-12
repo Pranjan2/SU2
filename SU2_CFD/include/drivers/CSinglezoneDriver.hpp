@@ -88,6 +88,11 @@ public:
   void Output(unsigned long TimeIter) override;
 
   /*!
+   * \brief Output the converged implicit aero-elastic solution in solution file.
+   */
+  void Implicit_Output(unsigned long TimeIter, bool suppress_output);
+
+  /*!
    * \brief Perform a dynamic mesh deformation, included grid velocity computation and the update of the multigrid structure.
    */
   void DynamicMeshUpdate(unsigned long TimeIter) override;
