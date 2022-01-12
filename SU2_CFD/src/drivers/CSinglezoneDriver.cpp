@@ -71,7 +71,10 @@ void CSinglezoneDriver::StartSolver() {
 
   if (precice_usage) 
   {
-    precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement, integration_container, surface_movement, output_container,  numerics_container, FFDBox);    
+    precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement, integration_container, surface_movement, output_container,  numerics_container, FFDBox);
+   // precice = new Precice(c config_container, geometry_container, solver_container, grid_movement);
+    //precice ->check();
+    
     dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
 
     if (rank == MASTER_NODE)
@@ -85,8 +88,6 @@ void CSinglezoneDriver::StartSolver() {
       std::cout << "------------------------------- Interface I/O Complete ---------------------------------" << std::endl;
     }
   }
-
-
   if (rank == MASTER_NODE)
   {
     cout << endl <<"Simulation Run using the Single-zone Driver" << endl;
@@ -108,17 +109,9 @@ void CSinglezoneDriver::StartSolver() {
   /*--- Run the problem until the number of time iterations required is reached. ---*/
   //while ( TimeIter < config_container[ZONE_0]->GetnTime_Iter() ) 
   //while ( (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage && precice->isCouplingOngoing() ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage)
-  while ((TimeIter < config_container[ZONE_0]->GetnTime_Iter()) ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage && precice->isCouplingOngoing() ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage)
+  while ( (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage)  
   {
 
-    /*---preCICE implicit coupling: saveOldState()---*/
-    if(precice_usage && precice->isActionRequired(precice->getCowic()))
-    {
-      precice->saveOldState(&StopCalc, dt);
-    }
-
-
-    /*---set minimal time step as new time step increment size---*/
     if(precice_usage)
     {
       dt = min(max_precice_dt,dt);
@@ -127,32 +120,32 @@ void CSinglezoneDriver::StartSolver() {
 
     /*--- Perform some preprocessing before starting the time-step simulation. ---*/
 
-    //std::cout << "Preprocessing..." << std::endl;
+    std::cout << "Preprocessing..." << std::endl;
 
     Preprocess(TimeIter);
 
     /*--- Run a time-step iteration of the single-zone problem. ---*/
     
 
-   // std::cout << "Running..." << std::endl;
+    std::cout << "Running..." << std::endl;
 
     Run();
 
     
 
     /*--- Perform some postprocessing on the solution before the update ---*/
-  //std::cout << "Postprocessing..." << std::endl;
+  std::cout << "Postprocessing..." << std::endl;
     Postprocess();
 
     /*--- Update the solution for dual time stepping strategy ---*/
 
-    //  std::cout << "Updating..." << std::endl;
+      std::cout << "Updating..." << std::endl;
 
     Update();
 
     /*--- Monitor the computations after each iteration. ---*/
 
-  //  std::cout << "Monitoring..." << std::endl;
+    std::cout << "Monitoring..." << std::endl;
 
     Monitor(TimeIter);
 
@@ -160,31 +153,16 @@ void CSinglezoneDriver::StartSolver() {
     if(precice_usage)
     {
       *max_precice_dt = precice->advance(*dt);
+      precice->saveOldState();
+      precice->reloadOldState();
     }
-
-    /*---Implicit coupling stage (reloadOldState)---*/
-    bool suppress_output = false;
-    if(precice_usage && precice->isActionRequired(precice->getCoric()))
-    {
-      //Stay at the same iteration number if preCICE is not converged and reload to the state before the current iteration
-      TimeIter--;
-      precice->reloadOldState(&StopCalc, dt);
-      suppress_output = true;
-    }
-
 
     /*--- Output the solution in files. ---*/
-    if (precice_usage)
-    {
-      Implicit_Output(TimeIter, suppress_output);
-    }
-    else
-    {
-      Output(TimeIter);
-    }
+
+    Output(TimeIter);
+    
     /*--- Save iteration solution for libROM ---*/
-    if (config_container[MESH_0]->GetSave_libROM()) 
-    {
+    if (config_container[MESH_0]->GetSave_libROM()) {
       solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->SavelibROM(geometry_container[ZONE_0][INST_0][MESH_0],
                                                                      config_container[ZONE_0], StopCalc);
     }
@@ -303,38 +281,8 @@ void CSinglezoneDriver::Update() {
 
 }
 
-void CSinglezoneDriver::Implicit_Output(unsigned long TimeIter, bool suppress_output)
-{
-  if (!suppress_output)
-  {
-    std::cout << "Writing solution for converged aero-elastic solution " << std::endl;
-    /*--- Time the output for performance benchmarking. ---*/
+void CSinglezoneDriver::Output(unsigned long TimeIter) {
 
-    StopTime = SU2_MPI::Wtime();
-
-    UsedTimeCompute += StopTime-StartTime;
-
-    StartTime = SU2_MPI::Wtime();
-
-    bool wrote_files = output_container[ZONE_0]->SetResult_Files(geometry_container[ZONE_0][INST_0][MESH_0],
-                                                               config_container[ZONE_0],
-                                                               solver_container[ZONE_0][INST_0][MESH_0],
-                                                               TimeIter, StopCalc);
-    if (wrote_files)
-    {
-      StopTime = SU2_MPI::Wtime();
-      UsedTimeOutput += StopTime-StartTime;
-      OutputCount++;
-      BandwidthSum = config_container[ZONE_0]->GetRestart_Bandwidth_Agg();
-      StartTime = SU2_MPI::Wtime();
-      config_container[ZONE_0]->Set_StartTime(StartTime);
-    }
-  }
-} 
-
-void CSinglezoneDriver::Output(unsigned long TimeIter) 
-{
-  
   /*--- Time the output for performance benchmarking. ---*/
 
   StopTime = SU2_MPI::Wtime();
@@ -347,6 +295,7 @@ void CSinglezoneDriver::Output(unsigned long TimeIter)
                                                                config_container[ZONE_0],
                                                                solver_container[ZONE_0][INST_0][MESH_0],
                                                                TimeIter, StopCalc);
+
   if (wrote_files){
 
     StopTime = SU2_MPI::Wtime();
