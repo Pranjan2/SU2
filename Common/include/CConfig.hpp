@@ -1161,6 +1161,7 @@ private:
   map<string, bool> all_options;
 
   /* Options for preCICE */
+ bool MDO; 
  bool precice_usage;	/*!< \brief Usage of preCICE for FSI simulations */
  bool precice_verbosityLevel_high;	/*!< \brief Verbosity level of the preCICE adapter for FSI simulations */
  bool precice_loadRamping; /*!< \brief Usage of preCICE load ramping procedure for FSI simulations */

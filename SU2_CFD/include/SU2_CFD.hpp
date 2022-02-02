@@ -32,6 +32,7 @@
 #include "CLI11.hpp"
 
 #include "drivers/CDriver.hpp"
+#include "drivers/CMDODriver.hpp"
 #include "drivers/CSinglezoneDriver.hpp"
 #include "drivers/CMultizoneDriver.hpp"
 #include "drivers/CDiscAdjSinglezoneDriver.hpp"

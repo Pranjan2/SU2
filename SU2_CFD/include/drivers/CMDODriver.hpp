@@ -1,5 +1,5 @@
 /*!
- * \file CSinglezoneDriver.hpp
+ * \file CMDODriver.hpp
  * \brief Headers of the main subroutines for driving single or multi-zone problems.
  *        The subroutines and functions are in the <i>driver_structure.cpp</i> file.
  * \author T. Economon, H. Kline, R. Sanchez
@@ -30,12 +30,12 @@
 #include "CDriver.hpp"
 
 /*!
- * \class CSinglezoneDriver
+ * \class CMDODriver
  * \brief Class for driving single-zone solvers.
  * \author R. Sanchez
  * \version 7.2.0 "Blackbird"
  */
-class CSinglezoneDriver : public CDriver {
+class CMDODriver : public CDriver {
 protected:
 
   unsigned long TimeIter;
@@ -48,14 +48,14 @@ public:
    * \param[in] val_nZone - Total number of zones.
    * \param[in] MPICommunicator - MPI communicator for SU2.
    */
-  CSinglezoneDriver(char* confFile,
+  CMDODriver(char* confFile,
              unsigned short val_nZone,
              SU2_Comm MPICommunicator);
 
   /*!
    * \brief Destructor of the class.
    */
-  ~CSinglezoneDriver(void) override;
+  ~CMDODriver(void) override;
 
   /*!
    * \brief [Overload] Launch the computation for single-zone problems.
@@ -86,6 +86,11 @@ public:
    * \brief Output the solution in solution file.
    */
   void Output(unsigned long TimeIter) override;
+
+  /*!
+   * \brief Output the converged implicit aero-elastic solution in solution file.
+   */
+  void Implicit_Output(unsigned long TimeIter, bool suppress_output);
 
   /*!
    * \brief Perform a dynamic mesh deformation, included grid velocity computation and the update of the multigrid structure.
