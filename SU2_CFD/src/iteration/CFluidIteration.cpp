@@ -289,6 +289,11 @@ std::cout << " See if MDO is required" << std::endl;
   /*--- For steady-state flow simulations, we need to loop over ExtIter for the number of time steps ---*/
   /*--- However, ExtIter is the number of FSI iterations, so nIntIter is used in this case ---*/
 
+  bool enable_mdo;
+  CSMDO *mdo;
+  double *max_precice_dt, *dt;   
+
+
     /*---See if MDA/MDO object needs to be created ---*/
     std::cout << " See if MDO is required" << std::endl;
     enable_mdo = config[ZONE_0]->Std_MDO();
@@ -331,7 +336,8 @@ std::cout << " See if MDO is required" << std::endl;
 
     /*--- Output files at intermediate iterations if the problem is single zone ---*/
 
-    if (singlezone && steady) {
+    if (singlezone && steady) 
+    {
       Output(output, geometry, solver, config, Inner_Iter, StopCalc, val_iZone, val_iInst);
     }
 
@@ -341,7 +347,7 @@ std::cout << " See if MDO is required" << std::endl;
 
   if (enable_mdo)
   {
-    if (mdo != NULL)
+    if (mdo!= NULL)
     {
       if (rank == MASTER_NODE)
       {
@@ -350,21 +356,22 @@ std::cout << " See if MDO is required" << std::endl;
         std::cout <<"---------------------------------------------------------"<<std::endl;
 
       }
-      delete mdo;
+      std::cout << "deleting mdo " << std::endl;
+     // delete mdo;
     }
-
+    std::cout << "deleting dt " << std::endl;
     if (dt != NULL)
     {
       delete dt;
     }
-
+    std::cout << "deleting max_precice_dt " << std::endl;
     if (max_precice_dt != NULL)
     {
       delete max_precice_dt;
     }
   }
 
-
+  std:: cout << " Donw with Steady state MDO " << std::endl;
 
   if (multizone && steady) {
     Output(output, geometry, solver, config, config[val_iZone]->GetOuterIter(), StopCalc, val_iZone, val_iInst);

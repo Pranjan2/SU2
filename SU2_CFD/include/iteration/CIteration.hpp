@@ -36,11 +36,12 @@
 #include "../../../Common/include/parallelization/mpi_structure.hpp"
 #include "../integration/CIntegration.hpp"
 
+
 using namespace std;
 
 class COutput;
 
-class CSMDO;
+//class CSMDO;
 
 /*!
  * \class CIteration
@@ -60,9 +61,9 @@ class CIteration {
   su2double StartTime{0.0}, /*!< \brief Tracking wall time. */
       StopTime{0.0}, UsedTime{0.0};
 
-  bool enable_mdo;
-  CSMDO *mdo;
-  double *max_precice_dt, *dt;     
+  //bool enable_mdo;
+  //CSMDO *mdo;
+  //double *max_precice_dt, *dt;     
 
  public:
   /*!
