@@ -60,7 +60,7 @@ class CIteration {
   su2double StartTime{0.0}, /*!< \brief Tracking wall time. */
       StopTime{0.0}, UsedTime{0.0};
 
-   bool precice_usage;
+  bool enable_mdo;
   CSMDO *mdo;
   double *max_precice_dt, *dt;     
 

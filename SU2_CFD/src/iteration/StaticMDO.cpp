@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #include "../../include/StaticMDO.hpp"
-.
+
 
 
   CSMDO::CSMDO(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement)
@@ -113,7 +113,7 @@
 
 
 /*---Class destructor -----*/  
-CSMO::~CSMO(void)
+CSMDO::~CSMDO(void)
 {
     for (int i = 0; i < localNumberWetSurfaces; i++) 
     {
@@ -233,13 +233,13 @@ CSMO::~CSMO(void)
   }
 
 
-void CSMO::check()
+void CSMDO::check()
 {
-    std::cout << " CSMO being called " << std::endl;
+    std::cout << " CSMDO being called " << std::endl;
 }
 
 
-double CSMO::initialize()
+double CSMDO::initializeMDO()
 {
   bool Debug = false;
   /* Check for dimensional consistency between SU2 and .xml file */
@@ -485,7 +485,7 @@ double CSMO::initialize()
 
 }
 
-double CSMO::advance( double computedTimestepLength )
+double CSMDO::advance( double computedTimestepLength )
 {
   bool Debug = false;
   if ( processWorkingOnWetSurface)
@@ -669,8 +669,8 @@ double CSMO::advance( double computedTimestepLength )
 }
 
 
-//void CSMO::saveOldState( bool *StopCalc, double *dt )
-void CSMO ::saveOldState( bool *StopCalc, double *dt )
+//void CSMDO::saveOldState( bool *StopCalc, double *dt )
+void CSMDO ::saveOldState( bool *StopCalc, double *dt )
 {
   /*---Begin loop over ALL grid points in the fluid domain---*/
   for (int iPoint = 0; iPoint < nPoint; iPoint++) 
@@ -705,7 +705,7 @@ void CSMO ::saveOldState( bool *StopCalc, double *dt )
   solverInterface.markActionFulfilled(cowic);
 }
 
-void CSMO::reloadOldState(bool *StopCalc, double *dt)
+void CSMDO::reloadOldState(bool *StopCalc, double *dt)
 {
   std::cout << "Relading old states for implicit calculations" << std::endl;  
   for (int iPoint = 0; iPoint < nPoint; iPoint++)
@@ -738,27 +738,27 @@ void CSMO::reloadOldState(bool *StopCalc, double *dt)
 
 }
 
-bool CSMO::isCouplingOngoing()
+bool CSMDO::isCouplingOngoing()
 {
   return solverInterface.isCouplingOngoing();
 }
 
-bool CSMO::isActionRequired( const string& action )
+bool CSMDO::isActionRequired( const string& action )
 {
   return solverInterface.isActionRequired(action);
 }
 
-const string& CSMO::getCowic()
+const string& CSMDO::getCowic()
 {
   return cowic;
 }
 
-const string& CSMO::getCoric()
+const string& CSMDO::getCoric()
 {
   return coric;
 }
 
-void CSMO::finalize()
+void CSMDO::finalize()
 {
   solverInterface.finalize();
 }

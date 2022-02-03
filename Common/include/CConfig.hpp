@@ -9382,4 +9382,6 @@ public:
   unsigned short GetRom_SaveFreq(void) const { return rom_save_freq; }
 
   bool GetMDO_Mode(void) const {return mdo;}
+
+  bool Std_MDO(void)  {return mdo;}
 };

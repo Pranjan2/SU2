@@ -62,33 +62,35 @@ void CMDODriver::StartSolver() {
     cout << endl <<"------------------------------ Begin Forward Analysis -----------------------------" << endl;
 
   /*---Initialize precice object */
-
-  /*---See if MDA/MDO object needs to be created ---*/
-  precice_usage = config_container[ZONE_0]->GetpreCICE_Usage();
-
   
-  /*---If MDA is required, create a coupling object ----*/
+  //if (driver_config->GetTime_Domain())
+  //{
+    /*---See if MDA/MDO object needs to be created ---*/
+    //precice_usage = config_container[ZONE_0]->GetpreCICE_Usage();
+  
+  
+    /*---If MDA is required, create a coupling object ----*/
 
-  if (precice_usage) 
-  {
-    precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement, integration_container, surface_movement, output_container,  numerics_container, FFDBox);    
+    /*if (precice_usage) 
+    {
+      precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement, integration_container, surface_movement, output_container,  numerics_container, FFDBox);    
     
-    dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
+      dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
 
-    if (rank == MASTER_NODE)
-    {
-      std::cout << "------------------------------ Initialize Interface I/O --------------------------------" << std::endl;
-    }
+      if (rank == MASTER_NODE)
+      {
+        std::cout << "------------------------------ Initialize Interface I/O --------------------------------" << std::endl;
+      }
 
 
-    max_precice_dt = new double(precice->initialize());
+      max_precice_dt = new double(precice->initialize());
 
-    if (rank == MASTER_NODE)
-    {
-      std::cout << "------------------------------- Interface I/O Complete ---------------------------------" << std::endl;
-    }
-  }
-
+      if (rank == MASTER_NODE)
+      {
+        std::cout << "------------------------------- Interface I/O Complete ---------------------------------" << std::endl;
+      }
+    } */
+  //}
 
   if (rank == MASTER_NODE)
   {
@@ -108,13 +110,15 @@ void CMDODriver::StartSolver() {
     TimeIter = config_container[ZONE_0]->GetRestart_Iter();
   }
 
+  std::cout << " Begin main loop " << std::endl;
+
 
   while ((TimeIter < config_container[ZONE_0]->GetnTime_Iter()) &&!precice_usage || (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage && precice->isCouplingOngoing() ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage)
   {
 
     /*---preCICE implicit coupling: saveOldState()---*/
     //if(precice_usage && precice->isActionRequired(precice->getCowic()))
-    if (TimeIter == 5)
+  /*  if (TimeIter == 5)
     {
       if ( precice_usage)
       {
@@ -122,7 +126,7 @@ void CMDODriver::StartSolver() {
         precice->saveOldState(&StopCalc, dt);
       }
     }
-
+  */
 
     /*---set minimal time step as new time step increment size---*/
    // if(precice_usage)
@@ -131,13 +135,14 @@ void CMDODriver::StartSolver() {
     //dt = 1;
    //   config_container[ZONE_0]->SetDelta_UnstTimeND(*dt);
   //  }
-
+    std::cout << " Calling preprocess " << std::endl;
     /*--- Perform some preprocessing before starting the time-step simulation. ---*/
     Preprocess(TimeIter);
 
     /*--- Run a time-step iteration of the single-zone problem. ---*/
-   
+   std::cout << " Call run for steady state solution "<< std::endl;
     Run();
+    std::cout << " Run complete for steady state solution "<< std::endl;
     
     /*--- Perform some postprocessing on the solution before the update ---*/
     Postprocess();
@@ -152,27 +157,26 @@ void CMDODriver::StartSolver() {
 
     /*--- Advance the MDO run ---*/
     //std::cout << " TimeIter: " << TimeIter << std::endl;
-    if ( TimeIter == 5)
+  /*  if ( TimeIter == 5)
     {
       if(precice_usage)
       {
-    //  *max_precice_dt = precice->advance(*dt);
+    
         *max_precice_dt = precice->advance(*dt);
       }
     }
-    
+    */
     /*---Implicit coupling stage (reloadOldState)---*/
     bool suppress_output = false;
     
-    if(precice_usage && precice->isActionRequired(precice->getCoric()))
+   /* if(precice_usage && precice->isActionRequired(precice->getCoric()))
     {
       //Stay at the same iteration number if preCICE is not converged and reload to the state before the current iteration
       TimeIter--;
-      //TimeIter =0;
       precice->reloadOldState(&StopCalc, dt);
       suppress_output = true;
     }
-
+    */
 
     /*--- Output the solution in files. ---*/
     if (precice_usage && !suppress_output)

@@ -269,7 +269,7 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
                             CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
                             unsigned short val_iInst) 
 {
-
+std::cout << " See if MDO is required" << std::endl;
 
   /*--- Boolean to determine if we are running a static or dynamic case ---*/
   bool steady = !config[val_iZone]->GetTime_Domain();
@@ -290,14 +290,15 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
   /*--- However, ExtIter is the number of FSI iterations, so nIntIter is used in this case ---*/
 
     /*---See if MDA/MDO object needs to be created ---*/
-  bool precice_usage = config_container[ZONE_0]->GetpreCICE_Usage();
+    std::cout << " See if MDO is required" << std::endl;
+    enable_mdo = config[ZONE_0]->Std_MDO();
 
-  if (precice_usage) 
+  if (enable_mdo) 
   {
 
-    mdo = new CSMDO(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size, config, geometry, solver, grid_movement);    
+    //mdo = new CSMDO(config[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size, config, geometry, solver, grid_movement);    
     
-    dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
+    //dt = new double(config[ZONE_0]->GetDelta_UnstTimeND());
 
 
     if (rank == MASTER_NODE)
@@ -305,7 +306,7 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
       std::cout << "------------------------------ Initialize  Interface I/O for Static MDO --------------------------------" << std::endl;
     }
 
-    max_precice_dt = new double(CSMDO->initialize());
+    //max_precice_dt = new double(mdo->initializeMDO());
 
     if (rank == MASTER_NODE)
     {
@@ -338,7 +339,7 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
     if (StopCalc) break;
   }
 
-  if (precice_usage)
+  if (enable_mdo)
   {
     if (mdo != NULL)
     {
@@ -363,7 +364,7 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
     }
   }
 
-}
+
 
   if (multizone && steady) {
     Output(output, geometry, solver, config, config[val_iZone]->GetOuterIter(), StopCalc, val_iZone, val_iInst);

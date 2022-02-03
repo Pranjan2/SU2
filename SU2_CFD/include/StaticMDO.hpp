@@ -66,12 +66,12 @@ private:
 
   public:
 
-  /*--------------- Override default constructor for class CSMO ------*/
-  //CSMO(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement, );
-  CSMO(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement, CIntegration**** integration_container,CSurfaceMovement** surface_movement,COutput** output_containter, CNumerics****** numerics_container, CFreeFormDefBox*** FFDBox);
+  /*--------------- Override default constructor for class CSMDO ------*/
   
-  /*--------- Override default destructor for class CSMO -------*/
-  ~CSMO();
+  CSMDO(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement);
+  
+  /*--------- Override default destructor for class CSMDO -------*/
+  ~CSMDO();
   
 
 
@@ -94,7 +94,7 @@ private:
   *
   * \return Maximum length of first timestep to be computed by the solver.
   */
-  double initialize();
+  double initializeMDO();
 
 
 /*!
@@ -188,10 +188,3 @@ private:
 
 
 };
-
-
-
-  
-
-
-}
