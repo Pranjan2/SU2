@@ -423,7 +423,8 @@ void CConfig::addConvectFEMOption(const string name, unsigned short & space_fiel
 
 void CConfig::addMathProblemOption(const string name, bool & ContinuousAdjoint, const bool & ContinuousAdjoint_default,
                           bool & DiscreteAdjoint, const bool & DiscreteAdjoint_default,
-                          bool & Restart_Flow, const bool & Restart_Flow_default) {
+                          bool & Restart_Flow, const bool & Restart_Flow_default) 
+{
   assert(option_map.find(name) == option_map.end());
   all_options.insert(pair<string, bool>(name, true));
   COptionBase* val = new COptionMathProblem(name, ContinuousAdjoint, ContinuousAdjoint_default, DiscreteAdjoint, DiscreteAdjoint_default, Restart_Flow, Restart_Flow_default);
@@ -546,6 +547,8 @@ void CConfig::addPythonOption(const string name) {
   COptionBase* val = new COptionPython(name);
   option_map.insert(pair<string, COptionBase *>(name, val));
 }
+
+
 
 bool CConfig::GetpreCICE_Usage(void) { return precice_usage; }
 
@@ -1875,6 +1878,7 @@ void CConfig::SetConfig_Options() {
 
   /*!\brief LIMIT_ADJFLOW \n DESCRIPTION: Limit value for the adjoint variable.\n DEFAULT: 1E6. \ingroup Config*/
   addDoubleOption("LIMIT_ADJFLOW", AdjointLimit, 1E6);
+
   /*!\brief MG_ADJFLOW\n DESCRIPTION: Multigrid with the adjoint problem. \n Defualt: YES \ingroup Config*/
   addBoolOption("MG_ADJFLOW", MG_AdjointFlow, true);
 
@@ -2809,6 +2813,8 @@ void CConfig::SetConfig_Options() {
   /*--- options related to preCICE ---*/
   /* DESCRIPTION: Activate preCICE for FSI coupling */
   addBoolOption("PRECICE_USAGE", precice_usage, false);
+
+  addBoolOption("MDO", mdo, false);
 
   /* DESCRIPTION: Activate high verbosity level of preCICE adapter for FSI coupling */
   addBoolOption("PRECICE_VERBOSITYLEVEL_HIGH", precice_verbosityLevel_high, false);

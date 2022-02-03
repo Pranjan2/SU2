@@ -176,7 +176,8 @@ su2_cfd_src += files(['iteration/CIteration.cpp',
                       'iteration/CFEMFluidIteration.cpp',
                       'iteration/CFluidIteration.cpp',
                       'iteration/CHeatIteration.cpp',
-                      'iteration/CTurboIteration.cpp'])
+                      'iteration/CTurboIteration.cpp',
+                      'iteration/StaticMDO.cpp'])
 
 su2_cfd_src += files(['limiters/CLimiterDetails.cpp'])
 

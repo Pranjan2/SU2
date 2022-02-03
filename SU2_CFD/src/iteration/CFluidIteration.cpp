@@ -27,6 +27,8 @@
 
 #include "../../include/iteration/CFluidIteration.hpp"
 #include "../../include/output/COutput.hpp"
+#include "../../include/StaticMDO.hpp"
+
 
 void CFluidIteration::Preprocess(COutput* output, CIntegration**** integration, CGeometry**** geometry,
                                  CSolver***** solver, CNumerics****** numerics, CConfig** config,
@@ -265,7 +267,10 @@ void CFluidIteration::Postprocess(COutput* output, CIntegration**** integration,
 void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
                             CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
                             CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
-                            unsigned short val_iInst) {
+                            unsigned short val_iInst) 
+{
+
+
   /*--- Boolean to determine if we are running a static or dynamic case ---*/
   bool steady = !config[val_iZone]->GetTime_Domain();
 
@@ -284,7 +289,35 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
   /*--- For steady-state flow simulations, we need to loop over ExtIter for the number of time steps ---*/
   /*--- However, ExtIter is the number of FSI iterations, so nIntIter is used in this case ---*/
 
-  for (Inner_Iter = 0; Inner_Iter < nInner_Iter; Inner_Iter++) {
+    /*---See if MDA/MDO object needs to be created ---*/
+  bool precice_usage = config_container[ZONE_0]->GetpreCICE_Usage();
+
+  if (precice_usage) 
+  {
+
+    mdo = new CSMDO(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size, config, geometry, solver, grid_movement);    
+    
+    dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
+
+
+    if (rank == MASTER_NODE)
+    {
+      std::cout << "------------------------------ Initialize  Interface I/O for Static MDO --------------------------------" << std::endl;
+    }
+
+    max_precice_dt = new double(CSMDO->initialize());
+
+    if (rank == MASTER_NODE)
+    {
+      std::cout << "------------------------------- Interface Initialization Complete ---------------------------------" << std::endl;
+    }
+
+  }
+
+
+
+  for (Inner_Iter = 0; Inner_Iter < nInner_Iter; Inner_Iter++) 
+  {
     config[val_iZone]->SetInnerIter(Inner_Iter);
 
     /*--- Run a single iteration of the solver ---*/
@@ -304,6 +337,33 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
     /*--- If the iteration has converged, break the loop ---*/
     if (StopCalc) break;
   }
+
+  if (precice_usage)
+  {
+    if (mdo != NULL)
+    {
+      if (rank == MASTER_NODE)
+      {
+        std::cout <<"---------------------------------------------------------"<<std::endl;
+        std::cout << "-------------------Deleted MDO object-------------------"<<std::endl;
+        std::cout <<"---------------------------------------------------------"<<std::endl;
+
+      }
+      delete mdo;
+    }
+
+    if (dt != NULL)
+    {
+      delete dt;
+    }
+
+    if (max_precice_dt != NULL)
+    {
+      delete max_precice_dt;
+    }
+  }
+
+}
 
   if (multizone && steady) {
     Output(output, geometry, solver, config, config[val_iZone]->GetOuterIter(), StopCalc, val_iZone, val_iInst);

@@ -498,6 +498,7 @@ public:
     cont_adjoint = cont_adjoint_def;
     disc_adjoint = disc_adjoint_def;
     restart = restart_def;
+
   }
 
 };

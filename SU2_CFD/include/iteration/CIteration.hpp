@@ -40,6 +40,8 @@ using namespace std;
 
 class COutput;
 
+class CSMDO;
+
 /*!
  * \class CIteration
  * \brief Parent class for defining a single iteration of a physics problem.
@@ -57,6 +59,10 @@ class CIteration {
 
   su2double StartTime{0.0}, /*!< \brief Tracking wall time. */
       StopTime{0.0}, UsedTime{0.0};
+
+   bool precice_usage;
+  CSMDO *mdo;
+  double *max_precice_dt, *dt;     
 
  public:
   /*!

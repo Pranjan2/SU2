@@ -7,25 +7,11 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "../../../Common/include/toolboxes/geometry_toolbox.hpp"
-#include "../include/variables/CEulerVariable.hpp"
-#include "../include/solvers/CEulerSolver.hpp"
-#include "../include/solvers/CFVMFlowSolverBase.inl"
-#include "../include/iteration/CFluidIteration.hpp"
+#include "../../include/StaticMDO.hpp"
+.
 
 
-
-
-
-
-
-
-#include "../include/precice.hpp"
-
-
-/*---Main class description -----*/
-
-  Precice::Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement,CIntegration**** integration_container,CSurfaceMovement** surface_movement,COutput** output_container, CNumerics****** numerics_container, CFreeFormDefBox*** FFDBox)
+  CSMDO::CSMDO(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement)
   :
   coric(precice::constants::actionReadIterationCheckpoint()),
   cowic(precice::constants::actionWriteIterationCheckpoint()),
@@ -35,14 +21,10 @@
   config_container(config_container),
   geometry_container(geometry_container),
   solver_container(solver_container),
-  grid_movement(grid_movement),
-  integration_container(integration_container),
-  surface_movement(surface_movement),
-  output_container(output_container),
-  numerics_container(numerics_container),
-  FFDBox(FFDBox)
+  grid_movement(grid_movement)
 
-  {
+  
+    {
     /* Get dimension of the problem */
     nDim = geometry_container[ZONE_0][INST_0][MESH_0]->GetnDim();
   
@@ -131,7 +113,7 @@
 
 
 /*---Class destructor -----*/  
-Precice::~Precice(void)
+CSMO::~CSMO(void)
 {
     for (int i = 0; i < localNumberWetSurfaces; i++) 
     {
@@ -251,13 +233,13 @@ Precice::~Precice(void)
   }
 
 
-void Precice::check()
+void CSMO::check()
 {
-    std::cout << " Precice being called " << std::endl;
+    std::cout << " CSMO being called " << std::endl;
 }
 
 
-double Precice::initialize()
+double CSMO::initialize()
 {
   bool Debug = false;
   /* Check for dimensional consistency between SU2 and .xml file */
@@ -503,7 +485,7 @@ double Precice::initialize()
 
 }
 
-double Precice::advance( double computedTimestepLength )
+double CSMO::advance( double computedTimestepLength )
 {
   bool Debug = false;
   if ( processWorkingOnWetSurface)
@@ -687,8 +669,8 @@ double Precice::advance( double computedTimestepLength )
 }
 
 
-//void Precice::saveOldState( bool *StopCalc, double *dt )
-void Precice ::saveOldState( bool *StopCalc, double *dt )
+//void CSMO::saveOldState( bool *StopCalc, double *dt )
+void CSMO ::saveOldState( bool *StopCalc, double *dt )
 {
   /*---Begin loop over ALL grid points in the fluid domain---*/
   for (int iPoint = 0; iPoint < nPoint; iPoint++) 
@@ -723,7 +705,7 @@ void Precice ::saveOldState( bool *StopCalc, double *dt )
   solverInterface.markActionFulfilled(cowic);
 }
 
-void Precice::reloadOldState(bool *StopCalc, double *dt)
+void CSMO::reloadOldState(bool *StopCalc, double *dt)
 {
   std::cout << "Relading old states for implicit calculations" << std::endl;  
   for (int iPoint = 0; iPoint < nPoint; iPoint++)
@@ -756,30 +738,27 @@ void Precice::reloadOldState(bool *StopCalc, double *dt)
 
 }
 
-bool Precice::isCouplingOngoing()
+bool CSMO::isCouplingOngoing()
 {
   return solverInterface.isCouplingOngoing();
 }
 
-bool Precice::isActionRequired( const string& action )
+bool CSMO::isActionRequired( const string& action )
 {
   return solverInterface.isActionRequired(action);
 }
 
-const string& Precice::getCowic()
+const string& CSMO::getCowic()
 {
   return cowic;
 }
 
-const string& Precice::getCoric()
+const string& CSMO::getCoric()
 {
   return coric;
 }
 
-void Precice::finalize()
+void CSMO::finalize()
 {
   solverInterface.finalize();
 }
-
-
-

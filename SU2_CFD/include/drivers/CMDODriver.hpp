@@ -100,7 +100,7 @@ public:
   /*!
    * \brief Perform a mesh deformation as initial condition.
    */
-  void SetInitialMesh() override;
+ // void SetInitialMesh() override;
 
   /*!
    * \brief Monitor

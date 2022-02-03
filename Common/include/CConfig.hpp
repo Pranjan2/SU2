@@ -89,6 +89,7 @@ private:
   su2double Wnd_Cauchy_Eps;          /*!< \brief Epsilon used for the convergence of the time average of the unsteady (single zone)´ flow problem. */
   unsigned long Wnd_StartConv_Iter;  /*!< \brief Start convergence criteria at this iteration after Start_Iter_Wnd. */
   bool Wnd_Cauchy_Crit;              /*!< \brief True => Cauchy criterion is used for time average objective function in unsteady flows. */
+ 
 
   bool MG_AdjointFlow;              /*!< \brief MG with the adjoint flow problem */
   su2double *PressureLimits,
@@ -1161,7 +1162,6 @@ private:
   map<string, bool> all_options;
 
   /* Options for preCICE */
- bool MDO; 
  bool precice_usage;	/*!< \brief Usage of preCICE for FSI simulations */
  bool precice_verbosityLevel_high;	/*!< \brief Verbosity level of the preCICE adapter for FSI simulations */
  bool precice_loadRamping; /*!< \brief Usage of preCICE load ramping procedure for FSI simulations */
@@ -1169,7 +1169,7 @@ private:
  unsigned long precice_numberWetSurfaces; /*!< \brief Number of different wet surfaces */
  string preciceConfigFileName;	/*!< \brief Name of the preCICE configuration file */
  string preciceWetSurfaceMarkerName;	/*!< \brief Name of the wet surface marker (from the mesh file) that the preCICE adapter will use for identification of the wet surface */
-
+ bool mdo;
 
   /*--- brief param is a map from the option name (config file string) to its decoder (the specific child
    class of COptionBase that turns the string into a value) ---*/
@@ -8856,6 +8856,12 @@ public:
    */
   bool GetpreCICE_Usage(void);
 
+    /*!
+   * \brief Check if the MDO needs to be performed
+   * \return True if we use preCICE, false otherwise.
+   */
+
+
   /*!
    * \brief Check if the verbosity level of the preCICE adapter is high or not
    * \return True if verbosity level is high, false otherwise.
@@ -9374,4 +9380,6 @@ public:
    * \return Save frequency for unsteady time steps.
    */
   unsigned short GetRom_SaveFreq(void) const { return rom_save_freq; }
+
+  bool GetMDO_Mode(void) const {return mdo;}
 };
