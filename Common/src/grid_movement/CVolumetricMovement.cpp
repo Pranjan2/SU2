@@ -119,10 +119,12 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
   unsigned long Tot_Iter = 0;
   su2double MinVolume, MaxVolume;
 
+
   /*--- Retrieve number or iterations, tol, output, etc. from config ---*/
 
   auto Screen_Output  = config->GetDeform_Output();
   auto Nonlinear_Iter = config->GetGridDef_Nonlinear_Iter();
+
 
   /*--- Disable the screen output if we're running SU2_CFD ---*/
 
@@ -136,7 +138,10 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
    deformation can be divided into increments to help with stability. In
    particular, the linear elasticity equations hold only for small deformations. ---*/
 
-  for (auto iNonlinear_Iter = 0ul; iNonlinear_Iter < Nonlinear_Iter; iNonlinear_Iter++) {
+
+
+  for (auto iNonlinear_Iter = 0ul; iNonlinear_Iter < Nonlinear_Iter; iNonlinear_Iter++) 
+  {
 
     /*--- Initialize vector and sparse matrix ---*/
 

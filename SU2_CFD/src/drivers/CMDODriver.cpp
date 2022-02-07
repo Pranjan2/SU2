@@ -29,6 +29,7 @@
 #include "../../include/definition_structure.hpp"
 #include "../../include/output/COutput.hpp"
 #include "../../include/iteration/CIteration.hpp"
+#include "../../include/output/CMeshOutput.hpp"
 
 #include "../../include/precice.hpp"
 
@@ -59,19 +60,13 @@ void CMDODriver::StartSolver() {
   /*--- Main external loop of the solver. Runs for the number of time steps required. ---*/
 
   if (rank == MASTER_NODE)
-    cout << endl <<"------------------------------ Begin Forward Analysis -----------------------------" << endl;
+    cout << endl <<"------------------------------ Begin Forward Analysis -----------------------------" << endl;  
 
-  /*---Initialize precice object */
-  
-  //if (driver_config->GetTime_Domain())
-  //{
     /*---See if MDA/MDO object needs to be created ---*/
-    //precice_usage = config_container[ZONE_0]->GetpreCICE_Usage();
-  
+    enable_mdo = config_container[ZONE_0]->GetMDO_Mode();
   
     /*---If MDA is required, create a coupling object ----*/
-
-    /*if (precice_usage) 
+    if (enable_mdo) 
     {
       precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement, integration_container, surface_movement, output_container,  numerics_container, FFDBox);    
     
@@ -79,7 +74,7 @@ void CMDODriver::StartSolver() {
 
       if (rank == MASTER_NODE)
       {
-        std::cout << "------------------------------ Initialize Interface I/O --------------------------------" << std::endl;
+        std::cout << "------------------------------ Initialize Coupling Interface --------------------------------" << std::endl;
       }
 
 
@@ -87,20 +82,19 @@ void CMDODriver::StartSolver() {
 
       if (rank == MASTER_NODE)
       {
-        std::cout << "------------------------------- Interface I/O Complete ---------------------------------" << std::endl;
+        std::cout << "------------------------------- Interface Initialization Complete ---------------------------------" << std::endl;
       }
-    } */
-  //}
+    } 
+  
 
   if (rank == MASTER_NODE)
   {
     cout << endl <<"Simulation Run using the MDO Driver" << endl;
-
-
+   
     if (driver_config->GetTime_Domain())
     {
       cout << "The simulation will run for "
-           << driver_config->GetnTime_Iter() - config_container[ZONE_0]->GetRestart_Iter() << " time steps." << endl;
+           << driver_config->GetnTime_Iter() - config_container[ZONE_0]->GetRestart_Iter() << " time steps or until implicit convergence" << endl;
     }
   }
 
@@ -109,40 +103,64 @@ void CMDODriver::StartSolver() {
   {
     TimeIter = config_container[ZONE_0]->GetRestart_Iter();
   }
-
-  std::cout << " Begin main loop " << std::endl;
-
-
-  while ((TimeIter < config_container[ZONE_0]->GetnTime_Iter()) &&!precice_usage || (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage && precice->isCouplingOngoing() ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && precice_usage)
+  
+  while ((TimeIter < config_container[ZONE_0]->GetnTime_Iter()) &&!enable_mdo || (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_mdo && precice->isCouplingOngoing() ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_mdo)
   {
 
     /*---preCICE implicit coupling: saveOldState()---*/
     //if(precice_usage && precice->isActionRequired(precice->getCowic()))
-  /*  if (TimeIter == 5)
+    if (TimeIter == 5)
     {
-      if ( precice_usage)
+      if (enable_mdo)
       {
-        std::cout << " Saving old state for time iter:" << TimeIter << std::endl;
+      //  std::cout << " Saving old state for time iter:" << TimeIter << std::endl;
         precice->saveOldState(&StopCalc, dt);
       }
     }
-  */
+  
 
     /*---set minimal time step as new time step increment size---*/
-   // if(precice_usage)
-   // {
-    //  dt = min(max_precice_dt,dt);
-    //dt = 1;
-   //   config_container[ZONE_0]->SetDelta_UnstTimeND(*dt);
-  //  }
-    std::cout << " Calling preprocess " << std::endl;
+   /* if(precice_usage)
+    {
+      dt = min(max_precice_dt,dt);
+      config_container[ZONE_0]->SetDelta_UnstTimeND(*dt);
+    }
+    */
+
+    if (enable_mdo && !(precice->isCouplingOngoing()))
+    { 
+      if ( rank == MASTER_NODE)
+      {
+        std::cout << "Aero-elastic solution converged!" << std::endl;
+      }
+
+      Output(TimeIter);
+      
+      if (rank == MASTER_NODE)
+      {
+        std::cout << "Loading mesh data to master node" << std::endl;
+      }
+
+      output_container[ZONE_0]->Load_Data(geometry_container[ZONE_0][INST_0][MESH_0], config_container[ZONE_0], solver_container[ZONE_0][INST_0][MESH_0]);
+      
+      if ( rank == MASTER_NODE)
+      {
+        std::cout << "Write deformed mesh to file" <<std::endl;
+      }
+      output_container[ZONE_0]->WriteToFile(config_container[ZONE_0],geometry_container[ZONE_0][INST_0][MESH_0], MESH, config_container[ZONE_0]->GetMesh_Out_FileName());
+
+      break;
+
+    }
+
+ 
+
     /*--- Perform some preprocessing before starting the time-step simulation. ---*/
     Preprocess(TimeIter);
 
     /*--- Run a time-step iteration of the single-zone problem. ---*/
-   std::cout << " Call run for steady state solution "<< std::endl;
     Run();
-    std::cout << " Run complete for steady state solution "<< std::endl;
+  
     
     /*--- Perform some postprocessing on the solution before the update ---*/
     Postprocess();
@@ -150,43 +168,42 @@ void CMDODriver::StartSolver() {
     /*--- Update the solution for dual time stepping strategy ---*/
     Update();
     
-    std::cout << "Check for convergence"<<std::endl;
-    std::cout << "TimeIter" << TimeIter << std::endl;
     /*--- Monitor the computations after each iteration. ---*/
     Monitor(TimeIter);
 
     /*--- Advance the MDO run ---*/
     //std::cout << " TimeIter: " << TimeIter << std::endl;
-  /*  if ( TimeIter == 5)
+    if ( TimeIter == 5)
     {
-      if(precice_usage)
+      if(enable_mdo)
       {
     
         *max_precice_dt = precice->advance(*dt);
       }
     }
-    */
+    
     /*---Implicit coupling stage (reloadOldState)---*/
     bool suppress_output = false;
     
-   /* if(precice_usage && precice->isActionRequired(precice->getCoric()))
+   /* if(precice_usage && precice->isActionRequired(precice->getCoric())) */
+    if ( TimeIter == 5)
     {
       //Stay at the same iteration number if preCICE is not converged and reload to the state before the current iteration
       TimeIter--;
       precice->reloadOldState(&StopCalc, dt);
       suppress_output = true;
     }
-    */
+    
 
     /*--- Output the solution in files. ---*/
-    if (precice_usage && !suppress_output)
-    {
-      Implicit_Output(TimeIter, suppress_output);
-    }
-    else
-    {
-      Output(TimeIter);
-    }
+   // if (enable_mdo && !suppress_output)
+   // {
+     // Implicit_Output(TimeIter, suppress_output);
+   // }
+    //else
+   // {
+   //   Output(TimeIter);
+   // }
     /*--- Save iteration solution for libROM ---*/
     if (config_container[MESH_0]->GetSave_libROM()) 
     {
@@ -202,7 +219,7 @@ void CMDODriver::StartSolver() {
 
   }
 
-  if (precice_usage)
+  if (enable_mdo)
   {
     if (precice != NULL)
     {

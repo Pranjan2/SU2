@@ -269,7 +269,7 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
                             CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
                             unsigned short val_iInst) 
 {
-std::cout << " See if MDO is required" << std::endl;
+
 
   /*--- Boolean to determine if we are running a static or dynamic case ---*/
   bool steady = !config[val_iZone]->GetTime_Domain();
@@ -289,36 +289,37 @@ std::cout << " See if MDO is required" << std::endl;
   /*--- For steady-state flow simulations, we need to loop over ExtIter for the number of time steps ---*/
   /*--- However, ExtIter is the number of FSI iterations, so nIntIter is used in this case ---*/
 
-  bool enable_mdo;
-  CSMDO *mdo;
-  double *max_precice_dt, *dt;   
+  ///bool enable_mdo;
+  ///CSMDO *mdo;
+  ///double *max_precice_dt, *dt;   
 
 
     /*---See if MDA/MDO object needs to be created ---*/
-    std::cout << " See if MDO is required" << std::endl;
-    enable_mdo = config[ZONE_0]->Std_MDO();
+   /// enable_mdo = config[ZONE_0]->Std_MDO();
 
-  if (enable_mdo) 
-  {
+  ///if (enable_mdo) 
+  ///{
 
-    //mdo = new CSMDO(config[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size, config, geometry, solver, grid_movement);    
+    ///mdo = new CSMDO(config[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size, config, geometry, solver, grid_movement);    
     
-    //dt = new double(config[ZONE_0]->GetDelta_UnstTimeND());
+    ///dt = new double (0.001);
+   // dt = new double(config[ZONE_0]->GetDelta_UnstTimeND());
+    
+    //std::cout << " dt for steady state is " << *dt << std::endl;
 
+    ///if (rank == MASTER_NODE)
+    ///{
+    ///  std::cout << "------------------------------ Initialize  Interface I/O for Static MDO --------------------------------" << std::endl;
+    ///}
 
-    if (rank == MASTER_NODE)
-    {
-      std::cout << "------------------------------ Initialize  Interface I/O for Static MDO --------------------------------" << std::endl;
-    }
+    ///max_precice_dt = new double(mdo->initializeMDO());
 
-    //max_precice_dt = new double(mdo->initializeMDO());
+    ///if (rank == MASTER_NODE)
+    ///{
+      ///std::cout << "------------------------------- Interface Initialization Complete ---------------------------------" << std::endl;
+    ///}
 
-    if (rank == MASTER_NODE)
-    {
-      std::cout << "------------------------------- Interface Initialization Complete ---------------------------------" << std::endl;
-    }
-
-  }
+  ///}
 
 
 
@@ -341,12 +342,80 @@ std::cout << " See if MDO is required" << std::endl;
       Output(output, geometry, solver, config, Inner_Iter, StopCalc, val_iZone, val_iInst);
     }
 
+    /*
+    if (Inner_Iter == 3999)
+    {
+      if (enable_mdo) 
+      {
+        if ( rank == MASTER_NODE)
+        {
+          std::cout << "Saving old state for iter: " << Inner_Iter << std::endl;
+        }
+        mdo->saveOldState(&StopCalc, dt);
+      }
+    }
+    */
+
+    /*if ( Inner_Iter == 3999)
+    {
+      if (enable_mdo)
+      {
+        if (rank == MASTER_NODE)
+        {
+          std::cout <<"Advancing coupling state" << std::endl;
+        }
+        solver[val_iZone][val_iInst][MESH_0][FLOW_SOL]->ComputeVertexTractions(geometry[val_iZone][val_iInst][MESH_0],
+                                                                           config[val_iZone]);
+        *max_precice_dt = mdo->advance(*dt);
+        ///---At this stage only the surface grid locations are displaced
+        ///---Deform the entire volume grid now
+       
+        if ( rank == MASTER_NODE)
+        {
+          std::cout << "Updating volume mesh " << std::endl;
+        }
+
+        SetMesh_Deformation(geometry[ZONE_0][INST_0],
+                                 solver[ZONE_0][INST_0][MESH_0],
+                                 numerics[ZONE_0][INST_0][MESH_0],
+                                 config[ZONE_0], RECORDING::CLEAR_INDICES);
+
+        if ( rank == MASTER_NODE)
+        {
+          std::cout << "Updating wall-distances " << std::endl;
+        }
+
+        CGeometry::ComputeWallDistance(config, geometry);
+
+
+      }
+    }
+
+    /// if(precice_usage && precice->isActionRequired(precice->getCoric())) 
+    if ( Inner_Iter == 3999)
+    {
+      //if (enable_mdo && mdo->isActionRequired(mdo->getCoric()))
+      if (enable_mdo)
+      {
+        Inner_Iter = 0;
+        if (rank == MASTER_NODE)
+        {
+          std::cout <<"Reloading fluid state" << std::endl;
+        }
+
+        mdo->reloadOldState(&StopCalc, dt);
+      }
+
+    }
+     
+   */ 
+
     /*--- If the iteration has converged, break the loop ---*/
     if (StopCalc) break;
   }
 
-  if (enable_mdo)
-  {
+   /*if (enable_mdo)
+   {
     if (mdo!= NULL)
     {
       if (rank == MASTER_NODE)
@@ -369,9 +438,9 @@ std::cout << " See if MDO is required" << std::endl;
     {
       delete max_precice_dt;
     }
-  }
+   } */
 
-  std:: cout << " Donw with Steady state MDO " << std::endl;
+  ///std:: cout << " Donw with Steady state MDO " << std::endl;
 
   if (multizone && steady) {
     Output(output, geometry, solver, config, config[val_iZone]->GetOuterIter(), StopCalc, val_iZone, val_iInst);

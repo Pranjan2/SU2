@@ -301,9 +301,9 @@ double Precice::initialize()
     }
   }
 
-  std::cout << " Mesh iD allocation complete " << std::endl;
+  std::cout << "Mesh iD allocation complete " << std::endl;
 
-  std::cout << "Checking " <<config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(0)) << std::endl;
+ // std::cout << "Checking " <<config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(0)) << std::endl;
    
   /*Determine the number of wet surfaces, that this process is working on, then loop over this number for all respective preCICE-related tasks */
   for (int i = 0; i < globalNumberWetSurfaces; i++) 
@@ -327,30 +327,30 @@ double Precice::initialize()
     std::cout << " MeshID for each wetsurface    : " << meshID[0] << std::endl;
     std::cout << " Marker ID for FSI surface     : " << config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(0)) << std::endl;
   }
-  std::cout << " Finished determining number of wet surfaces " << std::endl;
+  std::cout << "Finished determining number of wet surfaces " << std::endl;
   
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //unsigned short Markers = config_container[ZONE_0]->GetnMarker_All();
-    std::cout << " Process " << solverProcessIndex << " has " << nMarkers_Global << " global markers and " << nMarkers_Local << " local markers " << std::endl;
+    //std::cout << " Process " << solverProcessIndex << " has " << nMarkers_Global << " global markers and " << nMarkers_Local << " local markers " << std::endl;
     
 
     /*--- Get the marker ID for FSI surface---*/ 
 
-      std::cout << " Process " << solverProcessIndex << " has gobal FSI ID " << FSI_ID_Global << " and local FSI_ID " << FSI_ID_Local << std::endl;
+      //std::cout << " Process " << solverProcessIndex << " has gobal FSI ID " << FSI_ID_Global << " and local FSI_ID " << FSI_ID_Local << std::endl;
       
      // for ( int i = 0; i < Markers; i ++)
     //  {
     //    std::cout << " Process " << solverProcessIndex << " has marker name " << config_container[ZONE_0]->GetMarker_CfgFile_TagBound(i) << std::endl;
    //   }
 
-       for ( int i = 0; i < nMarkers_Local; i ++)
-      {
-        std::cout << " Process " << solverProcessIndex << " has local  marker name " << config_container[ZONE_0]->GetMarker_All_TagBound(i) << std::endl;
-      }
+      // for ( int i = 0; i < nMarkers_Local; i ++)
+    //  {
+    //    std::cout << " Process " << solverProcessIndex << " has local  marker name " << config_container[ZONE_0]->GetMarker_All_TagBound(i) << std::endl;
+    //  }
 
     unsigned long FSI_nVert = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[FSI_ID_Local];
 
-    std::cout << " Process " << solverProcessIndex << " has " << FSI_nVert << " vertices on the interface " << std::endl;
+   // std::cout << " Process " << solverProcessIndex << " has " << FSI_nVert << " vertices on the interface " << std::endl;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   if (localNumberWetSurfaces < 1) 
   {
@@ -527,16 +527,16 @@ double Precice::advance( double computedTimestepLength )
     /*---Number of vertices on FSI surface---*/
     unsigned long FSI_nVert = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[FSI_ID_Local];
 
-    std::cout << " Process " << solverProcessIndex << " has " << FSI_nVert << " vertices on the interface " << std::endl;
+    //std::cout << " Process " << solverProcessIndex << " has " << FSI_nVert << " vertices on the interface " << std::endl;
 
    if (Debug)
    { 
       std::cout << "Fluid Grid Points : " << std::setw(6) << nPoint << "# Vertices on surface : " << std::setw(6) << FSI_nVert << std::endl;
    }
     /* Two-dimensional array consisting of all tractions ---*/
-    std::cout << " Registering forces ..." << std::endl;
+    //std::cout << " Registering forces ..." << std::endl;
      
-    std::cout << " # of vertices on FSI Surface: " << FSI_nVert << std::endl;
+    //std::cout << " # of vertices on FSI Surface: " << FSI_nVert << std::endl;
       
     // Create an array to hold the tractions in nDIMS at the FSI Interface
     double FSI_Trac[FSI_nVert][nDim];
@@ -623,10 +623,10 @@ double Precice::advance( double computedTimestepLength )
       delete [] forces;
     }
 
-    if ( procid == 0)
-    {
-      std::cout << " Advancing interface " << std::endl;
-    }
+    //if ( procid == 0)
+    //{
+    //  std::cout << " Advancing interface " << std::endl;
+   // }
 
 
     /*---Advace solverInterface---*/
@@ -643,10 +643,10 @@ double Precice::advance( double computedTimestepLength )
     
     solverInterface.readBlockVectorData(displDeltaID[indexMarkerWetMappingLocalToGlobal[0]], vertexSize[0], vertexIDs[0], displacementDeltas);
 
-    if ( procid == 0)
-    {
-      std::cout << " Recieved displacements from elastic domain " << std::endl;
-    }
+   // if ( procid == 0)
+   // {
+   //   std::cout << " Recieved displacements from elastic domain " << std::endl;
+   // }
 
     /* Re-arrage the elastic inputs ---*/
 
@@ -690,6 +690,11 @@ double Precice::advance( double computedTimestepLength )
 //void Precice::saveOldState( bool *StopCalc, double *dt )
 void Precice ::saveOldState( bool *StopCalc, double *dt )
 {
+  if (solverProcessIndex == 0)
+  {
+    std::cout << "Saving current state for implicit calculations" << std::endl;
+  }
+
   /*---Begin loop over ALL grid points in the fluid domain---*/
   for (int iPoint = 0; iPoint < nPoint; iPoint++) 
   {
@@ -725,7 +730,10 @@ void Precice ::saveOldState( bool *StopCalc, double *dt )
 
 void Precice::reloadOldState(bool *StopCalc, double *dt)
 {
-  std::cout << "Relading old states for implicit calculations" << std::endl;  
+  if (solverProcessIndex == 0)
+  {
+    std::cout << "Reloading old states for implicit calculations" << std::endl;
+  }  
   for (int iPoint = 0; iPoint < nPoint; iPoint++)
   {
     solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->SetSolution( iPoint, solution_Saved[iPoint]);

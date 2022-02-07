@@ -122,8 +122,8 @@ int main(int argc, char *argv[]) {
 
   if (mdo)
   {
-    //driver = new CMDODriver(config_file_name, nZone, MPICommunicator);
-    driver = new CSinglezoneDriver(config_file_name, nZone, MPICommunicator);
+    driver = new CMDODriver(config_file_name, nZone, MPICommunicator);
+    //driver = new CSinglezoneDriver(config_file_name, nZone, MPICommunicator);
   }
 
   driver->StartSolver();

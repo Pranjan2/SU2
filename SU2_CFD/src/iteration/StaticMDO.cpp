@@ -7,6 +7,14 @@
 #include <string.h>
 #include <stdio.h>
 
+
+#include "../../../Common/include/toolboxes/geometry_toolbox.hpp"
+#include "../../include/variables/CEulerVariable.hpp"
+#include "../../include/solvers/CEulerSolver.hpp"
+
+#include "../../include/solvers/CFVMFlowSolverBase.inl"
+#include "../../include/iteration/CFluidIteration.hpp"
+
 #include "../../include/StaticMDO.hpp"
 
 
@@ -534,27 +542,14 @@ double CSMDO::advance( double computedTimestepLength )
 
       for (int iVertex = 0; iVertex < FSI_nVert; iVertex++)
       {
-
-       // iPoint = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[iMarker][iVertex]->GetNode();
-
-        /*--- Check if the node belongs to the domain (i.e, not a halo node) ---*/
-       // if (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetDomain(iPoint)) 
-       // {
-          /*---Record forces only for the Aeroelastic Interface---*/
-        //  if (iMarker == FSI_ID)
-        //  {
-            for (iDim = 0; iDim < nDim; iDim++)
-            {
-              FSI_Trac[iVertex][iDim] = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(FSI_ID_Local,iVertex,iDim);
-            }
+        for (iDim = 0; iDim < nDim; iDim++)
+        {
+            FSI_Trac[iVertex][iDim] = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetVertexTractions(FSI_ID_Local,iVertex,iDim);
+        }
             if (Debug)
             {
               std::cout << "MarkerID : " << std::setw(6) << FSI_ID_Local << std::setw(6) << " VertexID: " << std::setw(6) << iVertex << std::setw(6) << " Tx: " << std::setw(6) << FSI_Trac[iVertex][0] << std::setw(6) << " Ty: " << std::setw(6) << FSI_Trac[iVertex][1] << std::setw(6) << " Tz: " << std::setw(6) << FSI_Trac[iVertex][2] <<std::endl;
             }  
-
-            
-       //   }
-       // }
       }
 
     //}
@@ -584,13 +579,6 @@ double CSMDO::advance( double computedTimestepLength )
     }
 
     /*---Write force across the TCP I/O interface ---*/
-
-  //  for ( int i = 0; i < globalNumberWetSurfaces; i++)
-  //  {
-  //    std::cout << " IndexMappingToGlobal for i : " << i << " is " << indexMarkerWetMappingLocalToGlobal[i] <<std::endl;
-  //    std::cout << " VertexSize is " << vertexSize[i] << std::endl;
-  //    std::cout << " VertexIDs are " << vertexIDs[i]  << std::endl;
-  //  }
     solverInterface.writeBlockVectorData(forceID[indexMarkerWetMappingLocalToGlobal[0]], vertexSize[0], vertexIDs[0], forces);
 
     if ( procid == 0)
@@ -599,7 +587,6 @@ double CSMDO::advance( double computedTimestepLength )
     }
 
     /*---De-allocate force pointer---*/
-
     if ( forces != NULL)
     {
       delete [] forces;
@@ -649,11 +636,23 @@ double CSMDO::advance( double computedTimestepLength )
     /*---Update the surface coordinates ---*/
 
     // Begin looping over all vertices at the interface 
+    if ( procid == 0)
+    { 
+        std::cout << "Updating surface mesh " << std::endl;
+    }
 
     for (int iVertex = 0; iVertex < FSI_nVert; iVertex++)
-    {
-      geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID_Local][iVertex]->SetVarCoord(displacementDeltas_su2[iVertex]);
+    {  
+        geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID_Local][iVertex]->SetVarCoord(displacementDeltas_su2[iVertex]); 
     }
+
+    if ( procid == 0)
+      { 
+          std::cout << "Updating volume mesh " << std::endl;
+      }
+        
+
+
     return max_precice_dt;
   }
   
@@ -678,24 +677,30 @@ void CSMDO ::saveOldState( bool *StopCalc, double *dt )
     for (int iVar = 0; iVar < nVar; iVar++) 
     {
       //Save solutions at last and current time step
+   //   std::cout << " Save solution in current step " << std::endl;
       solution_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution(iPoint,iVar));
-      solution_time_n_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution_time_n(iPoint,iVar));
-      solution_time_n1_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution_time_n1(iPoint,iVar));
+     // std::cout << " Save solution at time n " << std::endl;
+     // solution_time_n_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution_time_n(iPoint,iVar));
+    //  std::cout << " Save solution at time n+1" << std::endl;
+    //  solution_time_n1_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution_time_n1(iPoint,iVar));
      // std::cout << " Point " << iPoint << " Variable 1 " << solution_Saved[iPoint][0] << std::endl;
     }
     for (int iDim = 0; iDim < nDim; iDim++) 
     {
       //Save coordinates at last, current and next time step
+     // std::cout << " Save coordinates in current step " << std::endl;
       Coord_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord(iPoint))[iDim];
-      Coord_n_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord_n(iPoint))[iDim];
-      Coord_n1_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord_n1(iPoint))[iDim];
-      Coord_p1_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord_p1(iPoint))[iDim];
-
-      GridVel_Saved[iPoint][iDim] = (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel(iPoint))[iDim];  
+      //Coord_n_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord_n(iPoint))[iDim];
+      //Coord_n1_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord_n1(iPoint))[iDim];
+      //Coord_p1_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord_p1(iPoint))[iDim];
+      //std::cout << " Save grid_vel in current step " << std::endl;      
+      //GridVel_Saved[iPoint][iDim] = (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel(iPoint))[iDim];  
     }
   }
+
+  //std::cout << " Save grid_vel_grad in current step " << std::endl;
     /*---Recording GridVel_Grad using SU2 datatype---*/
-    GridVel_Grad = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel_Grad();
+    //GridVel_Grad = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel_Grad();
 
   //Save wether simulation should be stopped after the current iteration
   StopCalc_savedState = *StopCalc;
@@ -707,27 +712,27 @@ void CSMDO ::saveOldState( bool *StopCalc, double *dt )
 
 void CSMDO::reloadOldState(bool *StopCalc, double *dt)
 {
-  std::cout << "Relading old states for implicit calculations" << std::endl;  
+  //std::cout << "Relading old states for implicit calculations" << std::endl;  
   for (int iPoint = 0; iPoint < nPoint; iPoint++)
   {
     solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->SetSolution( iPoint, solution_Saved[iPoint]);
-    solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Set_Solution_time_n(iPoint, solution_time_n_Saved[iPoint]);
-    solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Set_Solution_time_n1( iPoint, solution_time_n1_Saved[iPoint]);
+    //solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Set_Solution_time_n(iPoint, solution_time_n_Saved[iPoint]);
+    //solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Set_Solution_time_n1( iPoint, solution_time_n1_Saved[iPoint]);
 
     //Reload coordinates at last, current and next time step
-    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord(iPoint, Coord_n1_Saved[iPoint]);
-    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_n();
-    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_n1();
-    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord(iPoint, Coord_n_Saved[iPoint]);
-    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_n();
-    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_p1(iPoint, Coord_p1_Saved[iPoint]);
+    //geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord(iPoint, Coord_n1_Saved[iPoint]);
+    //geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_n();
+    //geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_n1();
+   // geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord(iPoint, Coord_n_Saved[iPoint]);
+   // geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_n();
+   // geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_p1(iPoint, Coord_p1_Saved[iPoint]);
     geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord(iPoint, Coord_Saved[iPoint]);
 
     //Reload grid velocity
-    geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel(iPoint, GridVel_Saved[iPoint]);
+   // geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel(iPoint, GridVel_Saved[iPoint]);
   }
   /*--- Set the grid velocity gradient here---*/
-  geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel_Grad(GridVel_Grad);
+  //geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel_Grad(GridVel_Grad);
 
     //Reload wether simulation should be stopped after current iteration
   *StopCalc = StopCalc_savedState;

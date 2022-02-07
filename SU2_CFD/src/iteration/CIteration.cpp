@@ -35,10 +35,27 @@
 void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surface_movement,
                                   CVolumetricMovement* grid_movement, CSolver*** solver, CConfig* config,
                                   unsigned long IntIter, unsigned long TimeIter) {
-  unsigned short Kind_Grid_Movement = config->GetKind_GridMovement();
+
+  unsigned short Kind_Grid_Movement;
+  
   bool adjoint = config->GetContinuous_Adjoint();
 
   unsigned short val_iZone = config->GetiZone();
+
+  bool mdo_mode =config->GetMDO_Mode();
+
+  if ( mdo_mode)
+  {
+    Kind_Grid_Movement = PRECICE_MOVEMENT;
+  }
+  else
+  {
+    Kind_Grid_Movement = config->GetKind_GridMovement();
+  }
+
+ 
+
+
 
   /*--- Perform mesh movement depending on specified type ---*/
   switch (Kind_Grid_Movement)
@@ -74,16 +91,16 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
     case PRECICE_MOVEMENT:
 
       if (rank == MASTER_NODE)
-        cout << " Deforming fluid domain for MDO ." << endl;
+        cout << "Deforming fluid domain for MDO " << endl;
       grid_movement->SetVolume_Deformation(geometry[MESH_0], config, true);
 
       if (rank == MASTER_NODE)
-        cout << " Computing grid velocities by finite differencing ." << endl;
-      geometry[MESH_0]->SetGridVelocity(config);
+        cout << "Computing grid velocities by finite differencing ." << endl;
+    //  geometry[MESH_0]->SetGridVelocity(config);
 
       /*--- Update the multigrid structure after moving the finest grid,
        including computing the grid velocities on the coarser levels. ---*/
-      grid_movement->UpdateMultiGrid(geometry, config);
+     // grid_movement->UpdateMultiGrid(geometry, config);
 
       break;
   }

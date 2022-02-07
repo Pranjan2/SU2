@@ -3149,7 +3149,7 @@ void CConfig::SetHeader(SU2_COMPONENT val_software) const{
   if ((iZone == 0) && (rank == MASTER_NODE)){
     cout << endl << "-------------------------------------------------------------------------" << endl;
     cout << "|    ___ _   _ ___                                                      |" << endl;
-    cout << "|   / __| | | |_  )   Release 7.2.0 \"Blackbird\"                         |" << endl;
+    cout << "|   / __| | | |_  )   Release 7.2.0 \"Columbia\"                         |" << endl;
     cout << "|   \\__ \\ |_| |/ /                                                      |" << endl;
     switch (val_software) {
     case SU2_COMPONENT::SU2_CFD: cout << "|   |___/\\___//___|   Suite (Computational Fluid Dynamics Code)         |" << endl; break;
