@@ -85,6 +85,11 @@ void CMDODriver::StartSolver() {
         std::cout << "------------------------------- Interface Initialization Complete ---------------------------------" << std::endl;
       }
     } 
+
+    /*---Get the time at which aero-elastic state must be computed---*/
+    //target_time = config_container[ZONE_0]->GetTargTimeIter();
+
+    //target_time = 100;
   
 
   if (rank == MASTER_NODE)
@@ -103,13 +108,22 @@ void CMDODriver::StartSolver() {
   {
     TimeIter = config_container[ZONE_0]->GetRestart_Iter();
   }
+
+  if (enable_mdo)
+  {
+    
+    if ( rank == MASTER_NODE)
+    {
+      std::cout <<"Aeroelasitc simulations will begin at: " << target_time << std::endl;
+    }
+  }
   
   while ((TimeIter < config_container[ZONE_0]->GetnTime_Iter()) &&!enable_mdo || (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_mdo && precice->isCouplingOngoing() ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_mdo)
   {
 
     /*---preCICE implicit coupling: saveOldState()---*/
     //if(precice_usage && precice->isActionRequired(precice->getCowic()))
-    if (TimeIter == 5)
+    if (TimeIter == target_time)
     {
       if (enable_mdo)
       {
@@ -158,8 +172,16 @@ void CMDODriver::StartSolver() {
     /*--- Perform some preprocessing before starting the time-step simulation. ---*/
     Preprocess(TimeIter);
 
-    /*--- Run a time-step iteration of the single-zone problem. ---*/
-    Run();
+    if (enable_mdo)
+    {
+      RunMDO(TimeIter);
+    }
+
+    else
+    {
+      /*--- Run a time-step iteration of the single-zone problem. ---*/
+      Run();
+    }  
   
     
     /*--- Perform some postprocessing on the solution before the update ---*/
@@ -173,7 +195,7 @@ void CMDODriver::StartSolver() {
 
     /*--- Advance the MDO run ---*/
     //std::cout << " TimeIter: " << TimeIter << std::endl;
-    if ( TimeIter == 5)
+    if ( TimeIter == target_time)
     {
       if(enable_mdo)
       {
@@ -186,7 +208,7 @@ void CMDODriver::StartSolver() {
     bool suppress_output = false;
     
    /* if(precice_usage && precice->isActionRequired(precice->getCoric())) */
-    if ( TimeIter == 5)
+    if ( TimeIter == target_time)
     {
       //Stay at the same iteration number if preCICE is not converged and reload to the state before the current iteration
       TimeIter--;
@@ -298,11 +320,24 @@ void CMDODriver::Run()
 
   unsigned long OuterIter = 0;
   config_container[ZONE_0]->SetOuterIter(OuterIter);
-   
-  /*--- Iterate the zone as a block, either to convergence or to a max number of iterations ---*/
-  iteration_container[ZONE_0][INST_0]->Solve(output_container[ZONE_0], integration_container, geometry_container, solver_container,
-        numerics_container, config_container, surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);
 
+
+    /*--- Iterate the zone as a block, either to convergence or to a max number of iterations ---*/
+    iteration_container[ZONE_0][INST_0]->Solve(output_container[ZONE_0], integration_container, geometry_container, solver_container,
+        numerics_container, config_container, surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);  
+
+}
+
+void CMDODriver::RunMDO(unsigned long TimeIter) 
+{
+
+  unsigned long OuterIter = 0;
+  config_container[ZONE_0]->SetOuterIter(OuterIter);
+
+    /*--- Iterate the zone as a block, either to convergence or to a max number of inner iterations for Implicit MDA ---*/
+    iteration_container[ZONE_0][INST_0]->MDOSolve(output_container[ZONE_0], integration_container, geometry_container, solver_container,
+        numerics_container, config_container, surface_movement, grid_movement, FFDBox, ZONE_0, INST_0, TimeIter);
+        
 }
 
 void CMDODriver::Postprocess() {

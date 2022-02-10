@@ -2261,6 +2261,7 @@ public:
       newString.append(option_name);
       newString.append(": multiple values for type ");
       newString.append(type_id);
+      std::cout << "Multiple value count: " << option_value.size() << std::endl;
       return newString;
     }
     return "";

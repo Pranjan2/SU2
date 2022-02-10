@@ -342,6 +342,8 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
       Output(output, geometry, solver, config, Inner_Iter, StopCalc, val_iZone, val_iInst);
     }
 
+    //std::cout << "Calling @ CFluidIteration"<<std::endl;
+
     /*
     if (Inner_Iter == 3999)
     {
@@ -441,6 +443,69 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
    } */
 
   ///std:: cout << " Donw with Steady state MDO " << std::endl;
+
+  if (multizone && steady) {
+    Output(output, geometry, solver, config, config[val_iZone]->GetOuterIter(), StopCalc, val_iZone, val_iInst);
+
+    /*--- Set the convergence to false (to make sure outer subiterations converge) ---*/
+
+    if (config[val_iZone]->GetKind_Solver() == HEAT_EQUATION) {
+      integration[val_iZone][INST_0][HEAT_SOL]->SetConvergence(false);
+    }
+    else {
+      integration[val_iZone][INST_0][FLOW_SOL]->SetConvergence(false);
+    }
+  }
+}
+
+void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
+                            CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
+                            CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+                            unsigned short val_iInst, unsigned long TimeIter) 
+{
+
+
+  /*--- Boolean to determine if we are running a static or dynamic case ---*/
+  bool steady = !config[val_iZone]->GetTime_Domain();
+
+  unsigned long Inner_Iter, nInner_Iter = config[val_iZone]->GetnInner_Iter();
+  bool StopCalc = false;
+
+
+  StartTime = SU2_MPI::Wtime();
+
+  /*--- Preprocess the solver ---*/
+  Preprocess(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
+             val_iZone, INST_0);
+
+  for (Inner_Iter = 0; Inner_Iter < nInner_Iter; Inner_Iter++) 
+  {
+    config[val_iZone]->SetInnerIter(Inner_Iter);
+
+    if (TimeIter == 50)
+    {
+      nInner_Iter = 500;
+    }
+
+    /*--- Run a single iteration of the solver ---*/
+    Iterate(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox, val_iZone,
+            INST_0);
+
+    /*--- Monitor the pseudo-time ---*/
+    StopCalc = Monitor(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
+                       val_iZone, INST_0);
+
+    /*--- Output files at intermediate iterations if the problem is single zone ---*/
+
+    if (singlezone && steady) 
+    {
+      Output(output, geometry, solver, config, Inner_Iter, StopCalc, val_iZone, val_iInst);
+    }
+
+    
+    if (StopCalc) break;
+  }
+
 
   if (multizone && steady) {
     Output(output, geometry, solver, config, config[val_iZone]->GetOuterIter(), StopCalc, val_iZone, val_iInst);

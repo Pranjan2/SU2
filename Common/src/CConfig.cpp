@@ -286,7 +286,6 @@ void CConfig::addDoubleOption(const string name, su2double & option_field, su2do
   // Check if the key is already in the map. If this fails, it is coder error
   // and not user error, so throw.
   assert(option_map.find(name) == option_map.end());
-
   // Add this option to the list of all the options
   all_options.insert(pair<string, bool>(name, true));
 
@@ -337,8 +336,10 @@ void CConfig::addLongOption(const string name, long & option_field, long default
   option_map.insert(pair<string, COptionBase *>(name, val));
 }
 
-void CConfig::addBoolOption(const string name, bool & option_field, bool default_value) {
+void CConfig::addBoolOption(const string name, bool & option_field, bool default_value) 
+{
   assert(option_map.find(name) == option_map.end());
+  
   all_options.insert(pair<string, bool>(name, true));
   COptionBase* val = new COptionBool(name, option_field, default_value);
   option_map.insert(pair<string, COptionBase *>(name, val));
@@ -2815,6 +2816,8 @@ void CConfig::SetConfig_Options() {
   addBoolOption("PRECICE_USAGE", precice_usage, false);
 
   addBoolOption("MDO", mdo, false);
+
+  addDoubleOption("MDO_INIT", mdo_time, 999.0);
 
   /* DESCRIPTION: Activate high verbosity level of preCICE adapter for FSI coupling */
   addBoolOption("PRECICE_VERBOSITYLEVEL_HIGH", precice_verbosityLevel_high, false);

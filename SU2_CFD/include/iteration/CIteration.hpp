@@ -176,6 +176,11 @@ class CIteration {
                      CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
                      unsigned short val_iInst){}
 
+  virtual void MDOSolve(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
+                     CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
+                     CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+                     unsigned short val_iInst, unsigned long TimeIter){}
+
   /*!
    * \brief A virtual member.
    * \param[in] output - Pointer to the COutput class.

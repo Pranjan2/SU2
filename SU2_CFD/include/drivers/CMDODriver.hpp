@@ -44,6 +44,9 @@ protected:
 
 public:
 
+  double target_time = 50.0;
+
+
   /*!
    * \brief Constructor of the class.
    * \param[in] confFile - Configuration file name.
@@ -73,6 +76,11 @@ public:
    * \brief Run the iteration for ZONE_0.
    */
   void Run() override;
+
+  /*!
+  * \brief Run the implicit MDO iteration for ZONE_0.
+  */
+  void RunMDO(unsigned long TimeIter);
 
   /*!
    * \brief Postprocess the iteration for ZONE_0.

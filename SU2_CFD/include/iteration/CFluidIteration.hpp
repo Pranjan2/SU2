@@ -37,6 +37,7 @@
  */
 class CFluidIteration : public CIteration {
  public:
+
   /*!
    * \brief Constructor of the class.
    * \param[in] config - Definition of the particular problem.
@@ -87,6 +88,13 @@ class CFluidIteration : public CIteration {
              CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
              CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
              unsigned short val_iInst) override;
+
+  /* --- Same as Solve() except this adapts to a higher inner Iteration for implicit coupling ---*/ 
+  void MDOSolve(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
+                            CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
+                            CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+                            unsigned short val_iInst, unsigned long TimeIter);
+
 
   /*!
    * \brief Updates the containers for the fluid system.

@@ -404,6 +404,7 @@ private:
   unsigned long OuterIter;          /*!< \brief Current Outer iterations for multizone problems. */
   unsigned long InnerIter;          /*!< \brief Current inner iterations for multizone problems. */
   unsigned long TimeIter;           /*!< \brief Current time iterations for multizone problems. */
+
   long Unst_AdjointIter;            /*!< \brief Iteration number to begin the reverse time integration in the direct solver for the unsteady adjoint. */
   long Iter_Avg_Objective;          /*!< \brief Iteration the number of time steps to be averaged, counting from the back */
   su2double PhysicalTime;           /*!< \brief Physical time at the current iteration in the solver for unsteady problems. */
@@ -1109,6 +1110,7 @@ private:
   su2double uq_delta_b;         /*!< \brief Parameter used to perturb eigenvalues of Reynolds Stress Matrix */
   unsigned short eig_val_comp;  /*!< \brief Parameter used to determine type of eigenvalue perturbation */
   su2double uq_urlx;            /*!< \brief Under-relaxation factor */
+  su2double mdo_time;                  /*!< \breif Target time iteration to initiate aero-elastic simulations. */
   bool uq_permute;              /*!< \brief Permutation of eigenvectors */
 
   unsigned long pastix_fact_freq;  /*!< \brief (Re-)Factorization frequency for PaStiX */
@@ -3001,6 +3003,12 @@ public:
    * \param[in] val_iter - Current time iterationnumber.
    */
   unsigned long GetTimeIter() const { return TimeIter; }
+
+  /*!
+  * \brief Get the target time iteration number.
+  * \param[in] val_iter - Current time iterationnumber.
+  */
+  double GetTargTimeIter() const { return mdo_time; }
 
   /*!
    * \brief Get the current internal iteration number.

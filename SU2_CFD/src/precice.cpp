@@ -362,7 +362,7 @@ double Precice::initialize()
 
   if (processWorkingOnWetSurface) 
   {
-    std::cout << " Discretizing Aero-elastic Interface! \n";
+    std::cout << "Discretizing Aero-elastic Interface! \n";
 
     /*--Store the wet surface marker values in an array, which has the size equal to the number of wet surfaces actually being worked on by this process*/
     valueMarkerWet = new short[localNumberWetSurfaces];
@@ -380,7 +380,7 @@ double Precice::initialize()
     vertexIDs = new int*[localNumberWetSurfaces];
   }
 
-  std::cout << " Finished setting indices " << std::endl;
+  std::cout << "Finished setting indices " << std::endl;
    
 
 
@@ -432,7 +432,7 @@ double Precice::initialize()
     
 
 
-      std::cout << " Finished acquiring node IDs and coordinates" << std::endl;
+      std::cout << "Finished acquiring node IDs and coordinates" << std::endl;
 
 
       /*---------preCICE Internal Calculations -----*/
@@ -493,11 +493,11 @@ double Precice::initialize()
 
   double precice_dt;
 
-  std::cout << " Initialize the interface " << std::endl;
+ // std::cout << " Initialize the interface " << std::endl;
 
   precice_dt = solverInterface.initialize();
 
-  std::cout << " Interface initialization complete " << std::endl;
+//  std::cout << " Interface initialization complete " << std::endl;
 
   return precice_dt;
 

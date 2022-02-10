@@ -126,6 +126,11 @@ int main(int argc, char *argv[]) {
     //driver = new CSinglezoneDriver(config_file_name, nZone, MPICommunicator);
   }
 
+  else
+  {
+    driver = new CSinglezoneDriver(config_file_name, nZone, MPICommunicator);
+  }
+
   driver->StartSolver();
 
   /*--- Postprocess all the containers, close history file, exit SU2. ---*/
