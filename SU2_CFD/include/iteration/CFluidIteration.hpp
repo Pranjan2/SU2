@@ -113,6 +113,14 @@ class CFluidIteration : public CIteration {
                CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
                CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
                unsigned short val_iInst) override;
+  /*!
+   * \brief Monitors the convergence and other metrics for the AERO-ELASTIC fluid system
+   * \param[in] ??? - Description here.
+   */
+  bool MonitorMDO(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
+               CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
+               CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
+               unsigned short val_iInst, unsigned long TimeIter);
 
   /*!
    * \brief Postprocesses the fluid system before heading to another physics system or the next iteration.

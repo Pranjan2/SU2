@@ -247,6 +247,43 @@ bool CFluidIteration::Monitor(COutput* output, CIntegration**** integration, CGe
   return StopCalc;
 }
 
+bool CFluidIteration::MonitorMDO(COutput* output, CIntegration**** integration, CGeometry**** geometry,
+                              CSolver***** solver, CNumerics****** numerics, CConfig** config,
+                              CSurfaceMovement** surface_movement, CVolumetricMovement*** grid_movement,
+                              CFreeFormDefBox*** FFDBox, unsigned short val_iZone, unsigned short val_iInst, unsigned long TimeIter) {
+  bool StopCalc = false;
+
+  StopTime = SU2_MPI::Wtime();
+
+  UsedTime = StopTime - StartTime;
+
+  //std::cout <<"Monitoring  in MonitorMDO at time iter" << TimeIter  << std::endl;
+
+  
+  output->SetHistory_Output(geometry[val_iZone][INST_0][MESH_0], solver[val_iZone][INST_0][MESH_0], config[val_iZone],
+                              config[val_iZone]->GetTimeIter(), config[val_iZone]->GetOuterIter(),
+                              config[val_iZone]->GetInnerIter());
+  
+
+
+  /*--- If convergence was reached --*/
+  StopCalc = output->GetConvergence();
+
+  //if ((TimeIter == 50) && (config[val_iZone]->GetFixed_CL_Mode()))
+  if (TimeIter == 50 && StopCalc) 
+  {
+    if ( rank == MASTER_NODE)
+    {
+      std::cout << "Entering FIXED_CL mode"<<std::endl;
+      std::cout << "Current implicit step has converged. This is a place-holder for AOA FD for Fixed CL"<<std::endl;
+    }
+
+    //StopCalc = MonitorFixed_CL(output, geometry[val_iZone][INST_0][MESH_0], solver[val_iZone][INST_0][MESH_0],
+    //                           config[val_iZone]);
+  }
+  return StopCalc;
+}
+
 void CFluidIteration::Postprocess(COutput* output, CIntegration**** integration, CGeometry**** geometry,
                                   CSolver***** solver, CNumerics****** numerics, CConfig** config,
                                   CSurfaceMovement** surface_movement, CVolumetricMovement*** grid_movement,
@@ -478,13 +515,16 @@ void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CG
   Preprocess(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
              val_iZone, INST_0);
 
+  /*--------------------------------------------------------------------------------------------------------------*/
+  /*-----------------------------------------------MAIN IMPLICIT LOOP---------------------------------------------*/
+  /*--------------------------------------------------------------------------------------------------------------*/
   for (Inner_Iter = 0; Inner_Iter < nInner_Iter; Inner_Iter++) 
   {
     config[val_iZone]->SetInnerIter(Inner_Iter);
-
+    /*---If at the target MDO time for implicit calculations, increase the # of inner Iterations to a high value-----*/
     if (TimeIter == 50)
     {
-      nInner_Iter = 500;
+      nInner_Iter = 20000;
     }
 
     /*--- Run a single iteration of the solver ---*/
@@ -492,8 +532,11 @@ void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CG
             INST_0);
 
     /*--- Monitor the pseudo-time ---*/
-    StopCalc = Monitor(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
-                       val_iZone, INST_0);
+    StopCalc = MonitorMDO(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
+                       val_iZone, INST_0, TimeIter);
+
+    //StopCalc = Monitor(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
+    //          val_iZone, INST_0);
 
     /*--- Output files at intermediate iterations if the problem is single zone ---*/
 
@@ -746,6 +789,7 @@ bool CFluidIteration::MonitorFixed_CL(COutput *output, CGeometry *geometry, CSol
   CSolver* flow_solver= solver[FLOW_SOL];
 
   bool fixed_cl_convergence = flow_solver->FixedCL_Convergence(config, output->GetConvergence());
+
 
   /* --- If Fixed CL mode has ended and Finite Differencing has started: --- */
 

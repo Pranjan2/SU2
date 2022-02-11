@@ -805,6 +805,9 @@ bool COutput::SetResult_Files(CGeometry *geometry, CConfig *config, CSolver** so
 
     WriteAdditionalFiles(config, geometry, solver_container);
 
+    /*---Write deformed mesh ---*/
+    //WriteToFile(config_container[ZONE_0],geometry_container[ZONE_0][INST_0][MESH_0], MESH, config_container[ZONE_0]->GetMesh_Out_FileName());
+    //WriteToFile(config,geometry, MESH, config->GetMesh_Out_FileName());
     return true;
   }
 

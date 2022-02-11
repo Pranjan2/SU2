@@ -89,7 +89,7 @@ void CMDODriver::StartSolver() {
     /*---Get the time at which aero-elastic state must be computed---*/
     //target_time = config_container[ZONE_0]->GetTargTimeIter();
 
-    //target_time = 100;
+   
   
 
   if (rank == MASTER_NODE)
@@ -121,8 +121,7 @@ void CMDODriver::StartSolver() {
   while ((TimeIter < config_container[ZONE_0]->GetnTime_Iter()) &&!enable_mdo || (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_mdo && precice->isCouplingOngoing() ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_mdo)
   {
 
-    /*---preCICE implicit coupling: saveOldState()---*/
-    //if(precice_usage && precice->isActionRequired(precice->getCowic()))
+    /*---Save old state for implicit coupling---*/
     if (TimeIter == target_time)
     {
       if (enable_mdo)
@@ -132,15 +131,7 @@ void CMDODriver::StartSolver() {
       }
     }
   
-
-    /*---set minimal time step as new time step increment size---*/
-   /* if(precice_usage)
-    {
-      dt = min(max_precice_dt,dt);
-      config_container[ZONE_0]->SetDelta_UnstTimeND(*dt);
-    }
-    */
-
+    /*--- Check if coupling has converged. If yes, output necessary files and then terminate the loop---*/
     if (enable_mdo && !(precice->isCouplingOngoing()))
     { 
       if ( rank == MASTER_NODE)
@@ -161,7 +152,7 @@ void CMDODriver::StartSolver() {
       {
         std::cout << "Write deformed mesh to file" <<std::endl;
       }
-      output_container[ZONE_0]->WriteToFile(config_container[ZONE_0],geometry_container[ZONE_0][INST_0][MESH_0], MESH, config_container[ZONE_0]->GetMesh_Out_FileName());
+       output_container[ZONE_0]->WriteToFile(config_container[ZONE_0],geometry_container[ZONE_0][INST_0][MESH_0], MESH, config_container[ZONE_0]->GetMesh_Out_FileName());
 
       break;
 
@@ -193,6 +184,8 @@ void CMDODriver::StartSolver() {
     /*--- Monitor the computations after each iteration. ---*/
     Monitor(TimeIter);
 
+    //Output(TimeIter);
+
     /*--- Advance the MDO run ---*/
     //std::cout << " TimeIter: " << TimeIter << std::endl;
     if ( TimeIter == target_time)
@@ -217,15 +210,6 @@ void CMDODriver::StartSolver() {
     }
     
 
-    /*--- Output the solution in files. ---*/
-   // if (enable_mdo && !suppress_output)
-   // {
-     // Implicit_Output(TimeIter, suppress_output);
-   // }
-    //else
-   // {
-   //   Output(TimeIter);
-   // }
     /*--- Save iteration solution for libROM ---*/
     if (config_container[MESH_0]->GetSave_libROM()) 
     {
@@ -477,6 +461,24 @@ bool CMDODriver::Monitor(unsigned long TimeIter)
     }
 
     StopCalc = MaxIterationsReached || InnerConvergence;
+  }
+
+  if ((TimeDomain == YES) && (TimeIter == 50))
+  {
+    InnerConvergence     = output_container[ZONE_0]->GetConvergence();
+    MaxIterationsReached = InnerIter+1 >= nInnerIter;
+
+    if ((MaxIterationsReached || InnerConvergence) && (rank == MASTER_NODE)) 
+    {
+      cout << endl << "----------------------------- MDA Solver Exit -------------------------------" << endl;
+      if (InnerConvergence) cout << "All convergence criteria satisfied." << endl;
+      else cout << endl << "Maximum number of iterations reached (ITER = " << nInnerIter << ") before convergence." << endl;
+      output_container[ZONE_0]->PrintConvergenceSummary();
+      cout << "-------------------------------------------------------------------------" << endl;
+    }
+
+    StopCalc = MaxIterationsReached || InnerConvergence;
+
   }
 
 
