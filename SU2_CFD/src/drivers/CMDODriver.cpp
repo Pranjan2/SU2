@@ -87,7 +87,7 @@ void CMDODriver::StartSolver() {
     } 
 
     /*---Get the time at which aero-elastic state must be computed---*/
-    //target_time = config_container[ZONE_0]->GetTargTimeIter();
+    target_time = config_container[ZONE_0]->GetTargTimeIter();
 
    
   
@@ -112,7 +112,7 @@ void CMDODriver::StartSolver() {
   if (enable_mdo)
   {
     
-    if ( rank == MASTER_NODE)
+    if (rank == MASTER_NODE)
     {
       std::cout <<"Aeroelasitc simulations will begin at: " << target_time << std::endl;
     }

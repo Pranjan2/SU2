@@ -257,6 +257,9 @@ bool CFluidIteration::MonitorMDO(COutput* output, CIntegration**** integration, 
 
   UsedTime = StopTime - StartTime;
 
+  /*--- Get the time at which implicit aero-elastic simulations must begin---*/
+  su2double target_Time = config[ZONE_0]->GetTargTimeIter();
+
   //std::cout <<"Monitoring  in MonitorMDO at time iter" << TimeIter  << std::endl;
 
   
@@ -270,7 +273,7 @@ bool CFluidIteration::MonitorMDO(COutput* output, CIntegration**** integration, 
   StopCalc = output->GetConvergence();
 
   //if ((TimeIter == 50) && (config[val_iZone]->GetFixed_CL_Mode()))
-  if (TimeIter == 50 && StopCalc) 
+  if (TimeIter == target_Time && StopCalc) 
   {
     if ( rank == MASTER_NODE)
     {
@@ -507,7 +510,10 @@ void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CG
 
   unsigned long Inner_Iter, nInner_Iter = config[val_iZone]->GetnInner_Iter();
   bool StopCalc = false;
+  
+  /*--- Get time at which implicit aero-elastic simulations must be done ---*/
 
+  su2double target_time = config[ZONE_0]->GetTargTimeIter();
 
   StartTime = SU2_MPI::Wtime();
 
@@ -521,8 +527,9 @@ void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CG
   for (Inner_Iter = 0; Inner_Iter < nInner_Iter; Inner_Iter++) 
   {
     config[val_iZone]->SetInnerIter(Inner_Iter);
+
     /*---If at the target MDO time for implicit calculations, increase the # of inner Iterations to a high value-----*/
-    if (TimeIter == 50)
+    if (TimeIter == target_time)
     {
       nInner_Iter = 20000;
     }
