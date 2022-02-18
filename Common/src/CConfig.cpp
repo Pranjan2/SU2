@@ -2817,7 +2817,7 @@ void CConfig::SetConfig_Options() {
 
   addBoolOption("MDO", mdo, false);
 
-  addDoubleOption("MDO_INIT", mdo_time, 500.0);
+  addDoubleOption("MDO_INIT", mdo_time, 50.0);
 
   /* DESCRIPTION: Activate high verbosity level of preCICE adapter for FSI coupling */
   addBoolOption("PRECICE_VERBOSITYLEVEL_HIGH", precice_verbosityLevel_high, false);

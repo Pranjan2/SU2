@@ -111,7 +111,6 @@ void CMDODriver::StartSolver() {
 
   if (enable_mdo)
   {
-    
     if (rank == MASTER_NODE)
     {
       std::cout <<"Aeroelasitc simulations will begin at: " << target_time << std::endl;
@@ -294,8 +293,14 @@ void CMDODriver::Preprocess(unsigned long TimeIter) {
   /*--- Perform a dynamic mesh update if required. ---*/
   /*--- For the Disc.Adj. of a case with (rigidly) moving grid, the appropriate
           mesh cordinates are read from the restart files. ---*/
-  if (!(config_container[ZONE_0]->GetGrid_Movement() && config_container[ZONE_0]->GetDiscrete_Adjoint()))
+
+  /*---Perform a dynamic mesh update only at MDO target time */
+
+  if ((enable_mdo) && (TimeIter == target_time))
+  {
+  //if (!(config_container[ZONE_0]->GetGrid_Movement() && config_container[ZONE_0]->GetDiscrete_Adjoint()))
     DynamicMeshUpdate(TimeIter);
+  }
 
 }
 

@@ -7,12 +7,13 @@
 #include <string.h>
 #include <stdio.h>
 
+/*
 #include "../../../Common/include/toolboxes/geometry_toolbox.hpp"
 #include "../include/variables/CEulerVariable.hpp"
 #include "../include/solvers/CEulerSolver.hpp"
 #include "../include/solvers/CFVMFlowSolverBase.inl"
 #include "../include/iteration/CFluidIteration.hpp"
-
+*/
 
 
 
@@ -264,8 +265,10 @@ double Precice::initialize()
     exit(EXIT_FAILURE);
   }
 
-  std::cout << " Dimension check complete " << std::endl;
-
+  if (solverProcessIndex == 0)
+  {
+    std::cout << "Dimension check complete " << std::endl;
+  }
 
 
   
@@ -295,8 +298,10 @@ double Precice::initialize()
     }
   }
 
-  std::cout << "Mesh iD allocation complete " << std::endl;
-
+  if ( solverProcessIndex == 0)
+  {
+    std::cout << "Mesh iD allocation complete " << std::endl;
+  }
  // std::cout << "Checking " <<config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(0)) << std::endl;
    
   /*Determine the number of wet surfaces, that this process is working on, then loop over this number for all respective preCICE-related tasks */
@@ -304,7 +309,7 @@ double Precice::initialize()
   {       
     if (config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(i)) == -1) 
     {
-      std::cout << "Process #" << solverProcessIndex << "/" << solverProcessSize-1 << ": Does not work on " << config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() << i << endl;
+      //std::cout << "Process #" << solverProcessIndex << "/" << solverProcessSize-1 << ": Does not work on " << config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() << i << endl;
     } 
     else 
     {
@@ -321,8 +326,11 @@ double Precice::initialize()
     std::cout << " MeshID for each wetsurface    : " << meshID[0] << std::endl;
     std::cout << " Marker ID for FSI surface     : " << config_container[ZONE_0]->GetMarker_All_TagBound(config_container[ZONE_0]->GetpreCICE_WetSurfaceMarkerName() + to_string(0)) << std::endl;
   }
-  std::cout << "Finished determining number of wet surfaces " << std::endl;
-  
+
+  if (solverProcessIndex == 0)
+  {
+    std::cout << "Finished determining number of wet surfaces " << std::endl;
+  }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //unsigned short Markers = config_container[ZONE_0]->GetnMarker_All();
     //std::cout << " Process " << solverProcessIndex << " has " << nMarkers_Global << " global markers and " << nMarkers_Local << " local markers " << std::endl;
@@ -348,7 +356,7 @@ double Precice::initialize()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   if (localNumberWetSurfaces < 1) 
   {
-    std::cout << "Process #" << solverProcessIndex << "/" << solverProcessSize-1 << ": Does not work on the wet surface at all." << endl;
+    //std::cout << "Process #" << solverProcessIndex << "/" << solverProcessSize-1 << ": Does not work on the wet surface at all." << endl;
     processWorkingOnWetSurface = false;
   }
 
@@ -356,8 +364,10 @@ double Precice::initialize()
 
   if (processWorkingOnWetSurface) 
   {
-    std::cout << "Discretizing Aero-elastic Interface! \n";
-
+    if ( solverProcessIndex == 0)
+    {
+      std::cout << "Discretizing Aero-elastic Interface! \n";
+    }
     /*--Store the wet surface marker values in an array, which has the size equal to the number of wet surfaces actually being worked on by this process*/
     valueMarkerWet = new short[localNumberWetSurfaces];
     indexMarkerWetMappingLocalToGlobal = new short[localNumberWetSurfaces];
@@ -373,9 +383,11 @@ double Precice::initialize()
     }
     vertexIDs = new int*[localNumberWetSurfaces];
   }
-
-  std::cout << "Finished setting indices " << std::endl;
-   
+ 
+   if (solverProcessIndex == 0)
+  { 
+    std::cout << "Finished setting indices " << std::endl;
+  } 
 
 
   if (processWorkingOnWetSurface) 
@@ -421,13 +433,12 @@ double Precice::initialize()
           std::cout << " Vertex: " << iVertex << std::setw(6) << " Node_index: " << iNode << std::setw(6) << " x: " << coupleNodeCoord[iVertex][0] << std::setw(6) << " y: " << coupleNodeCoord[iVertex][1] << std::setw(6) << " z: " << coupleNodeCoord[iVertex][2] << std::endl; 
         }
       }
- // geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetColor(iPoint) == solverProcessIndex)
-      std::cout <<" Process " << solverProcessIndex << " wrote " << l << " coordinates " << std::endl;
-    
 
 
-      std::cout << "Finished acquiring node IDs and coordinates" << std::endl;
-
+      if (solverProcessIndex == 0)
+      {
+        std::cout << "Finished acquiring node IDs and coordinates" << std::endl;
+      }
 
       /*---------preCICE Internal Calculations -----*/
       
@@ -487,12 +498,18 @@ double Precice::initialize()
 
   double precice_dt;
 
- // std::cout << " Initialize the interface " << std::endl;
+  if (solverProcessIndex == 0)
+  {
+    std::cout << "Establishing network link with CalculiX" << std::endl;
+  }
 
   precice_dt = solverInterface.initialize();
 
-//  std::cout << " Interface initialization complete " << std::endl;
-
+  if (solverProcessIndex == 0)
+  {
+    std::cout << "Network link with CalculiX established" << std::endl;
+  }
+  
   return precice_dt;
 
 }
@@ -597,12 +614,6 @@ double Precice::advance( double computedTimestepLength )
 
     /*---Write force across the TCP I/O interface ---*/
 
-  //  for ( int i = 0; i < globalNumberWetSurfaces; i++)
-  //  {
-  //    std::cout << " IndexMappingToGlobal for i : " << i << " is " << indexMarkerWetMappingLocalToGlobal[i] <<std::endl;
-  //    std::cout << " VertexSize is " << vertexSize[i] << std::endl;
-  //    std::cout << " VertexIDs are " << vertexIDs[i]  << std::endl;
-  //  }
     solverInterface.writeBlockVectorData(forceID[indexMarkerWetMappingLocalToGlobal[0]], vertexSize[0], vertexIDs[0], forces);
 
     if ( procid == 0)
