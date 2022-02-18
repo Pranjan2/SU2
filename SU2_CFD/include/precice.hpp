@@ -38,17 +38,6 @@ private:
   /* Fluid mesh elasticity information */
   CVolumetricMovement*** grid_movement;
 
-  /* Integration contianer */
-  CIntegration**** integration_container;
-
-  CSurfaceMovement** surface_movement;
-
-  COutput** output_container;
-
-  CNumerics****** numerics_container;
-
-  CFreeFormDefBox*** FFDBox;
-
 
 
   int nDim;    // Dimension of the problem
@@ -89,7 +78,7 @@ private:
 
   /*--------------- Override default constructor for class Precice ------*/
   //Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement, );
-  Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement, CIntegration**** integration_container,CSurfaceMovement** surface_movement,COutput** output_containter, CNumerics****** numerics_container, CFreeFormDefBox*** FFDBox);
+  Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement);
   
   /*--------- Override default destructor for class Precice -------*/
   ~Precice();

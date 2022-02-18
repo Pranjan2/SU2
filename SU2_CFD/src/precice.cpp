@@ -25,7 +25,7 @@
 
 /*---Main class description -----*/
 
-  Precice::Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement,CIntegration**** integration_container,CSurfaceMovement** surface_movement,COutput** output_container, CNumerics****** numerics_container, CFreeFormDefBox*** FFDBox)
+  Precice::Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement)
   :
   coric(precice::constants::actionReadIterationCheckpoint()),
   cowic(precice::constants::actionWriteIterationCheckpoint()),
@@ -35,13 +35,7 @@
   config_container(config_container),
   geometry_container(geometry_container),
   solver_container(solver_container),
-  grid_movement(grid_movement),
-  integration_container(integration_container),
-  surface_movement(surface_movement),
-  output_container(output_container),
-  numerics_container(numerics_container),
-  FFDBox(FFDBox)
-
+  grid_movement(grid_movement)
   {
     /* Get dimension of the problem */
     nDim = geometry_container[ZONE_0][INST_0][MESH_0]->GetnDim();
