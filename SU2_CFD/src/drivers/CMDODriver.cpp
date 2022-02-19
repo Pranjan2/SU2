@@ -298,9 +298,11 @@ void CMDODriver::Preprocess(unsigned long TimeIter) {
 
   if ((enable_mdo) && (TimeIter == target_time))
   {
-  //if (!(config_container[ZONE_0]->GetGrid_Movement() && config_container[ZONE_0]->GetDiscrete_Adjoint()))
+ // if (!(config_container[ZONE_0]->GetGrid_Movement() && config_container[ZONE_0]->GetDiscrete_Adjoint()))
     DynamicMeshUpdate(TimeIter);
   }
+
+
 
 }
 

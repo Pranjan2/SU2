@@ -44,10 +44,11 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
 
   bool mdo_mode =config->GetMDO_Mode();
 
-  if ( mdo_mode)
+  if (mdo_mode)
   {
     Kind_Grid_Movement = PRECICE_MOVEMENT;
   }
+
   else
   {
     Kind_Grid_Movement = config->GetKind_GridMovement();
@@ -91,7 +92,7 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
     case PRECICE_MOVEMENT:
 
       if (rank == MASTER_NODE)
-        cout << "Deforming fluid domain for MDO " << endl;
+        cout << "Deforming the volume grid due to MDA " << endl;
       grid_movement->SetVolume_Deformation(geometry[MESH_0], config, true);
 
       if (rank == MASTER_NODE)
@@ -100,7 +101,7 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
 
       /*--- Update the multigrid structure after moving the finest grid,
        including computing the grid velocities on the coarser levels. ---*/
-     // grid_movement->UpdateMultiGrid(geometry, config);
+     grid_movement->UpdateMultiGrid(geometry, config);
 
       break;
   }

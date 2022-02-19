@@ -145,6 +145,7 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
 
     /*--- Initialize vector and sparse matrix ---*/
 
+
     LinSysSol.SetValZero();
     LinSysRes.SetValZero();
     StiffMatrix.SetValZero();
@@ -173,6 +174,8 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
      so that all nodes have the same solution and r.h.s. entries
      across all partitions. ---*/
 
+
+
     CSysMatrixComms::Initiate(LinSysSol, geometry, config);
     CSysMatrixComms::Complete(LinSysSol, geometry, config);
 
@@ -199,6 +202,7 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
 
     /*--- Update the grid coordinates and cell volumes using the solution
      of the linear system (usol contains the x, y, z displacements). ---*/
+
 
     if (!Derivative) { UpdateGridCoord(geometry, config); }
     else { UpdateGridCoord_Derivatives(geometry, config); }
