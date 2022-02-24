@@ -131,7 +131,8 @@ def MeshUpdate(Mesh_Name, Nnodes,Nelems,n):
         Z[i,0] = round(Z[i,0],6) 
 
     # Write the updated mesh file
-    Def_Mesh_Name = "Solid/deform_"+str(n)+".msh"
+    #Def_Mesh_Name = "Solid/deform_"+str(n)+".msh"
+    Def_Mesh_Name = "Solid/deform.msh"
 
     file = open(Def_Mesh_Name, "w")
     file.write("  **This containes mesh information")
@@ -141,8 +142,8 @@ def MeshUpdate(Mesh_Name, Nnodes,Nelems,n):
         file.write("\n" '  ' + str(int(Nodeid[i,0])) +'\t , \t'+ str(X[i,0]) +'  \t, \t  '+ str(Y[i,0]) + '  , ' + str(Z[i,0]))
     file.write("\n")
     file.write("\n")
-    file.write("\n")
-    file.write("\n")
+    #file.write("\n")
+    #file.write("\n")
     file.write("*ELEMENT, TYPE=C3D4, ELSET=EALL")
     for i in range(Nelems):
         file.write("\n" + str(int(Eleid[i,0])) +' , '+ str(E1[i,0]) +' , '+ str(E2[i,0]) + ' , ' + str(E3[i,0])+ ' , ' +str(E4[i,0]))
@@ -235,12 +236,9 @@ def MeshUpdate(Mesh_Name, Nnodes,Nelems,n):
 
     TopOpt = False
 
-    print(X.shape, Y.shape, Z.shape)
-    print(UX.shape, UY.shape, UZ.shape)
-    print(FX.shape, FY.shape, FZ.shape)
-    print(Sigma.shape)
-
-    file = open("structure.dat", "w")
+    
+     #Def_Mesh_Name = "Solid/deform_"+str(n)+".msh"
+    file = open("elasticField_"+str(n)+".dat", "w")
     file.write("TITLE = \"Visualization of the Elastic field\"")
     file.write("\n")
     if TopOpt:
