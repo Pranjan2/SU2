@@ -11,10 +11,10 @@ def wrtInput(Mesh_Name, Dynamic, E, nu, rho):
         filename['surfaceNodes']='Solid/surfaceNodes.nam'
     if Dynamic == 0:
         filename['ccxdeck']="elastic.inp"    # ccx inp file
-        filename['meshfile']=str(Mesh_Name)    # ccx mesh file
-        filename['fixedNodes']='bottomNodes.nam'
-        filename['surfaceNodes']='surfaceNodes.nam'
-        filename['surfaceForces']='surfaceForces.nam' 
+        filename['meshfile']='Solid'+str(Mesh_Name)    # ccx mesh file
+        filename['fixedNodes']='Solid/bottomNodes.nam'
+        filename['surfaceNodes']='Solid/surfaceNodes.nam'
+        filename['surfaceForces']='Solid/surfaceForces.nam' 
 
     element = {}
     element['type']='C3D4'     # C3D4 = tetrahedral, C3D8 = hexahedral, CPS3 = tri, CPS4 = quad
@@ -66,7 +66,7 @@ def wrtInput(Mesh_Name, Dynamic, E, nu, rho):
                 file.write("\n1") 
 
                 file.write("\n\n*DESIGNVARIABLES, TYPE = COORDINATE")        
-                file.write("\nDV") 
+                file.write("\nNNN") 
 
             file.write("\n\n**Add material named EL with elastic properties")
             file.write("\n*MATERIAL,NAME=EL")
@@ -81,11 +81,11 @@ def wrtInput(Mesh_Name, Dynamic, E, nu, rho):
                 file.write("\n\n*STEP")        
                 file.write("\n*STATIC")
                 file.write("\n*CLOAD")
-                file.write("\n*INCLUDE, INPUT = surfaceForces.nam")
+                file.write("\n*INCLUDE, INPUT = Solid/surfaceForces.nam")
             else:
                 file.write("\n\n*STEP,NLGEOM, INC = 1000000000000")
                 file.write("\n*DYNAMIC,DIRECT")
-                file.write("\n1E-03,1000")        
+                file.write("\n1,1")        
                 file.write("\n*CLOAD")
                 file.write("\n"+tags[1]+",1,"+ load['x'])         
                 file.write("\n"+tags[1]+",2,"+ load['y'])

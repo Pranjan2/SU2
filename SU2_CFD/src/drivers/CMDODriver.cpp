@@ -70,7 +70,8 @@ void CMDODriver::StartSolver() {
     {
       //precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement, integration_container, surface_movement, output_container,  numerics_container, FFDBox);    
       precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement);
-      dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
+      //dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
+      dt = new double(1);
 
       if (rank == MASTER_NODE)
       {
