@@ -28,6 +28,7 @@
 #include "../../include/iteration/CFluidIteration.hpp"
 #include "../../include/output/COutput.hpp"
 #include "../../include/StaticMDO.hpp"
+#include "../../include/precice.hpp"
 
 
 void CFluidIteration::Preprocess(COutput* output, CIntegration**** integration, CGeometry**** geometry,
@@ -310,6 +311,8 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
                             unsigned short val_iInst) 
 {
 
+  bool enable_mdo = config[ZONE_0]->GetSMDO_Mode();
+
 
   /*--- Boolean to determine if we are running a static or dynamic case ---*/
   bool steady = !config[val_iZone]->GetTime_Domain();
@@ -322,46 +325,18 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
 
   StartTime = SU2_MPI::Wtime();
 
+
   /*--- Preprocess the solver ---*/
   Preprocess(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
              val_iZone, INST_0);
 
   /*--- For steady-state flow simulations, we need to loop over ExtIter for the number of time steps ---*/
   /*--- However, ExtIter is the number of FSI iterations, so nIntIter is used in this case ---*/
-
-  ///bool enable_mdo;
-  ///CSMDO *mdo;
-  ///double *max_precice_dt, *dt;   
-
-
-    /*---See if MDA/MDO object needs to be created ---*/
-   /// enable_mdo = config[ZONE_0]->Std_MDO();
-
-  ///if (enable_mdo) 
-  ///{
-
-    ///mdo = new CSMDO(config[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size, config, geometry, solver, grid_movement);    
-    
-    ///dt = new double (0.001);
-   // dt = new double(config[ZONE_0]->GetDelta_UnstTimeND());
-    
-    //std::cout << " dt for steady state is " << *dt << std::endl;
-
-    ///if (rank == MASTER_NODE)
-    ///{
-    ///  std::cout << "------------------------------ Initialize  Interface I/O for Static MDO --------------------------------" << std::endl;
-    ///}
-
-    ///max_precice_dt = new double(mdo->initializeMDO());
-
-    ///if (rank == MASTER_NODE)
-    ///{
-      ///std::cout << "------------------------------- Interface Initialization Complete ---------------------------------" << std::endl;
-    ///}
-
-  ///}
-
-
+  /*------------------------------------------------------------------------------------------------------------------*/
+  /*----------------------------------------------MAIN INNER LOOP-----------------------------------------------------*/
+  /*------------------------------------------------------------------------------------------------------------------*/
+ 
+  
 
   for (Inner_Iter = 0; Inner_Iter < nInner_Iter; Inner_Iter++) 
   {
@@ -381,122 +356,15 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
     {
       Output(output, geometry, solver, config, Inner_Iter, StopCalc, val_iZone, val_iInst);
     }
-
-    //std::cout << "Calling @ CFluidIteration"<<std::endl;
-
-    /*
-    if (Inner_Iter == 3999)
+    
+  
+    if (StopCalc) 
     {
-      if (enable_mdo) 
-      {
-        if ( rank == MASTER_NODE)
-        {
-          std::cout << "Saving old state for iter: " << Inner_Iter << std::endl;
-        }
-        mdo->saveOldState(&StopCalc, dt);
-      }
-    }
-    */
-
-    /*if ( Inner_Iter == 3999)
-    {
-      if (enable_mdo)
-      {
-        if (rank == MASTER_NODE)
-        {
-          std::cout <<"Advancing coupling state" << std::endl;
-        }
-        solver[val_iZone][val_iInst][MESH_0][FLOW_SOL]->ComputeVertexTractions(geometry[val_iZone][val_iInst][MESH_0],
-                                                                           config[val_iZone]);
-        *max_precice_dt = mdo->advance(*dt);
-        ///---At this stage only the surface grid locations are displaced
-        ///---Deform the entire volume grid now
-       
-        if ( rank == MASTER_NODE)
-        {
-          std::cout << "Updating volume mesh " << std::endl;
-        }
-
-        SetMesh_Deformation(geometry[ZONE_0][INST_0],
-                                 solver[ZONE_0][INST_0][MESH_0],
-                                 numerics[ZONE_0][INST_0][MESH_0],
-                                 config[ZONE_0], RECORDING::CLEAR_INDICES);
-
-        if ( rank == MASTER_NODE)
-        {
-          std::cout << "Updating wall-distances " << std::endl;
-        }
-
-        CGeometry::ComputeWallDistance(config, geometry);
-
-
-      }
-    }
-
-    /// if(precice_usage && precice->isActionRequired(precice->getCoric())) 
-    if ( Inner_Iter == 3999)
-    {
-      //if (enable_mdo && mdo->isActionRequired(mdo->getCoric()))
-      if (enable_mdo)
-      {
-        Inner_Iter = 0;
-        if (rank == MASTER_NODE)
-        {
-          std::cout <<"Reloading fluid state" << std::endl;
-        }
-
-        mdo->reloadOldState(&StopCalc, dt);
-      }
-
-    }
-     
-   */ 
-
-    /*--- If the iteration has converged, break the loop ---*/
-    if (StopCalc) break;
-  }
-
-   /*if (enable_mdo)
-   {
-    if (mdo!= NULL)
-    {
-      if (rank == MASTER_NODE)
-      {
-        std::cout <<"---------------------------------------------------------"<<std::endl;
-        std::cout << "-------------------Deleted MDO object-------------------"<<std::endl;
-        std::cout <<"---------------------------------------------------------"<<std::endl;
-
-      }
-      std::cout << "deleting mdo " << std::endl;
-     // delete mdo;
-    }
-    std::cout << "deleting dt " << std::endl;
-    if (dt != NULL)
-    {
-      delete dt;
-    }
-    std::cout << "deleting max_precice_dt " << std::endl;
-    if (max_precice_dt != NULL)
-    {
-      delete max_precice_dt;
-    }
-   } */
-
-  ///std:: cout << " Donw with Steady state MDO " << std::endl;
-
-  if (multizone && steady) {
-    Output(output, geometry, solver, config, config[val_iZone]->GetOuterIter(), StopCalc, val_iZone, val_iInst);
-
-    /*--- Set the convergence to false (to make sure outer subiterations converge) ---*/
-
-    if (config[val_iZone]->GetKind_Solver() == HEAT_EQUATION) {
-      integration[val_iZone][INST_0][HEAT_SOL]->SetConvergence(false);
-    }
-    else {
-      integration[val_iZone][INST_0][FLOW_SOL]->SetConvergence(false);
+      break;
     }
   }
 }
+
 
 void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
                             CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
@@ -570,6 +438,8 @@ void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CG
     }
   }
 }
+
+
 
 void CFluidIteration::SetWind_GustField(CConfig* config, CGeometry** geometry, CSolver*** solver) {
   // The gust is imposed on the flow field via the grid velocities. This method called the Field Velocity Method is

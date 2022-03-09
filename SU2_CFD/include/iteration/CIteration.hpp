@@ -77,6 +77,8 @@ class CIteration {
         multizone(config->GetMultizone_Problem()),
         singlezone(!multizone) {}
 
+      
+
   /*!
    * \brief Destructor of the class.
    */
@@ -179,7 +181,7 @@ class CIteration {
   virtual void MDOSolve(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
                      CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
                      CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
-                     unsigned short val_iInst, unsigned long TimeIter){}
+                     unsigned short val_iInst, unsigned long TimeIter){}               
 
   /*!
    * \brief A virtual member.

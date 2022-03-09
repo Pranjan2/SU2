@@ -2816,6 +2816,7 @@ void CConfig::SetConfig_Options() {
   addBoolOption("PRECICE_USAGE", precice_usage, false);
 
   addBoolOption("MDO", mdo, false);
+  addBoolOption("STEADY_MDO", smdo, false);
 
   addDoubleOption("MDO_INIT", mdo_time, 5);
 

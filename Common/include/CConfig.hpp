@@ -1172,6 +1172,8 @@ private:
  string preciceConfigFileName;	/*!< \brief Name of the preCICE configuration file */
  string preciceWetSurfaceMarkerName;	/*!< \brief Name of the wet surface marker (from the mesh file) that the preCICE adapter will use for identification of the wet surface */
  bool mdo;
+ bool smdo;
+
 
   /*--- brief param is a map from the option name (config file string) to its decoder (the specific child
    class of COptionBase that turns the string into a value) ---*/
@@ -9390,6 +9392,8 @@ public:
   unsigned short GetRom_SaveFreq(void) const { return rom_save_freq; }
 
   bool GetMDO_Mode(void) const {return mdo;}
+
+  bool GetSMDO_Mode(void) const {return smdo;}
 
   bool Std_MDO(void)  {return mdo;}
 };

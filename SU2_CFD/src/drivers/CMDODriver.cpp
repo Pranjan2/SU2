@@ -62,15 +62,17 @@ void CMDODriver::StartSolver() {
   if (rank == MASTER_NODE)
     cout << endl <<"------------------------------ Begin Forward Analysis -----------------------------" << endl;  
 
-    /*---See if MDA/MDO object needs to be created ---*/
+    /*---See if Unsteady MDA/MDO object needs to be created ---*/
     enable_mdo = config_container[ZONE_0]->GetMDO_Mode();
+
+
   
     /*---If MDA is required, create a coupling object ----*/
     if (enable_mdo) 
     {
       //precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement, integration_container, surface_movement, output_container,  numerics_container, FFDBox);    
       precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement);
-      //dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
+     //dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
       dt = new double(1);
 
       if (rank == MASTER_NODE)
@@ -184,6 +186,11 @@ void CMDODriver::StartSolver() {
     /*--- Monitor the computations after each iteration. ---*/
     Monitor(TimeIter);
 
+    /*---Output the converged undeformed state---*/
+    if ( TimeIter == (target_time -1))
+    {
+      Output(TimeIter);
+    }
     //Output(TimeIter);
 
     /*--- Advance the MDO run ---*/
