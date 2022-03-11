@@ -29,6 +29,7 @@
 #include "../../include/definition_structure.hpp"
 #include "../../include/output/COutput.hpp"
 #include "../../include/iteration/CIteration.hpp"
+
 #include "../../include/output/CMeshOutput.hpp"
 
 #include "../../include/precice.hpp"
@@ -51,7 +52,8 @@ CMDODriver::~CMDODriver(void)
 
 }
 
-void CMDODriver::StartSolver() {
+void CMDODriver::StartSolver() 
+{
 
   StartTime = SU2_MPI::Wtime();
 
@@ -60,17 +62,21 @@ void CMDODriver::StartSolver() {
   /*--- Main external loop of the solver. Runs for the number of time steps required. ---*/
 
   if (rank == MASTER_NODE)
+  {
     cout << endl <<"------------------------------ Begin Forward Analysis -----------------------------" << endl;  
-
+  }
     /*---See if Unsteady MDA/MDO object needs to be created ---*/
     enable_mdo = config_container[ZONE_0]->GetMDO_Mode();
 
-
+    /*--- Set the initial time iteration to the restart iteration. ---*/
+    if (config_container[ZONE_0]->GetRestart() && driver_config->GetTime_Domain())
+    {
+      TimeIter = config_container[ZONE_0]->GetRestart_Iter();
+    }
   
     /*---If MDA is required, create a coupling object ----*/
     if (enable_mdo) 
     {
-      //precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement, integration_container, surface_movement, output_container,  numerics_container, FFDBox);    
       precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement);
      //dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
       dt = new double(1);
@@ -92,8 +98,6 @@ void CMDODriver::StartSolver() {
     /*---Get the time at which aero-elastic state must be computed---*/
     target_time = config_container[ZONE_0]->GetTargTimeIter();
 
-   
-  
 
   if (rank == MASTER_NODE)
   {
@@ -106,11 +110,7 @@ void CMDODriver::StartSolver() {
     }
   }
 
-  /*--- Set the initial time iteration to the restart iteration. ---*/
-  if (config_container[ZONE_0]->GetRestart() && driver_config->GetTime_Domain())
-  {
-    TimeIter = config_container[ZONE_0]->GetRestart_Iter();
-  }
+
 
   if (enable_mdo)
   {
@@ -128,10 +128,12 @@ void CMDODriver::StartSolver() {
     {
       if (enable_mdo)
       {
-      //  std::cout << " Saving old state for time iter:" << TimeIter << std::endl;
         precice->saveOldState(&StopCalc, dt);
       }
     }
+
+  
+
   
     /*--- Check if coupling has converged. If yes, output necessary files and then terminate the loop---*/
     if (enable_mdo && !(precice->isCouplingOngoing()))
@@ -141,6 +143,7 @@ void CMDODriver::StartSolver() {
         std::cout << "Aero-elastic solution converged!" << std::endl;
       }
 
+      /*---Output only the converged aero-elastic state---*/
       Output(TimeIter);
       
       if (rank == MASTER_NODE)
@@ -186,15 +189,19 @@ void CMDODriver::StartSolver() {
     /*--- Monitor the computations after each iteration. ---*/
     Monitor(TimeIter);
 
-    /*---Output the converged undeformed state---*/
-    if ( TimeIter == (target_time -1))
+      /*---Output file for original fluid state---*/
+    if (TimeIter == (target_time -1))
     {
+      if (rank == MASTER_NODE)
+      {
+        std::cout << "Writing fluid state for undelfected state" << std::endl;
+      }
       Output(TimeIter);
     }
+
     //Output(TimeIter);
 
     /*--- Advance the MDO run ---*/
-    //std::cout << " TimeIter: " << TimeIter << std::endl;
     if ( TimeIter == target_time)
     {
       if(enable_mdo)
@@ -478,7 +485,7 @@ bool CMDODriver::Monitor(unsigned long TimeIter)
     StopCalc = MaxIterationsReached || InnerConvergence;
   }
 
-  if ((TimeDomain == YES) && (TimeIter == 50))
+  if ((TimeDomain == YES) && (TimeIter == target_time))
   {
     InnerConvergence     = output_container[ZONE_0]->GetConvergence();
     MaxIterationsReached = InnerIter+1 >= nInnerIter;

@@ -107,6 +107,7 @@ int main(int argc, char *argv[]) {
   const bool harmonic_balance = (config.GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE);
   bool mdo = config.GetMDO_Mode();
 
+  
 
   
    /*--- These are all the possible cases ---*/
@@ -123,13 +124,14 @@ int main(int argc, char *argv[]) {
   if (mdo)
   {
     driver = new CMDODriver(config_file_name, nZone, MPICommunicator);
-    //driver = new CSinglezoneDriver(config_file_name, nZone, MPICommunicator);
   }
 
   else
   {
     driver = new CSinglezoneDriver(config_file_name, nZone, MPICommunicator);
   }
+
+  std::cout << "Starting the MDO solver" << std::endl;
 
   driver->StartSolver();
 

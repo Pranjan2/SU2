@@ -86,7 +86,7 @@ void CSinglezoneDriver::StartSolver()
   if (config_container[ZONE_0]->GetRestart() && driver_config->GetTime_Domain())
     TimeIter = config_container[ZONE_0]->GetRestart_Iter();
   
-  while (TimeIter < config_container[ZONE_0]-> GetnTime_Iter())
+  while (TimeIter < config_container[ZONE_0]->GetnTime_Iter())
   /*--- Run the problem until the number of time iterations required is reached. ---*/  
   {
     /*--- Perform some preprocessing before starting the time-step simulation. ---*/
@@ -97,7 +97,6 @@ void CSinglezoneDriver::StartSolver()
 
     Run();
 
-
     /*--- Perform some postprocessing on the solution before the update ---*/
 
     Postprocess();
@@ -107,7 +106,7 @@ void CSinglezoneDriver::StartSolver()
     Update();
 
     /*--- Monitor the computations after each iteration. ---*/
-
+      
     Monitor(TimeIter);
 
     /*--- Output the solution in files. ---*/

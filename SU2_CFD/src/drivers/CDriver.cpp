@@ -1120,8 +1120,12 @@ void CDriver::Solver_Restart(CSolver ***solver, CGeometry **geometry,
 
   /*--- Check for restarts and use the LoadRestart() routines. ---*/
 
+  
+
   const bool restart = config->GetRestart();
   const bool restart_flow = config->GetRestart_Flow();
+
+  
 
   /*--- Adjust iteration number for unsteady restarts. ---*/
 
@@ -1138,19 +1142,36 @@ void CDriver::Solver_Restart(CSolver ***solver, CGeometry **geometry,
     else val_iter = config->GetRestart_Iter() - 1 - dt_step_2nd;
   }
 
+  
+
   /*--- Restart direct solvers. ---*/
 
-  if (restart || restart_flow) {
-    for (auto iSol = 0u; iSol < MAX_SOLS; ++iSol) {
+  if (restart || restart_flow) 
+  {
+    for (auto iSol = 0u; iSol < MAX_SOLS; ++iSol) 
+    {
       auto sol = solver[MESH_0][iSol];
-      if (sol && !sol->GetAdjoint()) {
+      if (sol && !sol->GetAdjoint()) 
+      {
         /*--- Note that the mesh solver always loads the most recent file (and not -2). ---*/
         SU2_OMP_PARALLEL_(if(sol->GetHasHybridParallel()))
-        sol->LoadRestart(geometry, solver, config, val_iter + (iSol==MESH_SOL && dt_step_2nd), update_geo);
+
+        if (config->GetMDO_Mode())
+        {
+          sol->LoadRestart(geometry, solver, config, val_iter + (iSol==MESH_SOL && dt_step_2nd), false);
+        }
+        else
+        {
+          sol->LoadRestart(geometry, solver, config, val_iter + (iSol==MESH_SOL && dt_step_2nd), update_geo);
+        }
+        std::cout << " I am failing here " << std::endl;
         END_SU2_OMP_PARALLEL
       }
     }
   }
+
+
+  
 
   /*--- Restart adjoint solvers. ---*/
 
