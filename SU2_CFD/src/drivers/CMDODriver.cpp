@@ -206,6 +206,10 @@ void CMDODriver::StartSolver()
     {
       if(enable_mdo)
       {
+        if ( rank == MASTER_NODE)
+        {
+          std::cout <<"Advancing aeroelastic state" <<std::endl;
+        }
     
         *max_precice_dt = precice->advance(*dt);
       }

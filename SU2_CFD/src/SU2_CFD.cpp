@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
     driver = new CSinglezoneDriver(config_file_name, nZone, MPICommunicator);
   }
 
-  std::cout << "Starting the MDO solver" << std::endl;
+  
 
   driver->StartSolver();
 
