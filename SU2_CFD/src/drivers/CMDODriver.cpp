@@ -124,6 +124,8 @@ void CMDODriver::StartSolver()
   {
 
     /*---Save old state for implicit coupling---*/
+
+    
     if (TimeIter == target_time)
     {
       if (enable_mdo)
@@ -131,6 +133,8 @@ void CMDODriver::StartSolver()
         precice->saveOldState(&StopCalc, dt);
       }
     }
+
+    
 
   
 
