@@ -614,7 +614,7 @@ void Precice ::saveOldState( bool *StopCalc, double *dt )
 
   /*---Begin loop over ALL grid points in the fluid domain---*/
   
-  /*
+  
 
   for (int iPoint = 0; iPoint < nPoint; iPoint++) 
   {
@@ -638,10 +638,10 @@ void Precice ::saveOldState( bool *StopCalc, double *dt )
     }
   }
 
-  */
+  
     /*---Recording GridVel_Grad using SU2 datatype---*/
 
-    /*
+    
     GridVel_Grad = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel_Grad();
 
   //Save wether simulation should be stopped after the current iteration
@@ -649,7 +649,7 @@ void Precice ::saveOldState( bool *StopCalc, double *dt )
   //Save the time step size
   dt_savedState = *dt;
 
-  */
+  
   //Writing task has been fulfilled successfully
   solverInterface.markActionFulfilled(cowic);
 }
@@ -661,7 +661,7 @@ void Precice::reloadOldState(bool *StopCalc, double *dt)
     std::cout << "Reloading old states for implicit calculations" << std::endl;
   }
 
-  /*  
+    
   for (int iPoint = 0; iPoint < nPoint; iPoint++)
   {
     solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->SetSolution( iPoint, solution_Saved[iPoint]);
@@ -681,18 +681,18 @@ void Precice::reloadOldState(bool *StopCalc, double *dt)
     geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel(iPoint, GridVel_Saved[iPoint]);
   }
 
-  */
+  
   /*--- Set the grid velocity gradient here---*/
-  /*
+  
   geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel_Grad(GridVel_Grad);
 
-    //Reload wether simulation should be stopped after current iteration
+  //Reload wether simulation should be stopped after current iteration
   *StopCalc = StopCalc_savedState;
   //Reload the time step size
   *dt = dt_savedState;
   //Reading task has been fulfilled successfully
 
-  */
+  
   solverInterface.markActionFulfilled(coric);
 
 }
