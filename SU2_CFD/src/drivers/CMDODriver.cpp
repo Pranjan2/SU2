@@ -203,6 +203,17 @@ void CMDODriver::StartSolver()
       Output(TimeIter);
     }
 
+          /*---Output file for defomred fluid state---*/
+    if (TimeIter == (target_time))
+    {
+      if (rank == MASTER_NODE)
+      {
+        std::cout << "Writing fluid state for deformed state" << std::endl;
+      }
+      Output(TimeIter);
+    }
+
+
     //Output(TimeIter);
 
     /*--- Advance the MDO run ---*/

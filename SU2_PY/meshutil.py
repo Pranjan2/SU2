@@ -32,7 +32,7 @@ def MeshUpdate(Mesh_Name, Nnodes,Nelems,n):
     Y_Disp = Disp[0:Nnodes,3]
 
     # Get the Z displacement 
-    Z_Disp = Disp[0:Nnodes,3]
+    Z_Disp = Disp[0:Nnodes,4]
 
 
 
