@@ -66,7 +66,8 @@ void CMDODriver::StartSolver()
     cout << endl <<"------------------------------ Begin Forward Analysis -----------------------------" << endl;  
   }
     /*---See if Unsteady MDA/MDO object needs to be created ---*/
-    enable_mdo = config_container[ZONE_0]->GetMDO_Mode();
+    enable_Steady_MDO = config_container[ZONE_0]->GetSMDO_Mode();
+    enable_Unsteady_MDO = config_container[ZONE_0]->GetUMDO_Mode();
 
     /*--- Set the initial time iteration to the restart iteration. ---*/
     if (config_container[ZONE_0]->GetRestart() && driver_config->GetTime_Domain())
@@ -74,8 +75,8 @@ void CMDODriver::StartSolver()
       TimeIter = config_container[ZONE_0]->GetRestart_Iter();
     }
   
-    /*---If MDA is required, create a coupling object ----*/
-    if (enable_mdo) 
+    /*---If Steady MDA is required, create a coupling object ----*/
+    if (enable_Steady_MDO) 
     {
       precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement);
      //dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
@@ -112,114 +113,87 @@ void CMDODriver::StartSolver()
 
 
 
-  if (enable_mdo)
+  if (enable_Steady_MDO)
   {
     if (rank == MASTER_NODE)
     {
       std::cout <<"Aeroelasitc simulations will begin at: " << target_time << std::endl;
     }
-  }
   
-  while ((TimeIter < config_container[ZONE_0]->GetnTime_Iter()) &&!enable_mdo || (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_mdo && precice->isCouplingOngoing() ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_mdo)
-  {
-
-    /*---Save old state for implicit coupling---*/
-
-    
-    if (TimeIter == target_time)
+  
+    while ((TimeIter < config_container[ZONE_0]->GetnTime_Iter()) &&!enable_Steady_MDO || (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_Steady_MDO && precice->isCouplingOngoing() ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_Steady_MDO)
     {
-      if (enable_mdo)
+
+      /*---Save old state for implicit coupling---*/
+      if (TimeIter == target_time)
       {
         precice->saveOldState(&StopCalc, dt);
       }
-    }
 
-    
+      /*--- Check if coupling has converged. If yes, output necessary files and then terminate the loop---*/
+      if (enable_Steady_MDO && !(precice->isCouplingOngoing()))
+      { 
+        if (rank == MASTER_NODE)
+        {
+          std::cout << "Static aero-elastic solution converged!" << std::endl;
+        }
 
-  
-
-  
-    /*--- Check if coupling has converged. If yes, output necessary files and then terminate the loop---*/
-    if (enable_mdo && !(precice->isCouplingOngoing()))
-    { 
-      if ( rank == MASTER_NODE)
-      {
-        std::cout << "Aero-elastic solution converged!" << std::endl;
-      }
-
-      /*---Output only the converged aero-elastic state---*/
-      Output(TimeIter);
+        /*---Output only the converged aero-elastic state---*/
+        Output(TimeIter);
       
-      if (rank == MASTER_NODE)
-      {
-        std::cout << "Loading mesh data to master node" << std::endl;
-      }
-
-      output_container[ZONE_0]->Load_Data(geometry_container[ZONE_0][INST_0][MESH_0], config_container[ZONE_0], solver_container[ZONE_0][INST_0][MESH_0]);
+        if (rank == MASTER_NODE)
+        {
+          std::cout << "Loading mesh data to master node" << std::endl;
+        }
+        output_container[ZONE_0]->Load_Data(geometry_container[ZONE_0][INST_0][MESH_0], config_container[ZONE_0], solver_container[ZONE_0][INST_0][MESH_0]);
       
-      if ( rank == MASTER_NODE)
-      {
-        std::cout << "Write deformed mesh to file" <<std::endl;
+        if ( rank == MASTER_NODE)
+        {
+          std::cout << "Write deformed mesh to file" <<std::endl;
+        }
+        output_container[ZONE_0]->WriteToFile(config_container[ZONE_0],geometry_container[ZONE_0][INST_0][MESH_0], MESH, config_container[ZONE_0]->GetMesh_Out_FileName());
+        break;
+
       }
-       output_container[ZONE_0]->WriteToFile(config_container[ZONE_0],geometry_container[ZONE_0][INST_0][MESH_0], MESH, config_container[ZONE_0]->GetMesh_Out_FileName());
+      /*--- Perform some preprocessing before starting the time-step simulation. ---*/
+      Preprocess(TimeIter);
 
-      break;
-
-    }
-
- 
-
-    /*--- Perform some preprocessing before starting the time-step simulation. ---*/
-    Preprocess(TimeIter);
-
-    if (enable_mdo)
-    {
-      RunMDO(TimeIter);
-    }
-
-    else
-    {
-      /*--- Run a time-step iteration of the single-zone problem. ---*/
-      Run();
-    }  
-  
+      RunMDO(TimeIter);  
     
-    /*--- Perform some postprocessing on the solution before the update ---*/
-    Postprocess();
+      /*--- Perform some postprocessing on the solution before the update ---*/
+      Postprocess();
 
-    /*--- Update the solution for dual time stepping strategy ---*/
-    Update();
+      /*--- Update the solution for dual time stepping strategy ---*/
+      Update();
     
-    /*--- Monitor the computations after each iteration. ---*/
-    Monitor(TimeIter);
+      /*--- Monitor the computations after each iteration. ---*/
+      Monitor(TimeIter);
 
       /*---Output file for original fluid state---*/
-    if (TimeIter == (target_time -1))
-    {
-      if (rank == MASTER_NODE)
+      if (TimeIter == (target_time -1))
       {
-        std::cout << "Writing fluid state for undelfected state" << std::endl;
+        if (rank == MASTER_NODE)
+        {
+          std::cout << "Writing fluid state for undelfected state" << std::endl;
+        }
+        Output(TimeIter);
       }
-      Output(TimeIter);
-    }
 
-          /*---Output file for defomred fluid state---*/
-    if (TimeIter == (target_time))
-    {
-      if (rank == MASTER_NODE)
+      /*---Output file for defomred fluid state---*/
+      if (TimeIter == (target_time))
       {
-        std::cout << "Writing fluid state for deformed state" << std::endl;
+        if (rank == MASTER_NODE)
+        {
+          std::cout << "Writing fluid state for deformed state" << std::endl;
+        }
+        Output(TimeIter);
       }
-      Output(TimeIter);
-    }
 
 
-    //Output(TimeIter);
+      //Output(TimeIter);
 
-    /*--- Advance the MDO run ---*/
-    if ( TimeIter == target_time)
-    {
-      if(enable_mdo)
+      /*--- Advance the MDO run ---*/
+      if ( TimeIter == target_time)
       {
         if ( rank == MASTER_NODE)
         {
@@ -228,37 +202,36 @@ void CMDODriver::StartSolver()
     
         *max_precice_dt = precice->advance(*dt);
       }
-    }
     
-    /*---Implicit coupling stage (reloadOldState)---*/
-    bool suppress_output = false;
     
-   /* if(precice_usage && precice->isActionRequired(precice->getCoric())) */
-    if ( TimeIter == target_time)
-    {
+      /*---Implicit coupling stage (reloadOldState)---*/
+      bool suppress_output = false;
+    
+      /* if(precice_usage && precice->isActionRequired(precice->getCoric())) */
+      if (TimeIter == target_time)
+      {
       //Stay at the same iteration number if preCICE is not converged and reload to the state before the current iteration
       TimeIter--;
       precice->reloadOldState(&StopCalc, dt);
       suppress_output = true;
-    }
-    
-
-    /*--- Save iteration solution for libROM ---*/
-    if (config_container[MESH_0]->GetSave_libROM()) 
-    {
-      solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->SavelibROM(geometry_container[ZONE_0][INST_0][MESH_0],
+      }
+      /*--- Save iteration solution for libROM ---*/
+      if (config_container[MESH_0]->GetSave_libROM()) 
+      {
+        solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->SavelibROM(geometry_container[ZONE_0][INST_0][MESH_0],
                                                                      config_container[ZONE_0], StopCalc);
+      }
+
+      /*--- If the convergence criteria has been met, terminate the simulation. ---*/
+
+      if (StopCalc) break;
+
+      TimeIter++;
+
     }
+  } // Steady-state MDA loop ends
 
-    /*--- If the convergence criteria has been met, terminate the simulation. ---*/
-
-    if (StopCalc) break;
-
-    TimeIter++;
-
-  }
-
-  if (enable_mdo)
+  if (enable_Steady_MDO || enable_Unsteady_MDO)
   {
     if (precice != NULL)
     {
@@ -267,7 +240,6 @@ void CMDODriver::StartSolver()
         std::cout <<"---------------------------------------------------------"<<std::endl;
         std::cout << "-------------------Deleted MDO object-------------------"<<std::endl;
         std::cout <<"---------------------------------------------------------"<<std::endl;
-
       }
       delete precice;
     }
@@ -284,6 +256,7 @@ void CMDODriver::StartSolver()
   }
 
 }
+
 
 void CMDODriver::Preprocess(unsigned long TimeIter) {
 
@@ -330,7 +303,7 @@ void CMDODriver::Preprocess(unsigned long TimeIter) {
 
   /*---Perform a dynamic mesh update only at MDO target time */
 
-  if ((enable_mdo) && (TimeIter == target_time))
+  if ((enable_Steady_MDO) && (TimeIter == target_time))
   {
  // if (!(config_container[ZONE_0]->GetGrid_Movement() && config_container[ZONE_0]->GetDiscrete_Adjoint()))
     DynamicMeshUpdate(TimeIter);

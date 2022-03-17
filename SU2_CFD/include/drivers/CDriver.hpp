@@ -104,7 +104,8 @@ protected:
   bool dry_run;                                 /*!< \brief Flag if SU2_CFD was started as dry-run via "SU2_CFD -d <config>.cfg" */
 
     //preCICE
-  bool enable_mdo;
+  bool enable_Unsteady_MDO;
+  bool enable_Steady_MDO;
   Precice *precice;
   double *max_precice_dt, *dt;
 

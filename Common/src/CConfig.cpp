@@ -2815,8 +2815,8 @@ void CConfig::SetConfig_Options() {
   /* DESCRIPTION: Activate preCICE for FSI coupling */
   addBoolOption("PRECICE_USAGE", precice_usage, false);
 
-  addBoolOption("MDO", mdo, false);
-  addBoolOption("STEADY_MDO", smdo, false);
+  addBoolOption("STEADY_MDO", Steady_MDO, false);
+  addBoolOption("UNSTEADY_MDO", Unsteady_MDO, false);
 
   addDoubleOption("MDO_INIT", mdo_time, 1);
 

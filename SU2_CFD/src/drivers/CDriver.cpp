@@ -1156,15 +1156,14 @@ void CDriver::Solver_Restart(CSolver ***solver, CGeometry **geometry,
         /*--- Note that the mesh solver always loads the most recent file (and not -2). ---*/
         SU2_OMP_PARALLEL_(if(sol->GetHasHybridParallel()))
 
-        if (config->GetMDO_Mode())
-        {
-          sol->LoadRestart(geometry, solver, config, val_iter + (iSol==MESH_SOL && dt_step_2nd), false);
-        }
-        else
-        {
+       // if (config->GetSMDO_Mode())
+       // {
+       //   sol->LoadRestart(geometry, solver, config, val_iter + (iSol==MESH_SOL && dt_step_2nd), false);
+      //  }
+      //  else
+      //  {
           sol->LoadRestart(geometry, solver, config, val_iter + (iSol==MESH_SOL && dt_step_2nd), update_geo);
-        }
-        std::cout << " I am failing here " << std::endl;
+      //  }
         END_SU2_OMP_PARALLEL
       }
     }

@@ -1110,7 +1110,7 @@ private:
   su2double uq_delta_b;         /*!< \brief Parameter used to perturb eigenvalues of Reynolds Stress Matrix */
   unsigned short eig_val_comp;  /*!< \brief Parameter used to determine type of eigenvalue perturbation */
   su2double uq_urlx;            /*!< \brief Under-relaxation factor */
-  su2double mdo_time;                  /*!< \breif Target time iteration to initiate aero-elastic simulations. */
+  su2double mdo_time;           /*!< \breif Target time iteration to initiate aero-elastic simulations. */
   bool uq_permute;              /*!< \brief Permutation of eigenvectors */
 
   unsigned long pastix_fact_freq;  /*!< \brief (Re-)Factorization frequency for PaStiX */
@@ -1171,8 +1171,8 @@ private:
  unsigned long precice_numberWetSurfaces; /*!< \brief Number of different wet surfaces */
  string preciceConfigFileName;	/*!< \brief Name of the preCICE configuration file */
  string preciceWetSurfaceMarkerName;	/*!< \brief Name of the wet surface marker (from the mesh file) that the preCICE adapter will use for identification of the wet surface */
- bool mdo;
- bool smdo;
+ bool Steady_MDO;
+ bool Unsteady_MDO;
 
 
   /*--- brief param is a map from the option name (config file string) to its decoder (the specific child
@@ -9391,9 +9391,14 @@ public:
    */
   unsigned short GetRom_SaveFreq(void) const { return rom_save_freq; }
 
-  bool GetMDO_Mode(void) const {return mdo;}
+  /*---Getter function for steady MDO in Const env---*/
+  bool GetSMDO_Mode(void) const {return Steady_MDO;}
 
-  bool GetSMDO_Mode(void) const {return smdo;}
+  /*---Getter function for Unsteady MDO in Const env---*/
+  bool GetUMDO_Mode(void) const {return Unsteady_MDO;}
 
-  bool Std_MDO(void)  {return mdo;}
+  /*---Getter functions for Unsteady and Steady MDO modes---*/
+  bool Std_MDO(void)  {return Steady_MDO;}
+  bool UStd_MDO(void)  {return Unsteady_MDO;}
+
 };

@@ -105,7 +105,8 @@ int main(int argc, char *argv[]) {
   const bool disc_adj = config.GetDiscrete_Adjoint();
   const bool multizone = config.GetMultizone_Problem();
   const bool harmonic_balance = (config.GetTime_Marching() == TIME_MARCHING::HARMONIC_BALANCE);
-  bool mdo = config.GetMDO_Mode();
+  bool Smdo = config.GetSMDO_Mode();
+  bool Umdo = config.GetUMDO_Mode();
 
   
 
@@ -121,7 +122,7 @@ int main(int argc, char *argv[]) {
 
   
 
-  if (mdo)
+  if (Smdo || Umdo )
   {
     driver = new CMDODriver(config_file_name, nZone, MPICommunicator);
   }

@@ -42,9 +42,10 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
 
   unsigned short val_iZone = config->GetiZone();
 
-  bool mdo_mode =config->GetMDO_Mode();
+  bool Smdo_mode =config->GetSMDO_Mode();
+  bool Umdo_mode =config->GetUMDO_Mode();
 
-  if (mdo_mode)
+  if (Smdo_mode || Umdo_mode)
   {
     Kind_Grid_Movement = PRECICE_MOVEMENT;
   }
