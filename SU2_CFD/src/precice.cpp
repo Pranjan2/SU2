@@ -526,7 +526,7 @@ double Precice::advance( double computedTimestepLength )
 
         if (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetColor(iPoint) == solverProcessIndex)
         {
-          forces[iVertex*nDim + iDim] = 1 * FSI_Trac[iVertex][iDim];
+          forces[iVertex*nDim + iDim] =  FSI_Trac[iVertex][iDim];
         }
        
         else

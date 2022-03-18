@@ -94,7 +94,26 @@ void CMDODriver::StartSolver()
       {
         std::cout << "------------------------------- Interface Initialization Complete ---------------------------------" << std::endl;
       }
-    } 
+    }
+
+    /*---If Unsteady MDA is required, create a coupling object ----*/
+    if (enable_Unsteady_MDO) 
+    {
+      precice = new Precice(config_container[ZONE_0]->GetpreCICE_ConfigFileName(),rank, size,config_container, geometry_container, solver_container, grid_movement);
+      dt = new double(config_container[ZONE_0]->GetDelta_UnstTimeND());
+
+      if (rank == MASTER_NODE)
+      {
+        std::cout << "------------------------------ Initialize Coupling Interface --------------------------------" << std::endl;
+      }
+
+      max_precice_dt = new double(precice->initialize());
+
+      if (rank == MASTER_NODE)
+      {
+        std::cout << "------------------------------- Interface Initialization Complete ---------------------------------" << std::endl;
+      }
+    }  
 
     /*---Get the time at which aero-elastic state must be computed---*/
     target_time = config_container[ZONE_0]->GetTargTimeIter();
@@ -197,7 +216,7 @@ void CMDODriver::StartSolver()
       {
         if ( rank == MASTER_NODE)
         {
-          std::cout <<"Advancing aeroelastic state" <<std::endl;
+          std::cout <<"Advancing static aeroelastic state" <<std::endl;
         }
     
         *max_precice_dt = precice->advance(*dt);
@@ -230,6 +249,73 @@ void CMDODriver::StartSolver()
 
     }
   } // Steady-state MDA loop ends
+
+  /*-----------------------------------------------------------------------------------------------------------------------*/
+
+  if (enable_Unsteady_MDO)
+  {  
+    while ((TimeIter < config_container[ZONE_0]->GetnTime_Iter()) &&!enable_Unsteady_MDO || (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_Unsteady_MDO && precice->isCouplingOngoing() ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_Unsteady_MDO)
+    {
+
+      /*---Save old state for implicit coupling---*/
+      if (precice->isActionRequired(precice->getCowic()))
+      {
+        precice->saveOldState(&StopCalc, dt);
+      }
+      
+      /*---Adjust the time step for sub-cycling---*/
+      dt = min(max_precice_dt,dt);
+      config_container[ZONE_0]->SetDelta_UnstTimeND(*dt);
+
+      /*--- Perform some preprocessing before starting the time-step simulation. ---*/
+      Preprocess(TimeIter);
+
+      Run();  
+    
+      /*--- Perform some postprocessing on the solution before the update ---*/
+      Postprocess();
+
+      /*--- Update the solution for dual time stepping strategy ---*/
+      Update();
+    
+      /*--- Monitor the computations after each iteration. ---*/
+      Monitor(TimeIter);
+
+      /*---Advance the aero-elastic state---*/
+      *max_precice_dt = precice->advance(*dt);
+
+
+    
+     
+      bool suppress_output = false;
+    
+      /* if(precice_usage && precice->isActionRequired(precice->getCoric())) */
+      if(enable_Unsteady_MDO && precice->isActionRequired(precice->getCoric()))
+      {
+      //Stay at the same iteration number if preCICE is not converged and reload to the state before the current iteration
+      TimeIter--;
+      precice->reloadOldState(&StopCalc, dt);
+      suppress_output = true;
+      }
+
+
+      /*--- Save iteration solution for libROM ---*/
+      if (config_container[MESH_0]->GetSave_libROM()) 
+      {
+        solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->SavelibROM(geometry_container[ZONE_0][INST_0][MESH_0],
+                                                                     config_container[ZONE_0], StopCalc);
+      }
+
+
+      Implicit_Output(TimeIter, suppress_output);
+
+      /*--- If the convergence criteria has been met, terminate the simulation. ---*/
+
+      if (StopCalc) break;
+
+      TimeIter++;
+    }
+  } // Unsteady-state MDA loop ends
 
   if (enable_Steady_MDO || enable_Unsteady_MDO)
   {
@@ -303,7 +389,7 @@ void CMDODriver::Preprocess(unsigned long TimeIter) {
 
   /*---Perform a dynamic mesh update only at MDO target time */
 
-  if ((enable_Steady_MDO) && (TimeIter == target_time))
+  if ((enable_Steady_MDO) && (TimeIter == target_time) || (enable_Unsteady_MDO))
   {
  // if (!(config_container[ZONE_0]->GetGrid_Movement() && config_container[ZONE_0]->GetDiscrete_Adjoint()))
     DynamicMeshUpdate(TimeIter);
