@@ -166,7 +166,7 @@ void CMDODriver::StartSolver()
         }
         output_container[ZONE_0]->Load_Data(geometry_container[ZONE_0][INST_0][MESH_0], config_container[ZONE_0], solver_container[ZONE_0][INST_0][MESH_0]);
       
-        if ( rank == MASTER_NODE)
+        if (rank == MASTER_NODE)
         {
           std::cout << "Write deformed mesh to file" <<std::endl;
         }
@@ -188,7 +188,11 @@ void CMDODriver::StartSolver()
       /*--- Monitor the computations after each iteration. ---*/
       Monitor(TimeIter);
 
+      //Output(TimeIter);
+
       /*---Output file for original fluid state---*/
+
+      
       if (TimeIter == (target_time -1))
       {
         if (rank == MASTER_NODE)
@@ -198,7 +202,11 @@ void CMDODriver::StartSolver()
         Output(TimeIter);
       }
 
+      
+
       /*---Output file for defomred fluid state---*/
+
+      
       if (TimeIter == (target_time))
       {
         if (rank == MASTER_NODE)
@@ -207,6 +215,8 @@ void CMDODriver::StartSolver()
         }
         Output(TimeIter);
       }
+
+      
 
 
       //Output(TimeIter);
@@ -224,25 +234,13 @@ void CMDODriver::StartSolver()
     
     
       /*---Implicit coupling stage (reloadOldState)---*/
-      bool suppress_output = false;
-    
-      /* if(precice_usage && precice->isActionRequired(precice->getCoric())) */
       if (TimeIter == target_time)
       {
-      //Stay at the same iteration number if preCICE is not converged and reload to the state before the current iteration
       TimeIter--;
-      precice->reloadOldState(&StopCalc, dt);
-      suppress_output = true;
-      }
-      /*--- Save iteration solution for libROM ---*/
-      if (config_container[MESH_0]->GetSave_libROM()) 
-      {
-        solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->SavelibROM(geometry_container[ZONE_0][INST_0][MESH_0],
-                                                                     config_container[ZONE_0], StopCalc);
+      precice->reloadOldState(&StopCalc, dt);  
       }
 
       /*--- If the convergence criteria has been met, terminate the simulation. ---*/
-
       if (StopCalc) break;
 
       TimeIter++;
@@ -508,7 +506,9 @@ void CMDODriver::DynamicMeshUpdate(unsigned long TimeIter) {
   auto iteration = iteration_container[ZONE_0][INST_0];
 
   /*--- Legacy dynamic mesh update - Only if GRID_MOVEMENT = YES ---*/
-  if (config_container[ZONE_0]->GetGrid_Movement()) {
+  
+  if (config_container[ZONE_0]->GetGrid_Movement()) 
+  {
     iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
                                 grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
                                 config_container[ZONE_0], 0, TimeIter);
@@ -520,12 +520,15 @@ void CMDODriver::DynamicMeshUpdate(unsigned long TimeIter) {
                                  solver_container[ZONE_0][INST_0][MESH_0],
                                  numerics_container[ZONE_0][INST_0][MESH_0],
                                  config_container[ZONE_0], RECORDING::CLEAR_INDICES);
+                    
 
   /*--- Update the wall distances if the mesh was deformed. ---*/
   if (config_container[ZONE_0]->GetGrid_Movement() ||
       config_container[ZONE_0]->GetDeform_Mesh()) {
     CGeometry::ComputeWallDistance(config_container, geometry_container);
   }
+  
+
 }
 
 bool CMDODriver::Monitor(unsigned long TimeIter)

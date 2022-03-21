@@ -495,7 +495,10 @@ void CMeshSolver::DeformMesh(CGeometry **geometry, CNumerics **numerics, CConfig
   /*--- Compute the stiffness matrix, no point recording because we clear the residual. ---*/
 
   const bool wasActive = AD::BeginPassive();
-
+  if (rank == MASTER_NODE)
+  {
+    std::cout <<"Computing stiffness matrix for fluid mesh"<<std::endl;
+  }
   Compute_StiffMatrix(geometry[MESH_0], numerics, config);
 
   AD::EndPassive(wasActive);
@@ -524,20 +527,35 @@ void CMeshSolver::DeformMesh(CGeometry **geometry, CNumerics **numerics, CConfig
 
   /*--- Update the grid coordinates and cell volumes using the solution
      of the linear system (usol contains the x, y, z displacements). ---*/
-  UpdateGridCoord(geometry[MESH_0], config);
+  
+  if (rank == MASTER_NODE)
+  {
+    std::cout <<"Update grid coordinates"<<std::endl;
+  }
 
+  UpdateGridCoord(geometry[MESH_0], config);
+  
+  if (rank == MASTER_NODE)
+  {
+    std::cout <<"Update dual grid"<<std::endl;
+  }
   /*--- Update the dual grid. ---*/
   CGeometry::UpdateGeometry(geometry, config);
 
   /*--- Check for failed deformation (negative volumes). ---*/
   SetMinMaxVolume(geometry[MESH_0], config, true);
 
+  if (rank == MASTER_NODE)
+  {
+    std::cout <<"Computing grid veloicty"<<std::endl;
+  }
   /*--- The Grid Velocity is only computed if the problem is time domain ---*/
   if (time_domain && !config->GetFSI_Simulation())
     ComputeGridVelocity(geometry, config);
 
   }
   END_SU2_OMP_PARALLEL
+  
 
   if (time_domain && config->GetFSI_Simulation()) {
     ComputeGridVelocity_FromBoundary(geometry, numerics, config);

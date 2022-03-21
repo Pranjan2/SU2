@@ -93,7 +93,7 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
     case PRECICE_MOVEMENT:
 
       if (rank == MASTER_NODE)
-        cout << "Deforming the volume grid due to MDA " << endl;
+        cout << "Deforming the volume grid due to aero-elastic response " << endl;
       grid_movement->SetVolume_Deformation(geometry[MESH_0], config, true);
 
       if (rank == MASTER_NODE)
@@ -190,7 +190,8 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
 }
 
 void CIteration::SetMesh_Deformation(CGeometry** geometry, CSolver** solver, CNumerics*** numerics, CConfig* config,
-                                     RECORDING kind_recording) {
+                                     RECORDING kind_recording) 
+{
   if (!config->GetDeform_Mesh()) return;
 
   /*--- Perform the elasticity mesh movement ---*/
@@ -200,6 +201,11 @@ void CIteration::SetMesh_Deformation(CGeometry** geometry, CSolver** solver, CNu
     /*--- In a primal run, AD::TapeActive returns a false ---*/
     /*--- In any other recordings, the tape is passive during the deformation. ---*/
     wasActive = AD::BeginPassive();
+  }
+
+  if (rank == MASTER_NODE)
+  {
+    std::cout << "Deforming mesh using linear elasticity" << std::endl;
   }
 
   /*--- Set the stiffness of each element mesh into the mesh numerics ---*/
