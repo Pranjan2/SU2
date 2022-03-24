@@ -152,6 +152,8 @@ void CMDODriver::StartSolver()
         precice->saveOldState(&StopCalc, dt);
       }
 
+  
+
       /*--- Perform some preprocessing before starting the time-step simulation. ---*/
       Preprocess(TimeIter);
 
@@ -162,7 +164,7 @@ void CMDODriver::StartSolver()
       Postprocess();
 
       /*--- Update the solution for dual time stepping strategy ---*/
-      Update();
+      //Update();
     
       /*--- Monitor the computations after each iteration. ---*/
       Monitor(TimeIter);
@@ -178,8 +180,8 @@ void CMDODriver::StartSolver()
         /*---Increment the value of counter so that this loop is executed just once---*/
         counter++;
       }
-
-      if (enable_Steady_MDO && !(precice->isCouplingOngoing()))
+      
+    if (enable_Steady_MDO && !(precice->isCouplingOngoing()))
       {
         if (rank==MASTER_NODE)
         {
@@ -190,9 +192,24 @@ void CMDODriver::StartSolver()
         {
           std::cout<<"Writing fluid field at aero-elastic equillibrium"<<std::endl;
         }
-        Output(TimeIter); 
+        Output(TimeIter);
+
+        if (rank == MASTER_NODE)
+        {
+          std::cout << "Loading mesh data to master node" << std::endl;
+        }
+        output_container[ZONE_0]->Load_Data(geometry_container[ZONE_0][INST_0][MESH_0], config_container[ZONE_0], solver_container[ZONE_0][INST_0][MESH_0]);
+
+        if (rank == MASTER_NODE)
+        {
+          std::cout << "Write deformed mesh to file" <<std::endl;
+        }
+        output_container[ZONE_0]->WriteToFile(config_container[ZONE_0],geometry_container[ZONE_0][INST_0][MESH_0], MESH, config_container[ZONE_0]->GetMesh_Out_FileName());
+
         break;
       }
+
+      
 
       if ((TimeIter == target_time) && (precice->isCouplingOngoing()))
       {
@@ -330,12 +347,12 @@ void CMDODriver::Preprocess(unsigned long TimeIter) {
    general once the drivers are more stable. ---*/
 
   if (config_container[ZONE_0]->GetTime_Marching() != TIME_MARCHING::STEADY)
-   // if (enable_Unsteady_MDO)
-   // {
+    if (enable_Unsteady_MDO)
+    {
       config_container[ZONE_0]->SetPhysicalTime(static_cast<su2double>(TimeIter)*config_container[ZONE_0]->GetDelta_UnstTimeND());
-  //  }
-  //  else if (enable_Steady_MDO)
-    else
+    }
+    else if (enable_Steady_MDO)
+    //else
     {
       config_container[ZONE_0]->SetPhysicalTime(0.0);
     }  
