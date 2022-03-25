@@ -60,7 +60,7 @@ void CMDODriver::StartSolver()
   config_container[ZONE_0]->Set_StartTime(StartTime);
 
   /*---Output counter---*/
-  int counter = 0;
+  unsigned long counter = 0;
 
   /*--- Main external loop of the solver. Runs for the number of time steps required. ---*/
 
@@ -145,17 +145,21 @@ void CMDODriver::StartSolver()
     while ((TimeIter < config_container[ZONE_0]->GetnTime_Iter()) &&!enable_Steady_MDO || (TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_Steady_MDO && precice->isCouplingOngoing() ||(TimeIter < config_container[ZONE_0]->GetnTime_Iter()) && enable_Steady_MDO)
     {
 
-    
+      
+      
       if (TimeIter == target_time)
       {
-      /*---Save the current fluid state---*/
+      /*---Save the current fluid state---*///
         precice->saveOldState(&StopCalc, dt);
       }
+
+      
 
   
 
       /*--- Perform some preprocessing before starting the time-step simulation. ---*/
-      Preprocess(TimeIter);
+
+      PreprocessMDO(TimeIter, counter);
 
 
       RunMDO(TimeIter);  
@@ -164,7 +168,7 @@ void CMDODriver::StartSolver()
       Postprocess();
 
       /*--- Update the solution for dual time stepping strategy ---*/
-      //Update();
+      Update();
     
       /*--- Monitor the computations after each iteration. ---*/
       Monitor(TimeIter);
@@ -178,7 +182,7 @@ void CMDODriver::StartSolver()
         }
         Output(TimeIter);
         /*---Increment the value of counter so that this loop is executed just once---*/
-        counter++;
+        //counter++;
       }
       
     if (enable_Steady_MDO && !(precice->isCouplingOngoing()))
@@ -209,7 +213,7 @@ void CMDODriver::StartSolver()
         break;
       }
 
-      
+      //Output(TimeIter);
 
       if ((TimeIter == target_time) && (precice->isCouplingOngoing()))
       {
@@ -232,7 +236,7 @@ void CMDODriver::StartSolver()
 
       /*--- If the convergence criteria has been met, terminate the simulation. ---*/
       //if (StopCalc) break;
-
+      counter++;
       TimeIter++;
 
     }
@@ -347,12 +351,12 @@ void CMDODriver::Preprocess(unsigned long TimeIter) {
    general once the drivers are more stable. ---*/
 
   if (config_container[ZONE_0]->GetTime_Marching() != TIME_MARCHING::STEADY)
-    if (enable_Unsteady_MDO)
+    //if (enable_Unsteady_MDO)
     {
       config_container[ZONE_0]->SetPhysicalTime(static_cast<su2double>(TimeIter)*config_container[ZONE_0]->GetDelta_UnstTimeND());
     }
-    else if (enable_Steady_MDO)
-    //else
+    //else if (enable_Steady_MDO)
+    else
     {
       config_container[ZONE_0]->SetPhysicalTime(0.0);
     }  
@@ -382,15 +386,70 @@ void CMDODriver::Preprocess(unsigned long TimeIter) {
           mesh cordinates are read from the restart files. ---*/
 
   /*---Perform a dynamic mesh update only at MDO target time */
-
   if ((enable_Steady_MDO) && (TimeIter == target_time) || (enable_Unsteady_MDO))
   {
- // if (!(config_container[ZONE_0]->GetGrid_Movement() && config_container[ZONE_0]->GetDiscrete_Adjoint()))
     DynamicMeshUpdate(TimeIter);
   }
+}
 
+void CMDODriver::PreprocessMDO(unsigned long TimeIter, unsigned long counter) {
 
+  /*--- Set runtime option ---*/
 
+  Runtime_Options();
+
+  /*--- Set the current time iteration in the config ---*/
+
+  config_container[ZONE_0]->SetTimeIter(TimeIter);
+
+  /*--- Store the current physical time in the config container, as
+   this can be used for verification / MMS. This should also be more
+   general once the drivers are more stable. ---*/
+
+  if (config_container[ZONE_0]->GetTime_Marching() != TIME_MARCHING::STEADY)
+    //if (enable_Unsteady_MDO)
+    {
+      config_container[ZONE_0]->SetPhysicalTime(static_cast<su2double>(TimeIter)*config_container[ZONE_0]->GetDelta_UnstTimeND());
+    }
+    //else if (enable_Steady_MDO)
+    else
+    {
+      config_container[ZONE_0]->SetPhysicalTime(0.0);
+    }  
+
+  /*--- Set the initial condition for EULER/N-S/RANS ---------------------------------------------*/
+  if (config_container[ZONE_0]->GetFluidProblem()) {
+    solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->SetInitialCondition(geometry_container[ZONE_0][INST_0],
+                                                                            solver_container[ZONE_0][INST_0],
+                                                                            config_container[ZONE_0], TimeIter);
+  }
+  else if (config_container[ZONE_0]->GetHeatProblem()) {
+    /*--- Set the initial condition for HEAT equation ---------------------------------------------*/
+    solver_container[ZONE_0][INST_0][MESH_0][HEAT_SOL]->SetInitialCondition(geometry_container[ZONE_0][INST_0],
+                                                                            solver_container[ZONE_0][INST_0],
+                                                                            config_container[ZONE_0], TimeIter);
+  }
+
+  SU2_MPI::Barrier(SU2_MPI::GetComm());
+
+  /*--- Run a predictor step ---*/
+  if (config_container[ZONE_0]->GetPredictor())
+    iteration_container[ZONE_0][INST_0]->Predictor(output_container[ZONE_0], integration_container, geometry_container, solver_container,
+        numerics_container, config_container, surface_movement, grid_movement, FFDBox, ZONE_0, INST_0);
+
+  /*--- Perform a dynamic mesh update if required. ---*/
+  /*--- For the Disc.Adj. of a case with (rigidly) moving grid, the appropriate
+          mesh cordinates are read from the restart files. ---*/
+
+  /*---Perform a dynamic mesh update only at MDO target time */
+  if ((enable_Steady_MDO) && (TimeIter == target_time) || (enable_Unsteady_MDO))
+  {
+    if (rank == MASTER_NODE)
+    {
+      std::cout<<"Performing dynamic mesh update for aero-elastic iteration: "<< counter << std::endl;
+    }
+    DynamicMeshUpdate(counter);
+  }
 }
 
 void CMDODriver::Run() 

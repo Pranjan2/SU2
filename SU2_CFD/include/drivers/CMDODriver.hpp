@@ -72,6 +72,11 @@ public:
    */
   void Preprocess(unsigned long TimeIter) override;
 
+    /*!
+   * \brief Preprocess the single-zone iteration
+   */
+  void PreprocessMDO(unsigned long TimeIter, unsigned long counter) ;
+
   /*!
    * \brief Run the iteration for ZONE_0.
    */

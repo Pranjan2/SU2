@@ -1,4 +1,4 @@
-# This script performs four steps in sequence : 1) Open and read the displacements (disp.csv) 2) Open and Read the existing mesh 3) Update mesh and write to file 4) Read
+# This script performs four steps in sequence : 1) Open and read the displaced coordinates 2) Open and Read the existing mesh 3) Update mesh and write to file 4) Read
 # the stress fields and 5) Write visualization files 
 import numpy as np
 import pandas as pd
@@ -10,42 +10,36 @@ import os
 def MeshUpdate(Mesh_Name, Nnodes,Nelems,n):
 
     # Open the displacement file (Disp.csv)
-    Nd_Disp = pd.read_csv('Disp.csv',header = None, sep = ',', skiprows = 1, nrows=Nnodes)
+    Up_CRD = pd.read_csv('updatedCOORD.csv',header = None, sep = ',', skiprows = 1, nrows=Nnodes)
 
-    Disp = Nd_Disp.to_numpy()
+    CRD = Up_CRD.to_numpy()
 
     # Get the node count from the Disp.csv file and see if all values are read 
     # Doing (Nnodes -1) since python begins reading from 0
 
-    Node_Count_Disp = Disp[Nnodes-1,1]
+    Node_Count_CRD = CRD[Nnodes-1,0]
 
-    if ( Node_Count_Disp-Nnodes > 0.00001):
+    if ( Node_Count_CRD-Nnodes > 0.00001):
         print("Did not read all nodes from Disp.csv")
-        print("Read from Disp.csv ", Node_Count_Disp)
+        print("Read from Disp.csv ", Node_Count_CRD)
         print("Actual number of nodes ", Nnodes)
 
 
     # Get the X displacement
-    X_Disp = Disp[0:Nnodes,2]
+    X_CRD = CRD[0:Nnodes,1]
 
     # Get the Y displacement 
-    Y_Disp = Disp[0:Nnodes,3]
+    Y_CRD = CRD[0:Nnodes,2]
 
     # Get the Z displacement 
-    Z_Disp = Disp[0:Nnodes,4]
+    Z_CRD = CRD[0:Nnodes,3]
 
 
 
     # Reshape all *_Disp arrays 
-    X_Disp = X_Disp.reshape(Nnodes,1)
-    Y_Disp = Y_Disp.reshape(Nnodes,1)
-    Z_Disp = Z_Disp.reshape(Nnodes,1)
-
-    UX = X_Disp
-    UY = Y_Disp
-    UZ = Z_Disp
-
-
+    X_CRD = X_CRD.reshape(Nnodes,1)
+    Y_CRD = Y_CRD.reshape(Nnodes,1)
+    Z_CRD = Z_CRD.reshape(Nnodes,1)
 
     #---------------------------------------------------------FINISHED READING ALL DISPLACEMENT DATA----------------------------------------------------------------------#
 
@@ -80,16 +74,19 @@ def MeshUpdate(Mesh_Name, Nnodes,Nelems,n):
     Y = Y.reshape(Nnodes,1)
     Z = Z.reshape(Nnodes,1)
 
-    # Update the Node Coordinates : Current Node Coordinates (X,Y,Z) + Node Displacement Coordinates (X_Disp,Y_Disp,Z_Disp)
+    # Compute the FINAL discplacement field
 
-    X = X + X_Disp
-    Y = Y + Y_Disp
-    Z = Z + Z_Disp
+    UX = X_CRD - X
+    UY = Y_CRD - Y
+    UZ = Z_CRD - Z
 
-   
+    # Update the Node Coordinates
+
+    X = X_CRD
+    Y = Y_CRD
+    Z = Z_CRD
 
     # Read all Element information from the current mesh file 
-
     Element = pd.read_csv(Mesh_Name,header = None, sep = ',', skiprows = Nnodes + 4, nrows=Nelems)
 
     ELE = Element.to_numpy()
@@ -212,7 +209,7 @@ def MeshUpdate(Mesh_Name, Nnodes,Nelems,n):
         file.write("VARIABLES = \"x\"\"y\"\"z\"\"Ux\"\"Uy\"\"Uz\"\"Sigma\"")
 
     file.write("\n")
-    file.write("ZONE STRANDID=2, SOLUTIONTIME=1, NODES=" + str(Nnodes) + ", ELEMENTS= " + str(Nelems) + ", DATAPACKING=POINT, ZONETYPE=FETETRAHEDRON")
+    file.write("ZONE STRANDID=2, SOLUTIONTIME=0, NODES=" + str(Nnodes) + ", ELEMENTS= " + str(Nelems) + ", DATAPACKING=POINT, ZONETYPE=FETETRAHEDRON")
     for i in range(Nnodes):
         if TopOpt:
             file.write("\n" +"{:.5e}" .format(X[i,0]) +'  \t  '+ "{:.5e}".format(Y[i,0]) + ' \t \t ' + "{:.5e}".format(Z[i,0]) + '\t'+ "{:.5e}".format(UX[i,0])+'\t'+ "{:.5e}".format(UY[i,0])+'\t'+ "{:.5e}".format(UZ[i,0]) + ' \t ' +"{:.5e}".format(FX[i,0]) + ' \t ' +"{:.5e}".format(FY[i,0]) + ' \t ' +"{:.5e}".format(FZ[i,0])+ ' \t ' +"{:.5e}".format(Sigma[i,0])+ ' \t ' +"{:.5e}".format(densityinterp_ave[i,0]))
@@ -225,17 +222,6 @@ def MeshUpdate(Mesh_Name, Nnodes,Nelems,n):
     file.close()
     print("Post processing Complete!")
     return Def_Mesh_Name    
-
-
-
-
-
-
-
-
-
-
-
 
 
 

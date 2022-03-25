@@ -591,6 +591,8 @@ double Precice::advance( double computedTimestepLength )
     for (int iVertex = 0; iVertex < FSI_nVert; iVertex++)
     {
       geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID_Local][iVertex]->SetVarCoord(displacementDeltas_su2[iVertex]);
+      //geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID_Local][iVertex]->AddVarCoord(displacementDeltas_su2[iVertex]);
+     
     }
     return max_precice_dt;
   }
