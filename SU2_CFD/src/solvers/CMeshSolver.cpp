@@ -443,27 +443,33 @@ void CMeshSolver::SetMesh_Stiffness(CGeometry **geometry, CNumerics **numerics, 
 
     /*--- Stiffness inverse of the volume of the element. ---*/
     case INVERSE_VOLUME:
-      for (unsigned long iElem = 0; iElem < nElement; iElem++) {
+      for (unsigned long iElem = 0; iElem < nElement; iElem++) 
+      {
         su2double E = 1.0 / element[iElem].GetRef_Volume();
         myNumerics->SetMeshElasticProperties(iElem, min(E,maxE));
       }
     break;
 
     /*--- Stiffness inverse of the distance of the element to the closest wall. ---*/
-    case SOLID_WALL_DISTANCE: {
+    case SOLID_WALL_DISTANCE: 
+    {
       const su2double offset = config->GetDeform_StiffLayerSize();
       if (fabs(offset) > 0.0) {
         /*--- With prescribed layer of maximum stiffness (reaches max and holds). ---*/
         su2double d0 = offset / MaxDistance;
         su2double dmin = 1.0 / maxE;
         su2double scale = 1.0 / (1.0 - d0);
-        for (unsigned long iElem = 0; iElem < nElement; iElem++) {
+        for (unsigned long iElem = 0; iElem < nElement; iElem++) 
+        {
           su2double E = 1.0 / max(dmin, (element[iElem].GetWallDistance() - d0)*scale);
           myNumerics->SetMeshElasticProperties(iElem, E);
         }
-      } else {
+      }
+       else 
+       {
         /*--- Without prescribed layer of maximum stiffness (may not reach max). ---*/
-        for (unsigned long iElem = 0; iElem < nElement; iElem++) {
+        for (unsigned long iElem = 0; iElem < nElement; iElem++) 
+        {
           su2double E = 1.0 / element[iElem].GetWallDistance();
           myNumerics->SetMeshElasticProperties(iElem, min(E,maxE));
         }
@@ -699,7 +705,8 @@ void CMeshSolver::SetBoundaryDisplacements(CGeometry *geometry, CConfig *config,
    * The derivatives are still correct since the motion does not depend on the solution,
    * but this means that (for now) we cannot get derivatives w.r.t. motion parameters. */
 
-  if (config->GetSurface_Movement(DEFORMING) && !config->GetDiscrete_Adjoint()) {
+  if (config->GetSurface_Movement(DEFORMING) && !config->GetDiscrete_Adjoint()) 
+  {
     if (velocity_transfer)
       SU2_MPI::Error("Forced motions are not compatible with FSI simulations.", CURRENT_FUNCTION);
 
@@ -715,24 +722,28 @@ void CMeshSolver::SetBoundaryDisplacements(CGeometry *geometry, CConfig *config,
   unsigned short iMarker;
 
   /*--- Impose zero displacements of all non-moving surfaces that are not MARKER_DEFORM_SYM_PLANE. ---*/
-  for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
+  for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) 
+  {
     if ((config->GetMarker_All_Deform_Mesh(iMarker) == NO) &&
         (config->GetMarker_All_Deform_Mesh_Sym_Plane(iMarker) == NO) &&
         (config->GetMarker_All_Moving(iMarker) == NO) &&
         (config->GetMarker_All_KindBC(iMarker) != INTERNAL_BOUNDARY) &&
-        (config->GetMarker_All_KindBC(iMarker) != SEND_RECEIVE)) {
+        (config->GetMarker_All_KindBC(iMarker) != SEND_RECEIVE)) 
+        {
 
-      BC_Clamped(geometry, config, iMarker);
-    }
+          BC_Clamped(geometry, config, iMarker);
+        }
   }
 
   /*--- Impose displacement boundary conditions and symmetry. ---*/
-  for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) {
+  for (iMarker = 0; iMarker < config->GetnMarker_All(); iMarker++) 
+  {
     if ((config->GetMarker_All_Deform_Mesh(iMarker) == YES) ||
-        (config->GetMarker_All_Moving(iMarker) == YES)) {
+        (config->GetMarker_All_Moving(iMarker) == YES)) 
+        {
 
-      BC_Deforming(geometry, config, iMarker, velocity_transfer);
-    }
+          BC_Deforming(geometry, config, iMarker, velocity_transfer);
+        }
     else if (config->GetMarker_All_Deform_Mesh_Sym_Plane(iMarker) == YES) {
 
       BC_Sym_Plane(geometry, config, iMarker);

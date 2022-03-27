@@ -7379,7 +7379,8 @@ unsigned short CConfig::GetMarker_CfgFile_DV(string val_marker) const {
   return Marker_CfgFile_DV[iMarker_CfgFile];
 }
 
-unsigned short CConfig::GetMarker_CfgFile_Moving(string val_marker) const {
+unsigned short CConfig::GetMarker_CfgFile_Moving(string val_marker) const 
+{
   unsigned short iMarker_CfgFile;
   for (iMarker_CfgFile = 0; iMarker_CfgFile < nMarker_CfgFile; iMarker_CfgFile++)
     if (Marker_CfgFile_TagBound[iMarker_CfgFile] == val_marker) break;

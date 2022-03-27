@@ -3591,6 +3591,8 @@ void CPhysicalGeometry::SetBoundaries(CConfig *config) {
       config->SetMarker_All_ZoneInterface(iMarker, config->GetMarker_CfgFile_ZoneInterface(Marker_Tag));
       config->SetMarker_All_DV(iMarker, config->GetMarker_CfgFile_DV(Marker_Tag));
       config->SetMarker_All_Moving(iMarker, config->GetMarker_CfgFile_Moving(Marker_Tag));
+     // std::cout << "This is Marker name: " << Marker_Tag << " with moving flag " << config->GetMarker_CfgFile_Moving(Marker_Tag) <<std::endl;
+     // config->SetMarker_All_Moving(iMarker, config->GetMarker_CfgFile_Moving("wetSurface0"));
       config->SetMarker_All_Deform_Mesh(iMarker, config->GetMarker_CfgFile_Deform_Mesh(Marker_Tag));
       config->SetMarker_All_Deform_Mesh_Sym_Plane(iMarker, config->GetMarker_CfgFile_Deform_Mesh_Sym_Plane(Marker_Tag));
       config->SetMarker_All_Fluid_Load(iMarker, config->GetMarker_CfgFile_Fluid_Load(Marker_Tag));

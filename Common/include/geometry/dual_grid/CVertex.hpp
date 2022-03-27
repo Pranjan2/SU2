@@ -155,9 +155,13 @@ public:
    * \brief Set the value of the coordinate variation due to a surface modification.
    * \param[in] val_varcoord - Variation of the coordinate.
    */
-  inline void SetVarCoord(const su2double *val_varcoord) {
+  inline void SetVarCoord(const su2double *val_varcoord) 
+  {
     for (unsigned short iDim = 0; iDim < nDim; iDim++)
+    {
       VarCoord[iDim] = val_varcoord[iDim];
+      //std::cout << val_varcoord[iDim] << std::endl;
+    }
   }
 
   /*!

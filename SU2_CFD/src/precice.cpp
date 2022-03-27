@@ -361,6 +361,7 @@ double Precice::initialize()
     for (int i = 0; i < localNumberWetSurfaces; i++) 
     {
       vertexSize[i] = geometry_container[ZONE_0][INST_0][MESH_0]->nVertex[valueMarkerWet[i]];
+
       /*--- coordinates of all nodes at the wet surface ---*/
       double coupleNodeCoord[vertexSize[i]][nDim]; 
 
@@ -373,6 +374,7 @@ double Precice::initialize()
       {
         /*---Get node number (= index) to vertex (= node) of the aeroelastic interface---*/
         iNode = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[valueMarkerWet[i]][iVertex]->GetNode();
+      //  std::cout << "ValueMakerWet: " << valueMarkerWet[i] << std::endl;
    
        /*---vector = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord(iNode);---*/
         if (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetDomain(iNode))
@@ -591,8 +593,10 @@ double Precice::advance( double computedTimestepLength )
     for (int iVertex = 0; iVertex < FSI_nVert; iVertex++)
     {
       geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID_Local][iVertex]->SetVarCoord(displacementDeltas_su2[iVertex]);
-      //geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID_Local][iVertex]->AddVarCoord(displacementDeltas_su2[iVertex]);
-     
+
+    //  su2double* VarCoord;
+   //   VarCoord = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID_Local][iVertex]->GetVarCoord();
+     // std::cout << " Disp in x: " << VarCoord[0] << " Disp in y: " << VarCoord[1] << " Disp in z: " << VarCoord[2] << std::endl;      
     }
     return max_precice_dt;
   }

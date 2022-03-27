@@ -181,9 +181,9 @@ void CMDODriver::StartSolver()
           std::cout<<"Writing undeflected aero-elastic fields"<<std::endl;
         }
         Output(TimeIter);
-        /*---Increment the value of counter so that this loop is executed just once---*/
-        //counter++;
       }
+
+      Output(TimeIter);
       
     if (enable_Steady_MDO && !(precice->isCouplingOngoing()))
       {
@@ -564,6 +564,10 @@ void CMDODriver::DynamicMeshUpdate(unsigned long TimeIter) {
   
   if (config_container[ZONE_0]->GetGrid_Movement()) 
   {
+    if (rank == MASTER_NODE)
+    {
+      std::cout <<"Performing grid deformation using LEGACY class"<<std::endl;
+    }
     iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
                                 grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
                                 config_container[ZONE_0], 0, TimeIter);
