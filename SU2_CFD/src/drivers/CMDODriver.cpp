@@ -147,24 +147,15 @@ void CMDODriver::StartSolver()
 
       
       
-      if (TimeIter == target_time)
-      {
-      /*---Save the current fluid state---*///
-        precice->saveOldState(&StopCalc, dt);
-      }
-
-      
-
-  
-
-      /*--- Perform some preprocessing before starting the time-step simulation. ---*/
+      /*---- Deform the mesh here based on surface displacements of previous advance---*/
 
       PreprocessMDO(TimeIter, counter);
 
 
+
       RunMDO(TimeIter);  
     
-      /*--- Perform some postprocessing on the solution before the update ---*/
+      /*--- Compute tractions baed on current fluid state---*/
       Postprocess();
 
       /*--- Update the solution for dual time stepping strategy ---*/
@@ -211,6 +202,12 @@ void CMDODriver::StartSolver()
         output_container[ZONE_0]->WriteToFile(config_container[ZONE_0],geometry_container[ZONE_0][INST_0][MESH_0], MESH, config_container[ZONE_0]->GetMesh_Out_FileName());
 
         break;
+      }
+
+      if (TimeIter == target_time)
+      {
+      /*---Save the current fluid state---*///
+        precice->saveOldState(&StopCalc, dt);
       }
 
       //Output(TimeIter);

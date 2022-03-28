@@ -201,7 +201,7 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
     /*--- Definition of the preconditioner matrix vector multiplication, and linear solver ---*/
 
     /*--- To keep legacy behavior ---*/
-    System.SetToleranceType(LinearToleranceType::RELATIVE);
+    System.SetToleranceType(LinearToleranceType::ABSOLUTE);
 
     /*--- If we want no derivatives or the direct derivatives, we solve the system using the
      * normal matrix vector product and preconditioner. For the mesh sensitivities using
@@ -235,6 +235,7 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
     { 
       UpdateGridCoord_Derivatives(geometry, config); 
     }
+
     if (UpdateGeo) 
     { UpdateDualGrid(geometry, config); 
     }
@@ -1654,7 +1655,7 @@ void CVolumetricMovement::SetBoundaryDisplacements(CGeometry *geometry, CConfig 
     
     if (config->GetMarker_All_Moving(iMarker) == 1)
     {
-      std::cout << " Marker : " << Marker_Tag << " is a moving MARKER " << std::endl;
+      std::cout << "Marker : " << Marker_Tag << " is a moving MARKER " << std::endl;
     }
 
     if (config->GetMarker_All_Moving(iMarker) == 1)
@@ -1673,7 +1674,11 @@ void CVolumetricMovement::SetBoundaryDisplacements(CGeometry *geometry, CConfig 
       {
         iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
         VarCoord = geometry->vertex[iMarker][iVertex]->GetVarCoord();
-        std::cout << "Disp X " << VarCoord[0] << std::endl;
+        std::cout << "Disp X " << VarCoord[0] << " Disp Y " <<  setw(12) << VarCoord[1] << " Disp Z " <<setw(12) << VarCoord[2] << std::endl;
+        if (iVertex == 1)
+        {
+          //VarCoord[2] = 0.1;
+        }
         for (iDim = 0; iDim < nDim; iDim++) 
         {
           total_index = iPoint*nDim + iDim;
@@ -1685,9 +1690,6 @@ void CVolumetricMovement::SetBoundaryDisplacements(CGeometry *geometry, CConfig 
       }
     }
   }
- // BLOCK COMMENTING ENDS
-
-
 
   /*--- Set to zero displacements of the normal component for the symmetry plane condition ---*/
 
@@ -1870,8 +1872,10 @@ void CVolumetricMovement::SetDomainDisplacements(CGeometry *geometry, CConfig *c
   /*--- Don't move the volume grid outside the limits based
    on the distance to the solid surface ---*/
 
-  if (config->GetDeform_Limit() < 1E6) {
-    for (iPoint = 0; iPoint < nPoint; iPoint++) {
+  if (config->GetDeform_Limit() < 1E6) 
+  {
+    for (iPoint = 0; iPoint < nPoint; iPoint++) 
+    {
       if (geometry->nodes->GetWall_Distance(iPoint) >= config->GetDeform_Limit()) {
         for (iDim = 0; iDim < nDim; iDim++) {
           total_index = iPoint*nDim + iDim;

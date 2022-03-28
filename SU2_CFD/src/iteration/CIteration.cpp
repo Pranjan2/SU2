@@ -92,14 +92,6 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
      /* --- Case for mesh motion with external elastic solver during MDO ---*/
     case PRECICE_MOVEMENT:
 
-      if (rank == MASTER_NODE)
-      {
-        if (config->GetSurface_Movement(MDO_SURFACE))
-        {
-          std::cout<<"Reading MDO surface" <<std::endl;
-        }
-      }
-
       grid_movement->SetVolume_Deformation(geometry[MESH_0], config, true);
 
       if (rank == MASTER_NODE)

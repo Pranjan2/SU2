@@ -593,6 +593,7 @@ double Precice::advance( double computedTimestepLength )
     for (int iVertex = 0; iVertex < FSI_nVert; iVertex++)
     {
       geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID_Local][iVertex]->SetVarCoord(displacementDeltas_su2[iVertex]);
+     // geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID_Local][iVertex]->AddVarCoord(displacementDeltas_su2[iVertex]);
 
     //  su2double* VarCoord;
    //   VarCoord = geometry_container[ZONE_0][INST_0][MESH_0]->vertex[FSI_ID_Local][iVertex]->GetVarCoord();
@@ -634,7 +635,8 @@ void Precice ::saveOldState( bool *StopCalc, double *dt )
       solution_time_n_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution_time_n(iPoint,iVar));
       solution_time_n1_Saved[iPoint][iVar] = (solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->GetSolution_time_n1(iPoint,iVar));
      // std::cout << " Point " << iPoint << " Variable 1 " << solution_Saved[iPoint][0] << std::endl;
-    }
+    } 
+    
     for (int iDim = 0; iDim < nDim; iDim++) 
     {
       //Save coordinates at last, current and next time step
@@ -644,14 +646,15 @@ void Precice ::saveOldState( bool *StopCalc, double *dt )
       Coord_p1_Saved[iPoint][iDim] =  (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetCoord_p1(iPoint))[iDim];
 
       GridVel_Saved[iPoint][iDim] = (geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel(iPoint))[iDim];  
-    }
+    } 
   }
 
   
-    /*---Recording GridVel_Grad using SU2 datatype---*/
+    //---Recording GridVel_Grad using SU2 datatype---//
 
     
     GridVel_Grad = geometry_container[ZONE_0][INST_0][MESH_0]->nodes->GetGridVel_Grad();
+    
 
   //Save wether simulation should be stopped after the current iteration
   StopCalc_savedState = *StopCalc;
@@ -669,7 +672,8 @@ void Precice::reloadOldState(bool *StopCalc, double *dt)
   {
     std::cout << "Reloading old states for implicit calculations" << std::endl;
   }
-
+  
+  
     
   for (int iPoint = 0; iPoint < nPoint; iPoint++)
   {
@@ -678,6 +682,7 @@ void Precice::reloadOldState(bool *StopCalc, double *dt)
     solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Set_Solution_time_n1( iPoint, solution_time_n1_Saved[iPoint]);
 
     //Reload coordinates at last, current and next time step
+    
     geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord(iPoint, Coord_n1_Saved[iPoint]);
     geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_n();
     geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_n1();
@@ -688,13 +693,15 @@ void Precice::reloadOldState(bool *StopCalc, double *dt)
 
     //Reload grid velocity
     geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel(iPoint, GridVel_Saved[iPoint]);
+
+    
   }
 
   
-  /*--- Set the grid velocity gradient here---*/
+  //--- Set the grid velocity gradient here---//
   
-  geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel_Grad(GridVel_Grad);
-
+   geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel_Grad(GridVel_Grad);
+   
   //Reload wether simulation should be stopped after current iteration
   *StopCalc = StopCalc_savedState;
   //Reload the time step size
