@@ -92,8 +92,22 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
      /* --- Case for mesh motion with external elastic solver during MDO ---*/
     case PRECICE_MOVEMENT:
 
+    if ( TimeIter == 100)
+    {
+      if(rank == MASTER_NODE)
+      {
+        std::cout<<"Updating farfield nodes after aero-elastic update!"<<std::endl;
+      }
       grid_movement->SetVolume_Deformation(geometry[MESH_0], config, true);
+    }
 
+    else
+    {
+      if (rank==MASTER_NODE)
+      {
+        std::cout <<"Not updating grid here"<<std::endl;
+      }
+    }
       if (rank == MASTER_NODE)
         cout << "Computing grid velocities by finite differencing ." << endl;
       geometry[MESH_0]->SetGridVelocity(config);

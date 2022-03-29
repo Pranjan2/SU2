@@ -146,11 +146,16 @@ void CMDODriver::StartSolver()
     {
 
       
+        if (TimeIter == target_time)
+      {
+      /*---Save the current fluid state---*///
+        precice->saveOldState(&StopCalc, dt);
+      }
       
       /*---- Deform the mesh here based on surface displacements of previous advance---*/
 
-      PreprocessMDO(TimeIter, counter);
-
+     // PreprocessMDO(TimeIter, counter);
+        Preprocess(TimeIter);
 
 
       RunMDO(TimeIter);  
@@ -175,6 +180,8 @@ void CMDODriver::StartSolver()
       }
 
       Output(TimeIter);
+
+
       
     if (enable_Steady_MDO && !(precice->isCouplingOngoing()))
       {
@@ -204,22 +211,23 @@ void CMDODriver::StartSolver()
         break;
       }
 
-      if (TimeIter == target_time)
-      {
-      /*---Save the current fluid state---*///
-        precice->saveOldState(&StopCalc, dt);
-      }
-
-      //Output(TimeIter);
 
       if ((TimeIter == target_time) && (precice->isCouplingOngoing()))
       {
         /*---Compute surface tractions and recieve displaced surface---*/
         *max_precice_dt = precice->advance(*dt);
+        
+        /* Only update the grid after the mesh as been deformed by CCX---*/
+
+        auto iteration = iteration_container[ZONE_0][INST_0];
+
+        iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
+                                grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
+                                config_container[ZONE_0], 0, 100);
 
         /*---Stay at the current time---*/
         TimeIter--;      
-
+        
         /*---Reload the fluid state---*/
         precice->reloadOldState(&StopCalc, dt);
 
