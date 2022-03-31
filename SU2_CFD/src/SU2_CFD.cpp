@@ -129,7 +129,9 @@ int main(int argc, char *argv[]) {
 
   if (Smdo)
   {
-    driver = new CStaticMDODriver(config_file_name, nZone, MPICommunicator);
+    //driver = new CStaticMDODriver(config_file_name, nZone, MPICommunicator);
+    driver = new CMDODriver(config_file_name, nZone, MPICommunicator);
+
   }
   
   else

@@ -124,34 +124,6 @@ void CStaticMDODriver::StartSolver()
   /*--- Run the problem until the number of time iterations required is reached. ---*/
   {
 
-        if (!(precice->isCouplingOngoing()))
-    {
-      if (rank==MASTER_NODE)
-      {
-        std::cout <<"Static aero-elastic solution converged"<<std::endl;
-      }
-
-      if (rank==MASTER_NODE)
-      {
-        std::cout<<"Writing fluid field at aero-elastic equillibrium"<<std::endl;
-      }
-        Output(TimeIter);
-
-      if (rank == MASTER_NODE)
-      {
-        std::cout << "Loading mesh data to master node" << std::endl;
-      }
-      output_container[ZONE_0]->Load_Data(geometry_container[ZONE_0][INST_0][MESH_0], config_container[ZONE_0], solver_container[ZONE_0][INST_0][MESH_0]);
-
-      if (rank == MASTER_NODE)
-      {
-        std::cout << "Write deformed mesh to file" <<std::endl;
-      }
-      output_container[ZONE_0]->WriteToFile(config_container[ZONE_0],geometry_container[ZONE_0][INST_0][MESH_0], MESH, config_container[ZONE_0]->GetMesh_Out_FileName());
-
-      break;
-    }
-
     if (TimeIter == target_time)
     {
       /*---Save the current fluid state---*/
@@ -217,25 +189,37 @@ void CStaticMDODriver::StartSolver()
 
       Output(TimeIter);
 
+      if (rank == MASTER_NODE)
+      {
+        std::cout << "Loading mesh data to master node" << std::endl;
+      }
+      output_container[ZONE_0]->Load_Data(geometry_container[ZONE_0][INST_0][MESH_0], config_container[ZONE_0], solver_container[ZONE_0][INST_0][MESH_0]);
+
+      if (rank == MASTER_NODE)
+      {
+        std::cout << "Write deformed mesh to file" <<std::endl;
+      }
+      output_container[ZONE_0]->WriteToFile(config_container[ZONE_0],geometry_container[ZONE_0][INST_0][MESH_0], MESH, config_container[ZONE_0]->GetMesh_Out_FileName());
+
       break;
     }
 
 
 
 
-        /*---Reload the fluid state variables and undeformed coordinates---*/
-       precice->reloadOldStaticState(&StopCalc, dt); 
+      /*---Reload the fluid state variables and undeformed coordinates---*/
+      precice->reloadOldStaticState(&StopCalc, dt); 
 
    
-        auto iteration = iteration_container[ZONE_0][INST_0];
+      auto iteration = iteration_container[ZONE_0][INST_0];
         
-        /*---Deform the fluid mesh in the farfield---*/
-        iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
+      /*---Deform the fluid mesh in the farfield---*/
+      iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
                                 grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
                                 config_container[ZONE_0], 0, 100);
     
-       /*---Stay at the current time---*/
-       TimeIter--;
+      /*---Stay at the current time---*/
+      TimeIter--;
     }
 
 

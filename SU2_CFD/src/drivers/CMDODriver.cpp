@@ -220,11 +220,11 @@ void CMDODriver::StartSolver()
         /* Only update the grid after the mesh as been deformed by CCX---*/
     
         
-        auto iteration = iteration_container[ZONE_0][INST_0];
+       // auto iteration = iteration_container[ZONE_0][INST_0];
 
-        iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
-                                grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
-                                config_container[ZONE_0], 0, 100);
+      //  iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
+       //                         grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
+      //                          config_container[ZONE_0], 0, 100);
         
         /*---Stay at the current time---*/
         TimeIter--;      
@@ -576,7 +576,7 @@ void CMDODriver::DynamicMeshUpdate(unsigned long TimeIter) {
     }
     iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
                                 grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
-                                config_container[ZONE_0], 0, TimeIter);
+                                config_container[ZONE_0], 0, 100);
   }
 
   /*--- New solver - all the other routines in SetGrid_Movement should be adapted to this one ---*/
