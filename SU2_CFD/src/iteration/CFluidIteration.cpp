@@ -261,8 +261,6 @@ bool CFluidIteration::MonitorMDO(COutput* output, CIntegration**** integration, 
   /*--- Get the time at which implicit aero-elastic simulations must begin---*/
   su2double target_Time = config[ZONE_0]->GetTargTimeIter();
 
-  //std::cout <<"Monitoring  in MonitorMDO at time iter" << TimeIter  << std::endl;
-
   
   output->SetHistory_Output(geometry[val_iZone][INST_0][MESH_0], solver[val_iZone][INST_0][MESH_0], config[val_iZone],
                               config[val_iZone]->GetTimeIter(), config[val_iZone]->GetOuterIter(),
@@ -273,7 +271,6 @@ bool CFluidIteration::MonitorMDO(COutput* output, CIntegration**** integration, 
   /*--- If convergence was reached --*/
   StopCalc = output->GetConvergence();
 
-  //if ((TimeIter == 50) && (config[val_iZone]->GetFixed_CL_Mode()))
   if (TimeIter == target_Time && StopCalc) 
   {
     if ( rank == MASTER_NODE)
@@ -408,34 +405,8 @@ void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CG
 
     /*--- Monitor the pseudo-time ---*/
     StopCalc = MonitorMDO(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
-                       val_iZone, INST_0, TimeIter);
-
-    //StopCalc = Monitor(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
-    //          val_iZone, INST_0);
-
-    /*--- Output files at intermediate iterations if the problem is single zone ---*/
-
-    if (singlezone && steady) 
-    {
-      Output(output, geometry, solver, config, Inner_Iter, StopCalc, val_iZone, val_iInst);
-    }
-
-    
+                       val_iZone, INST_0, TimeIter);    
     if (StopCalc) break;
-  }
-
-
-  if (multizone && steady) {
-    Output(output, geometry, solver, config, config[val_iZone]->GetOuterIter(), StopCalc, val_iZone, val_iInst);
-
-    /*--- Set the convergence to false (to make sure outer subiterations converge) ---*/
-
-    if (config[val_iZone]->GetKind_Solver() == HEAT_EQUATION) {
-      integration[val_iZone][INST_0][HEAT_SOL]->SetConvergence(false);
-    }
-    else {
-      integration[val_iZone][INST_0][FLOW_SOL]->SetConvergence(false);
-    }
   }
 }
 

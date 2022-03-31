@@ -28,7 +28,7 @@ private:
 
   /* Fluid mesh and boundary information */
   CGeometry**** geometry_container;
-  
+
   /* Fluid solution information */
   CSolver***** solver_container;
 
@@ -57,7 +57,7 @@ private:
   unsigned long globalNumberWetSurfaces; //Number of wet surfaces of the whole problem
   unsigned long localNumberWetSurfaces; //Number of wet surfaces, which this process is actually working on
   short *indexMarkerWetMappingLocalToGlobal; //Mapping relations for wet surfaces
-  
+
   //Variables for storing the old state to reset to in case of an implicit simulation
   int nPoint; //Overall number of nodes of the problem
   int nVar; //Number of variables of the problem
@@ -66,7 +66,7 @@ private:
   bool StopCalc_savedState;
   double **solution_Saved, **solution_time_n_Saved, **solution_time_n1_Saved;
 
-  CVectorOfMatrix GridVel_Grad; 
+  CVectorOfMatrix GridVel_Grad;
 
   unsigned short  FSI_ID_Global;
   unsigned short  FSI_ID_Local;
@@ -79,10 +79,10 @@ private:
   /*--------------- Override default constructor for class Precice ------*/
   //Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement, );
   Precice(const std::string& preciceConfigurationFileName, int solverProcessIndex, int solverProcessSize, CConfig** config_container, CGeometry**** geometry_container, CSolver***** solver_container, CVolumetricMovement*** grid_movement);
-  
+
   /*--------- Override default destructor for class Precice -------*/
   ~Precice();
-  
+
 
 
   /* Method to see if this adapter file is being called from SU2 */
@@ -132,7 +132,7 @@ private:
   * \param[in] computedTimestepLength - Length of timestep computed by solver.
   * \return Maximum length of next timestep to be computed by solver.
   */
-  double advance( double computedTimestepLength );
+  double advance( double computedTimestepLength);
 
   /*!
   * \brief Checks wether preCICE coupling is still ongoing or not.
@@ -196,6 +196,11 @@ private:
 
   void reloadOldState( bool *StopCalc, double *dt );
 
+  void saveOldStaticState( bool *StopCalc, double *dt);
+
+  void reloadOldStaticState(bool *StopCalc, double *dt);
+
+
+
 
 };
-

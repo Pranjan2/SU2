@@ -156,7 +156,8 @@ su2_cfd_src += files(['drivers/CDriver.cpp',
                       'drivers/CDiscAdjMultizoneDriver.cpp',
                       'drivers/CDiscAdjSinglezoneDriver.cpp',
                       'drivers/CDummyDriver.cpp',
-                      'drivers/CMDODriver.cpp'])
+                      'drivers/CMDODriver.cpp',
+                      'drivers/CStaticMDODriver.cpp'])
 
 su2_cfd_src += files(['integration/CIntegration.cpp',
                       'integration/CIntegrationFactory.cpp',
