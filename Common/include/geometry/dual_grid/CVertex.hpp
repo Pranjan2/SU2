@@ -160,7 +160,6 @@ public:
     for (unsigned short iDim = 0; iDim < nDim; iDim++)
     {
       VarCoord[iDim] = val_varcoord[iDim];
-      //std::cout << val_varcoord[iDim] << std::endl;
     }
   }
 

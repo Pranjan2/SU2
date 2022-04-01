@@ -388,10 +388,10 @@ double Precice::initialize()
           }
         } 
         /* -- Print detailed surface information --*/
-        if (Debug)
-        {
-          std::cout << " Vertex: " << iVertex << std::setw(6) << " Node_index: " << iNode << std::setw(6) << " x: " << coupleNodeCoord[iVertex][0] << std::setw(6) << " y: " << coupleNodeCoord[iVertex][1] << std::setw(6) << " z: " << coupleNodeCoord[iVertex][2] << std::endl; 
-        }
+        
+        
+       //   std::cout << " Vertex: " << iVertex << std::setw(6) << " Node_index: " << iNode << std::setw(6) << " x: " << coupleNodeCoord[iVertex][0] << std::setw(6) << " y: " << coupleNodeCoord[iVertex][1] << std::setw(6) << " z: " << coupleNodeCoord[iVertex][2] << std::endl; 
+        
       }
 
 
@@ -544,14 +544,14 @@ double Precice::advance( double computedTimestepLength )
 
     solverInterface.writeBlockVectorData(forceID[indexMarkerWetMappingLocalToGlobal[0]], vertexSize[0], vertexIDs[0], forces);
 
-    if ( procid == 0)
+    if (procid == 0)
     {
       std::cout << "Aerodynamic tractions transmitted to elastic domain " << std::endl;
     }
 
     /*---De-allocate force pointer---*/
 
-    if ( forces != NULL)
+    if (forces != NULL)
     {
       delete [] forces;
     }
@@ -572,11 +572,14 @@ double Precice::advance( double computedTimestepLength )
 
     /* Re-arrage the elastic inputs ---*/
 
+    std::cout << "FSI nVert: " << FSI_nVert << std::endl;
+
     for (int iVertex = 0; iVertex < FSI_nVert; iVertex++) 
     {
       for (int iDim = 0; iDim < nDim; iDim++) 
       {
         displacementDeltas_su2[iVertex][iDim] = displacementDeltas[iVertex*nDim + iDim];
+        std::cout << "Dispx " << setw(12) << displacementDeltas[iVertex*nDim + 0 ]<< " DispY " << setw(12) << displacementDeltas[iVertex*nDim + 1 ] << " DispZ " << setw(12) << displacementDeltas[iVertex*nDim + 2 ] << std::endl;
       }
     }
     /*---De-allocate memeory---*/
@@ -599,7 +602,7 @@ double Precice::advance( double computedTimestepLength )
   }
   
   /* If the process does not have the AERO-elastic interface */
- // else
+  else
   {
     /* Do not compute the forces. Just advance the solverInterface */
     double max_precice_dt;

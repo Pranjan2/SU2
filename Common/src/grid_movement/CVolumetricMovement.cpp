@@ -1674,11 +1674,8 @@ void CVolumetricMovement::SetBoundaryDisplacements(CGeometry *geometry, CConfig 
       {
         iPoint = geometry->vertex[iMarker][iVertex]->GetNode();
         VarCoord = geometry->vertex[iMarker][iVertex]->GetVarCoord();
-        std::cout << "Disp X " << VarCoord[0] << " Disp Y " <<  setw(12) << VarCoord[1] << " Disp Z " <<setw(12) << VarCoord[2] << std::endl;
-        if (iVertex == 1)
-        {
-          //VarCoord[2] = 0.1;
-        }
+       // std::cout << "Disp X " << VarCoord[0] << " Disp Y " <<  setw(12) << VarCoord[1] << " Disp Z " <<setw(12) << VarCoord[2] << std::endl;
+
         for (iDim = 0; iDim < nDim; iDim++) 
         {
           total_index = iPoint*nDim + iDim;
