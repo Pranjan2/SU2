@@ -157,6 +157,8 @@ void CMDODriver::StartSolver()
      // PreprocessMDO(TimeIter, counter);
       Preprocess(TimeIter);
 
+              
+
 
       RunMDO(TimeIter);  
     
@@ -170,16 +172,18 @@ void CMDODriver::StartSolver()
       Monitor(TimeIter);
 
       /*---Output the required fields to files---*/
-      if (counter == 0)
-      {
-        if(rank==MASTER_NODE)
+      if (!(precice->isCouplingOngoing()))
         {
-          std::cout<<"Writing undeflected aero-elastic fields"<<std::endl;
-        }
-        Output(TimeIter);
-      }
+          if(rank==MASTER_NODE)
+          {
+            std::cout<<"Aero-elastic solution converged!"<<std::endl;
+            std::cout<<"Writing fluid field at aero-elastic equillibrium"<<std::endl;
+          }
 
-      Output(TimeIter);
+          Output(TimeIter);
+
+          break;
+        }  
 
 
      /* 
@@ -221,25 +225,14 @@ void CMDODriver::StartSolver()
         
         /* Only update the grid after the mesh as been deformed by CCX---*/
     
-        
+       /* 
         auto iteration = iteration_container[ZONE_0][INST_0];
 
         iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
                                 grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
                                 config_container[ZONE_0], 0, 100);
-
-        if (!(precice->isCouplingOngoing()))
-        {
-          if(rank==MASTER_NODE)
-          {
-            std::cout<<"Aero-elastic solution converged!"<<std::endl;
-            std::cout<<"Writing fluid field at aero-elastic equillibrium"<<std::endl;
-          }
-
-          Output(TimeIter);
-
-          break;
-        }                
+        */
+       
         
         /*---Stay at the current time---*/
         TimeIter--;      
@@ -591,7 +584,7 @@ void CMDODriver::DynamicMeshUpdate(unsigned long TimeIter) {
     }
     iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
                                 grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
-                                config_container[ZONE_0], 0, 100);
+                                config_container[ZONE_0], 0, 0);
   }
 
   /*--- New solver - all the other routines in SetGrid_Movement should be adapted to this one ---*/
