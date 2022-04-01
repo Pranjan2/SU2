@@ -574,12 +574,15 @@ double Precice::advance( double computedTimestepLength )
 
     std::cout << "FSI nVert: " << FSI_nVert << std::endl;
 
+    std::cout << "Reading vertex size: " << vertexSize[0] <<std::endl;
+
     for (int iVertex = 0; iVertex < FSI_nVert; iVertex++) 
     {
       for (int iDim = 0; iDim < nDim; iDim++) 
       {
         displacementDeltas_su2[iVertex][iDim] = displacementDeltas[iVertex*nDim + iDim];
-        std::cout << "Dispx " << setw(12) << displacementDeltas[iVertex*nDim + 0 ]<< " DispY " << setw(12) << displacementDeltas[iVertex*nDim + 1 ] << " DispZ " << setw(12) << displacementDeltas[iVertex*nDim + 2 ] << std::endl;
+        //std::cout << "Dispx " << setw(12) << displacementDeltas[iVertex*nDim + 0 ]<< " DispY " << setw(12) << displacementDeltas[iVertex*nDim + 1 ] << " DispZ " << setw(12) << displacementDeltas[iVertex*nDim + 2 ] << std::endl;
+        printf(" DispX %lf, DispY %lf, DispZ %lf \n", displacementDeltas[iVertex*nDim + 0], displacementDeltas[iVertex*nDim + 1 ], displacementDeltas[iVertex*nDim + 2 ]);
       }
     }
     /*---De-allocate memeory---*/
@@ -726,7 +729,7 @@ void Precice::reloadOldState(bool *StopCalc, double *dt)
     solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]->GetNodes()->Set_Solution_time_n1( iPoint, solution_time_n1_Saved[iPoint]);
 
     //Reload coordinates at last, current and next time step
-    /*
+    
     geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord(iPoint, Coord_n1_Saved[iPoint]);
     geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_n();
     geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetCoord_n1();
@@ -738,13 +741,13 @@ void Precice::reloadOldState(bool *StopCalc, double *dt)
     //Reload grid velocity
     geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel(iPoint, GridVel_Saved[iPoint]);
     
-    */
+    
   }
 
   
   //--- Set the grid velocity gradient here---//
   
-   //geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel_Grad(GridVel_Grad);
+   geometry_container[ZONE_0][INST_0][MESH_0]->nodes->SetGridVel_Grad(GridVel_Grad);
    
   //Reload wether simulation should be stopped after current iteration
   *StopCalc = StopCalc_savedState;
