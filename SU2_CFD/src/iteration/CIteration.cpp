@@ -107,7 +107,7 @@ void CIteration::SetGrid_Movement(CGeometry** geometry, CSurfaceMovement* surfac
     {
       if (rank==MASTER_NODE)
       {
-        std::cout <<"Not updating grid here"<<std::endl;
+        std::cout <<"Not updating grid at Preprocess()"<<std::endl;
       }
     }
       if (rank == MASTER_NODE)

@@ -182,7 +182,7 @@ void CMDODriver::StartSolver()
       Output(TimeIter);
 
 
-      
+     /* 
     if (enable_Steady_MDO && !(precice->isCouplingOngoing()))
       {
         if (rank==MASTER_NODE)
@@ -211,6 +211,8 @@ void CMDODriver::StartSolver()
         break;
       }
 
+      */
+
 
       if ((TimeIter == target_time) && (precice->isCouplingOngoing()))
       {
@@ -220,11 +222,24 @@ void CMDODriver::StartSolver()
         /* Only update the grid after the mesh as been deformed by CCX---*/
     
         
-       // auto iteration = iteration_container[ZONE_0][INST_0];
+        auto iteration = iteration_container[ZONE_0][INST_0];
 
-      //  iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
-       //                         grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
-      //                          config_container[ZONE_0], 0, 100);
+        iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
+                                grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
+                                config_container[ZONE_0], 0, 100);
+
+        if (!(precice->isCouplingOngoing()))
+        {
+          if(rank==MASTER_NODE)
+          {
+            std::cout<<"Aero-elastic solution converged!"<<std::endl;
+            std::cout<<"Writing fluid field at aero-elastic equillibrium"<<std::endl;
+          }
+
+          Output(TimeIter);
+
+          break;
+        }                
         
         /*---Stay at the current time---*/
         TimeIter--;      
