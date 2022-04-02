@@ -396,7 +396,7 @@ void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CG
     /*---If at the target MDO time for implicit calculations, increase the # of inner Iterations to a high value-----*/
     if (TimeIter == target_time)
     {
-      nInner_Iter = 100;
+      nInner_Iter = 10000;
     }
 
     /*--- Run a single iteration of the solver ---*/
