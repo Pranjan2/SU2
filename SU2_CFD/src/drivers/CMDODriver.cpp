@@ -153,13 +153,11 @@ void CMDODriver::StartSolver()
       }
       
       /*---- Deform the mesh here based on surface displacements of previous advance---*/
-
-     // PreprocessMDO(TimeIter, counter);
       Preprocess(TimeIter);
 
               
 
-
+      /*---Run implicit iteration---*/
       RunMDO(TimeIter);  
     
       /*--- Compute tractions baed on current fluid state---*/
@@ -181,6 +179,21 @@ void CMDODriver::StartSolver()
           }
 
           Output(TimeIter);
+
+          /*---Output the deformed mesh---*/
+
+          if (rank == MASTER_NODE)
+          {
+            std::cout << "Loading mesh data to master node" << std::endl;
+          }
+          output_container[ZONE_0]->Load_Data(geometry_container[ZONE_0][INST_0][MESH_0], config_container[ZONE_0], solver_container[ZONE_0][INST_0][MESH_0]);
+
+          if (rank == MASTER_NODE)
+          {
+            std::cout << "Write deformed mesh to file" <<std::endl;
+          }
+          output_container[ZONE_0]->WriteToFile(config_container[ZONE_0],geometry_container[ZONE_0][INST_0][MESH_0], MESH, config_container[ZONE_0]->GetMesh_Out_FileName());
+
 
           break;
         }  

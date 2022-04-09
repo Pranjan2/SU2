@@ -582,7 +582,7 @@ double Precice::advance( double computedTimestepLength )
       {
         displacementDeltas_su2[iVertex][iDim] = displacementDeltas[iVertex*nDim + iDim];
         //std::cout << "Dispx " << setw(12) << displacementDeltas[iVertex*nDim + 0 ]<< " DispY " << setw(12) << displacementDeltas[iVertex*nDim + 1 ] << " DispZ " << setw(12) << displacementDeltas[iVertex*nDim + 2 ] << std::endl;
-        printf(" DispX %lf, DispY %lf, DispZ %lf \n", displacementDeltas[iVertex*nDim + 0], displacementDeltas[iVertex*nDim + 1 ], displacementDeltas[iVertex*nDim + 2 ]);
+        //printf(" DispX %lf, DispY %lf, DispZ %lf \n", displacementDeltas[iVertex*nDim + 0], displacementDeltas[iVertex*nDim + 1 ], displacementDeltas[iVertex*nDim + 2 ]);
       }
     }
     /*---De-allocate memeory---*/

@@ -2398,7 +2398,7 @@ void CConfig::SetConfig_Options() {
   /* DESCRIPTION: Number of outer iterations in the multizone problem. */
   addUnsignedLongOption("OUTER_ITER", nOuterIter, 1);
   /* DESCRIPTION: Number of inner iterations in each multizone block. */
-  addUnsignedLongOption("INNER_ITER", nInnerIter, 1);
+  addUnsignedLongOption("INNER_ITER", nInnerIter, 1000);
   /* DESCRIPTION: Number of time steps solved in the multizone problem. */
   addUnsignedLongOption("TIME_ITER", nTimeIter, 1);
   /* DESCRIPTION: Number of iterations in each single-zone block. */

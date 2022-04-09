@@ -72,7 +72,7 @@ void CStaticMDODriver::StartSolver()
 
   if (rank == MASTER_NODE)
   {
-    cout << endl <<"Simulation Run using the Static aero-elasticity Driver" << endl;
+    cout << endl <<"Simulation Run using the STATIC aero-elasticity Driver" << endl;
     if (driver_config->GetTime_Domain())
     {
         cout << "The simulation will run for "
@@ -102,14 +102,6 @@ void CStaticMDODriver::StartSolver()
   /*---Get the time at which aero-elastic state must be computed---*/
    target_time = config_container[ZONE_0]->GetTargTimeIter();
 
-
-    if (rank == MASTER_NODE)
-    {
-      std::cout <<"Aeroelasitc simulations will begin at: " << target_time << std::endl;
-    }
-
-
-
     /*---Output counter---*/
     unsigned long counter = 0;
 
@@ -126,68 +118,41 @@ void CStaticMDODriver::StartSolver()
 
     if (TimeIter == target_time)
     {
-      /*---Save the current fluid state---*/
+      /*---Save the current fluid state---*///
       precice->saveOldStaticState(&StopCalc, dt);
+      
     }
 
-    /*--- Perform some preprocessing before starting the time-step simulation. ---*/
-    
-    
+    /*---- Deform the mesh here based on surface displacements of previous advance---*/
     Preprocess(TimeIter);
+
+              
+
+    /*---Run implicit iteration---*/
+    RunSMDO(TimeIter);  
     
-    /*--- Run a time-step iteration of the single-zone problem. ---*/
-
-    RunSMDO(TimeIter);
-
-    /*--- Perform some postprocessing on the solution before the update ---*/
-
+    /*--- Compute tractions baed on current fluid state---*/
     Postprocess();
 
     /*--- Update the solution for dual time stepping strategy ---*/
-
     Update();
-
+    
     /*--- Monitor the computations after each iteration. ---*/
-
     Monitor(TimeIter);
 
+
     /*---Output the required fields to files---*/
-    if (counter == 0)
-    {
-      /*
-      if(rank==MASTER_NODE)
-      {
-        std::cout<<"Writing undeflected aero-elastic fields"<<std::endl;
-      }
-      
-      Output(TimeIter);
-
-      */
-    }
-
-
-
-    if (precice->isCouplingOngoing())
-    {
-       /*---Compute surface tractions and recieve displaced surface---*/
-       *max_precice_dt = precice->advance(*dt);
-
     if (!(precice->isCouplingOngoing()))
     {
-      if (rank==MASTER_NODE)
+      if(rank==MASTER_NODE)
       {
-        std::cout <<"Static aero-elastic solution converged after advance() "<<std::endl;
-        std::cout <<"Deforming mesh for this last advance " <<std::endl;
+        std::cout<<"Aero-elastic solution converged!"<<std::endl;
+        std::cout<<"Writing fluid field at aero-elastic equillibrium"<<std::endl;
       }
 
-      auto iteration = iteration_container[ZONE_0][INST_0];
-
-      /*---Deform the fluid mesh in the farfield---*/
-      iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
-                                grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
-                                config_container[ZONE_0], 0, 100);
-
       Output(TimeIter);
+
+      /*---Output the deformed mesh---*/
 
       if (rank == MASTER_NODE)
       {
@@ -201,38 +166,27 @@ void CStaticMDODriver::StartSolver()
       }
       output_container[ZONE_0]->WriteToFile(config_container[ZONE_0],geometry_container[ZONE_0][INST_0][MESH_0], MESH, config_container[ZONE_0]->GetMesh_Out_FileName());
 
+
       break;
     }
 
-
-
-
-      /*---Reload the fluid state variables and undeformed coordinates---*/
-      precice->reloadOldStaticState(&StopCalc, dt); 
-
-   
-      auto iteration = iteration_container[ZONE_0][INST_0];
-        
-      /*---Deform the fluid mesh in the farfield---*/
-      iteration->SetGrid_Movement(geometry_container[ZONE_0][INST_0],surface_movement[ZONE_0],
-                                grid_movement[ZONE_0][INST_0], solver_container[ZONE_0][INST_0],
-                                config_container[ZONE_0], 0, 100);
-    
+    if ((TimeIter == target_time) && (precice->isCouplingOngoing()))
+    {
+      /*---Compute surface tractions and recieve displaced surface---*/
+      *max_precice_dt = precice->advance(*dt);
+               
       /*---Stay at the current time---*/
-      TimeIter--;
+      TimeIter--;      
+
+      /*---Reload the fluid state---*/
+      precice->reloadOldStaticState(&StopCalc, dt);
+
     }
 
-
-    /*--- Output the solution in files. ---*/
-
-    //Output(TimeIter);
-
     /*--- If the convergence criteria has been met, terminate the simulation. ---*/
-
-    //if (StopCalc) break;
-
-    TimeIter++;
+   
     counter++;
+    TimeIter++;
 
   } /*---Implicit loop ends here---*/
 

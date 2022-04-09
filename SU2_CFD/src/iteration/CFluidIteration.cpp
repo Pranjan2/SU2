@@ -240,10 +240,21 @@ bool CFluidIteration::Monitor(COutput* output, CIntegration**** integration, CGe
 
   /* --- Checking convergence of Fixed CL mode to target CL, and perform finite differencing if needed  --*/
 
-  if (config[val_iZone]->GetFixed_CL_Mode()) {
+  if (config[val_iZone]->GetFixed_CL_Mode()) 
+  {
     StopCalc = MonitorFixed_CL(output, geometry[val_iZone][INST_0][MESH_0], solver[val_iZone][INST_0][MESH_0],
                                config[val_iZone]);
   }
+
+  if (StopCalc)
+  {
+    if (rank == MASTER_NODE)
+    {
+      std::cout << " I am exiting Fixed CL monitor now " << std::endl;
+    }
+  } 
+
+  
 
   return StopCalc;
 }
@@ -271,17 +282,16 @@ bool CFluidIteration::MonitorMDO(COutput* output, CIntegration**** integration, 
   /*--- If convergence was reached --*/
   StopCalc = output->GetConvergence();
 
-  if (TimeIter == target_Time && StopCalc) 
-  {
-    if ( rank == MASTER_NODE)
-    {
-      std::cout << "Entering FIXED_CL mode"<<std::endl;
-      std::cout << "Current implicit step has converged. This is a place-holder for AOA FD for Fixed CL"<<std::endl;
-    }
+ // if (StopCalc) 
+ // {
+ //   if ( rank == MASTER_NODE)
+  //  {
+  //    std::cout << "Current implicit step has converged --> Entering FIXED_CL mode"<<std::endl;
+  //  }
 
-    //StopCalc = MonitorFixed_CL(output, geometry[val_iZone][INST_0][MESH_0], solver[val_iZone][INST_0][MESH_0],
-    //                           config[val_iZone]);
-  }
+    StopCalc = MonitorFixed_CL(output, geometry[val_iZone][INST_0][MESH_0], solver[val_iZone][INST_0][MESH_0],
+                               config[val_iZone]);
+ // }
   return StopCalc;
 }
 
@@ -404,8 +414,16 @@ void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CG
             INST_0);
 
     /*--- Monitor the pseudo-time ---*/
-    StopCalc = MonitorMDO(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
-                       val_iZone, INST_0, TimeIter);    
+    StopCalc = Monitor(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
+                       val_iZone, INST_0);    
+
+    if (StopCalc)
+    {
+      if (rank == MASTER_NODE)
+      {
+        std::cout << " I am exiting Monitor now " << std::endl;
+      }
+    }                   
     if (StopCalc) break;
   }
 }
@@ -632,25 +650,44 @@ void CFluidIteration::InitializeVortexDistribution(unsigned long& nVortex, vecto
   nVortex = x0.size();
 }
 
-bool CFluidIteration::MonitorFixed_CL(COutput *output, CGeometry *geometry, CSolver **solver, CConfig *config) {
+bool CFluidIteration::MonitorFixed_CL(COutput *output, CGeometry *geometry, CSolver **solver, CConfig *config) 
+{
 
   CSolver* flow_solver= solver[FLOW_SOL];
 
+ 
   bool fixed_cl_convergence = flow_solver->FixedCL_Convergence(config, output->GetConvergence());
-
 
   /* --- If Fixed CL mode has ended and Finite Differencing has started: --- */
 
-  if (flow_solver->GetStart_AoA_FD() && flow_solver->GetIter_Update_AoA() == config->GetInnerIter()){
+
+  if (flow_solver->GetStart_AoA_FD() && flow_solver->GetIter_Update_AoA() == config->GetInnerIter())
+  {
+
+   // if (rank == MASTER_NODE)
+   // {
+   //   std::cout << " I am printing convergence history now " << std::endl;
+   // }
+
 
     /* --- Print convergence history and volume files since fixed CL mode has converged--- */
-    if (rank == MASTER_NODE) output->PrintConvergenceSummary();
+   // if (rank == MASTER_NODE) output->PrintConvergenceSummary();
 
-    output->SetResult_Files(geometry, config, solver,
-                            config->GetInnerIter(), true);
+   // if (rank == MASTER_NODE)
+   // {
+  //    std::cout << " I am setting result files now " << std::endl;
+  //  }
+
+  //  output->SetResult_Files(geometry, config, solver,
+  //                          config->GetInnerIter(), true);
+
+  //  if (rank == MASTER_NODE)
+  //  {
+  //    std::cout << " I am setting FD mode in config " << std::endl;
+  //  }                        
 
     /* --- Set finite difference mode in config (disables output) --- */
-    config->SetFinite_Difference_Mode(true);
+  //  config->SetFinite_Difference_Mode(true);
   }
 
   /* --- Set convergence based on fixed CL convergence  --- */
