@@ -572,9 +572,9 @@ double Precice::advance( double computedTimestepLength )
 
     /* Re-arrage the elastic inputs ---*/
 
-    std::cout << "FSI nVert: " << FSI_nVert << std::endl;
+   // std::cout << "FSI nVert: " << FSI_nVert << std::endl;
 
-    std::cout << "Reading vertex size: " << vertexSize[0] <<std::endl;
+   // std::cout << "Reading vertex size: " << vertexSize[0] <<std::endl;
 
     for (int iVertex = 0; iVertex < FSI_nVert; iVertex++) 
     {
