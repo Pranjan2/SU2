@@ -209,10 +209,7 @@ void CVolumetricMovement::SetVolume_Deformation(CGeometry *geometry, CConfig *co
     if (!Derivative || ((config->GetKind_SU2() == SU2_COMPONENT::SU2_CFD) && Derivative)) 
     {
 
-    if (rank == MASTER_NODE)
-    {
-      std::cout << "Solving linear system "<<std::endl;
-    }
+    
       Tot_Iter = System.Solve(StiffMatrix, LinSysRes, LinSysSol, geometry, config);
 
     } 
@@ -1655,7 +1652,10 @@ void CVolumetricMovement::SetBoundaryDisplacements(CGeometry *geometry, CConfig 
     
     if (config->GetMarker_All_Moving(iMarker) == 1)
     {
-      std::cout << "Marker : " << Marker_Tag << " is a moving MARKER " << std::endl;
+      if (rank == MASTER_NODE)
+      {
+        std::cout << "Marker : " << Marker_Tag << " is a moving MARKER " << std::endl;
+      }
     }
 
     if (config->GetMarker_All_Moving(iMarker) == 1)
@@ -1667,7 +1667,7 @@ void CVolumetricMovement::SetBoundaryDisplacements(CGeometry *geometry, CConfig 
     
         //  if(rank==MASTER_NODE)
          // {
-      std::cout <<"--------------------------SETTING KNOWN DISPLACEMENTS FROM CCX-------------------------------"<<std::endl;
+      //std::cout <<"--------------------------SETTING KNOWN DISPLACEMENTS FROM CCX-------------------------------"<<std::endl;
       //    }
 
       for (iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++) 
