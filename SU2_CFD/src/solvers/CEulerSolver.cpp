@@ -4084,11 +4084,6 @@ bool CEulerSolver::FixedCL_Convergence(CConfig* config, bool convergence)
       AoA_inc = 0.001;
     }
 
-    if (rank == MASTER_NODE)
-    {
-      std::cout << " Conv Iter: " << config->GetConv_Iter() << std::endl;
-    }
-
     else
     {
       Iter_Update_AoA = config->GetConv_Iter();
@@ -4107,8 +4102,8 @@ bool CEulerSolver::FixedCL_Convergence(CConfig* config, bool convergence)
       End_AoA_FD = ((curr_iter - Iter_Update_AoA - 2) == Iter_dCL_dAlpha ||
         curr_iter == config->GetnInner_Iter()- 2 );
 
-      if (convergence && (curr_iter - Iter_Update_AoA) > config->GetStartConv_Iter())
-        End_AoA_FD = true;
+      //if (convergence && (curr_iter - Iter_Update_AoA) > config->GetStartConv_Iter())
+      //  End_AoA_FD = true;
 
     /* --- If Finite Difference mode is ending, reset AoA and calculate Coefficient Gradients --- */
 
@@ -4116,6 +4111,7 @@ bool CEulerSolver::FixedCL_Convergence(CConfig* config, bool convergence)
       {
         SetCoefficient_Gradients(config);
         config->SetAoA(AoA_Prev);
+        return fixed_cl_conv = true;
       }
     }
   }
@@ -4223,6 +4219,11 @@ void CEulerSolver::SetCoefficient_Gradients(CConfig *config) const{
   config->SetdCMy_dCL(dCMy_dCL_);
   config->SetdCMz_dCL(dCMz_dCL_);
   config->SetdCL_dAlpha(dCL_dAlpha_);
+
+  if (rank == MASTER_NODE)
+  {
+    std::cout <<"dCL_DAlpha: " << dCL_dAlpha_ << std::endl;
+  }
 }
 
 void CEulerSolver::UpdateCustomBoundaryConditions(CGeometry **geometry_container, CConfig *config){
