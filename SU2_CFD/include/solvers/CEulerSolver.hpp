@@ -723,6 +723,14 @@ public:
   bool FixedCL_Convergence(CConfig *config, bool convergence) final;
 
   /*!
+   * \brief A virtual member.
+   * \param[in] config - Definition of the particular problem.
+   * \param[in] convergence - boolean for whether the solution is converged
+   * \return boolean for whether new dCL_dAlpha is computed for each aeroelastically deformed deometry
+   */
+  bool Compute_dCL_dAlpha(CConfig *config, bool convergence) final;
+
+  /*!
    * \brief Checking whether fixed CL mode in finite-differencing mode
    * \return boolean for whether the Fixed CL mode is currently in finite-differencing mode
    */

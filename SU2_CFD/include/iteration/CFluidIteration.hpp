@@ -122,7 +122,7 @@ class CFluidIteration : public CIteration {
   bool MonitorMDO(COutput* output, CIntegration**** integration, CGeometry**** geometry, CSolver***** solver,
                CNumerics****** numerics, CConfig** config, CSurfaceMovement** surface_movement,
                CVolumetricMovement*** grid_movement, CFreeFormDefBox*** FFDBox, unsigned short val_iZone,
-               unsigned short val_iInst, unsigned long TimeIter);
+               unsigned short val_iInst, int counter);
 
   /*!
    * \brief Postprocesses the fluid system before heading to another physics system or the next iteration.
@@ -177,7 +177,7 @@ class CFluidIteration : public CIteration {
    * \param[in] config - Definition of the particular problem.
    * \return Boolean indicating weather calculation should be stopped
    */
-  bool MonitorFixed_CL(COutput* output, CGeometry* geometry, CSolver** solver, CConfig* config);
+  bool MonitorFixed_CL(COutput* output, CGeometry* geometry, CSolver** solver, CConfig* config, int counter);
 
   /*!
    * \brief Store old aeroelastic solutions

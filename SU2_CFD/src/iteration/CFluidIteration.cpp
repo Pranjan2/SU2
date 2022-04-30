@@ -225,6 +225,8 @@ bool CFluidIteration::Monitor(COutput* output, CIntegration**** integration, CGe
                               CFreeFormDefBox*** FFDBox, unsigned short val_iZone, unsigned short val_iInst) {
   bool StopCalc = false;
 
+  int counter = 0;
+
   StopTime = SU2_MPI::Wtime();
 
   UsedTime = StopTime - StartTime;
@@ -243,18 +245,8 @@ bool CFluidIteration::Monitor(COutput* output, CIntegration**** integration, CGe
   if (config[val_iZone]->GetFixed_CL_Mode()) 
   {
     StopCalc = MonitorFixed_CL(output, geometry[val_iZone][INST_0][MESH_0], solver[val_iZone][INST_0][MESH_0],
-                               config[val_iZone]);
+                               config[val_iZone], counter);
   }
-
-  if (StopCalc)
-  {
-    if (rank == MASTER_NODE)
-    {
-      std::cout << " I am exiting Fixed CL monitor now " << std::endl;
-    }
-  } 
-
-  
 
   return StopCalc;
 }
@@ -262,37 +254,34 @@ bool CFluidIteration::Monitor(COutput* output, CIntegration**** integration, CGe
 bool CFluidIteration::MonitorMDO(COutput* output, CIntegration**** integration, CGeometry**** geometry,
                               CSolver***** solver, CNumerics****** numerics, CConfig** config,
                               CSurfaceMovement** surface_movement, CVolumetricMovement*** grid_movement,
-                              CFreeFormDefBox*** FFDBox, unsigned short val_iZone, unsigned short val_iInst, unsigned long TimeIter) {
+                              CFreeFormDefBox*** FFDBox, unsigned short val_iZone, unsigned short val_iInst, int counter) 
+{
+
   bool StopCalc = false;
 
   StopTime = SU2_MPI::Wtime();
 
   UsedTime = StopTime - StartTime;
 
-  /*--- Get the time at which implicit aero-elastic simulations must begin---*/
-  su2double target_Time = config[ZONE_0]->GetTargTimeIter();
-
-  
-  output->SetHistory_Output(geometry[val_iZone][INST_0][MESH_0], solver[val_iZone][INST_0][MESH_0], config[val_iZone],
+  if (config[val_iZone]->GetMultizone_Problem() || config[val_iZone]->GetSinglezone_Driver()) {
+    output->SetHistory_Output(geometry[val_iZone][INST_0][MESH_0], solver[val_iZone][INST_0][MESH_0], config[val_iZone],
                               config[val_iZone]->GetTimeIter(), config[val_iZone]->GetOuterIter(),
                               config[val_iZone]->GetInnerIter());
-  
-
+  }
 
   /*--- If convergence was reached --*/
   StopCalc = output->GetConvergence();
 
- // if (StopCalc) 
- // {
- //   if ( rank == MASTER_NODE)
-  //  {
-  //    std::cout << "Current implicit step has converged --> Entering FIXED_CL mode"<<std::endl;
-  //  }
+  /* --- Checking convergence of Fixed CL mode to target CL, and perform finite differencing if needed  --*/
 
+  if (config[val_iZone]->GetFixed_CL_Mode()) 
+  {
     StopCalc = MonitorFixed_CL(output, geometry[val_iZone][INST_0][MESH_0], solver[val_iZone][INST_0][MESH_0],
-                               config[val_iZone]);
- // }
+                               config[val_iZone], counter);
+  }
+
   return StopCalc;
+
 }
 
 void CFluidIteration::Postprocess(COutput* output, CIntegration**** integration, CGeometry**** geometry,
@@ -343,7 +332,7 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
   /*----------------------------------------------MAIN INNER LOOP-----------------------------------------------------*/
   /*------------------------------------------------------------------------------------------------------------------*/
  
-  
+  int counter = 0;
 
   for (Inner_Iter = 0; Inner_Iter < nInner_Iter; Inner_Iter++) 
   {
@@ -396,6 +385,8 @@ void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CG
   Preprocess(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
              val_iZone, INST_0);
 
+  int counter = 0;           
+
   /*--------------------------------------------------------------------------------------------------------------*/
   /*-----------------------------------------------MAIN IMPLICIT LOOP---------------------------------------------*/
   /*--------------------------------------------------------------------------------------------------------------*/
@@ -409,22 +400,27 @@ void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CG
       nInner_Iter = 10000;
     }
 
+   
+
     /*--- Run a single iteration of the solver ---*/
     Iterate(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox, val_iZone,
             INST_0);
 
     /*--- Monitor the pseudo-time ---*/
-    StopCalc = Monitor(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
-                       val_iZone, INST_0);    
+    StopCalc = MonitorMDO(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
+                       val_iZone, INST_0, counter);
+
+
+    counter++;                       
 
     if (StopCalc)
     {
       if (rank == MASTER_NODE)
       {
-        std::cout << " I am exiting Monitor now " << std::endl;
+        std::cout << "I am exiting Monitor now " << std::endl;
       }
+      break;
     }                   
-    if (StopCalc) break;
   }
 }
 
@@ -650,10 +646,17 @@ void CFluidIteration::InitializeVortexDistribution(unsigned long& nVortex, vecto
   nVortex = x0.size();
 }
 
-bool CFluidIteration::MonitorFixed_CL(COutput *output, CGeometry *geometry, CSolver **solver, CConfig *config) 
+bool CFluidIteration::MonitorFixed_CL(COutput *output, CGeometry *geometry, CSolver **solver, CConfig *config, int counter) 
 {
 
   CSolver* flow_solver= solver[FLOW_SOL];
+
+  /*---If the forward analysis has converged, compute the dCL_dAlha, just once per geometry---*/
+
+  if (output->GetConvergence() && (counter == 0))
+  {
+    bool evaluate_lift_slope =  flow_solver->Compute_dCL_dAlpha(config, output->GetConvergence());
+  }
 
  
   bool fixed_cl_convergence = flow_solver->FixedCL_Convergence(config, output->GetConvergence());
@@ -664,22 +667,22 @@ bool CFluidIteration::MonitorFixed_CL(COutput *output, CGeometry *geometry, CSol
   if (flow_solver->GetStart_AoA_FD() && flow_solver->GetIter_Update_AoA() == config->GetInnerIter())
   {
 
-   // if (rank == MASTER_NODE)
-   // {
-   //   std::cout << " I am printing convergence history now " << std::endl;
-   // }
+    if (rank == MASTER_NODE)
+    {
+      std::cout << "I am printing convergence history now " << std::endl;
+    }
 
 
     /* --- Print convergence history and volume files since fixed CL mode has converged--- */
-   // if (rank == MASTER_NODE) output->PrintConvergenceSummary();
+    if (rank == MASTER_NODE) output->PrintConvergenceSummary();
 
    // if (rank == MASTER_NODE)
    // {
   //    std::cout << " I am setting result files now " << std::endl;
   //  }
 
-  //  output->SetResult_Files(geometry, config, solver,
-  //                          config->GetInnerIter(), true);
+    output->SetResult_Files(geometry, config, solver,
+                            config->GetInnerIter(), true);
 
   //  if (rank == MASTER_NODE)
   //  {
@@ -687,7 +690,7 @@ bool CFluidIteration::MonitorFixed_CL(COutput *output, CGeometry *geometry, CSol
   //  }                        
 
     /* --- Set finite difference mode in config (disables output) --- */
-  //  config->SetFinite_Difference_Mode(true);
+    config->SetFinite_Difference_Mode(true);
   }
 
   /* --- Set convergence based on fixed CL convergence  --- */
