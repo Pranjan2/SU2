@@ -2148,7 +2148,7 @@ public:
    * \param[in] convergence - boolean for whether the solution is converged
    * \return boolean for whether new dCL_dAlpha is computed for each aeroelastically deformed deometry
    */
-  inline virtual bool Compute_dCL_dAlpha(CConfig *config, bool convergence) { return false; }
+  inline virtual void Compute_dCL_dAlpha(CConfig *config, bool convergence) {}
 
   /*!
    * \brief A virtual member.

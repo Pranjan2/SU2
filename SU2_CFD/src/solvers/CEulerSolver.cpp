@@ -4064,66 +4064,6 @@ void CEulerSolver::SetFarfield_AoA(CGeometry *geometry, CSolver **solver_contain
   }
 }
 
-
-
-bool CEulerSolver::Compute_dCL_dAlpha(CConfig *config, bool convergence)
-{
-  const auto curr_iter = config->GetInnerIter();
-  const auto Iter_dCL_dAlpha = config->GetIter_dCL_dAlpha();
-  bool fixed_cl_conv = false;
-  AoA_inc = 0.0;
-
-  if (convergence)
-  {
-    if (Iter_dCL_dAlpha == 0)
-    {
-      if (rank=MASTER_NODE)
-      {
-        std::cout<< "No iteration count for dCL/dAlpha, CL driver disabled" << std::endl;
-      }
-      End_AoA_FD = true;
-      fixed_cl_conv = true;
-    }
-
-    /*---Else, setup finite differencing---*/
-    Iter_Update_AoA = curr_iter;
-    Start_AoA_FD = true;
-    fixed_cl_conv = false;
-    AoA_inc = 0.001;
-
-    if (Start_AoA_FD)
-    {
-      // --- Disable history writing --- //
-
-      config->SetHistory_Wrt_Freq(2, 0);
-
-      // --- End Finite Difference Mode if iteration limit is reached, so simualtion is converged --- //
-
-      End_AoA_FD = ((curr_iter - Iter_Update_AoA - 2) == Iter_dCL_dAlpha ||
-        curr_iter == config->GetnInner_Iter()- 2 );
-
-      if (convergence && (curr_iter - Iter_Update_AoA) > config->GetStartConv_Iter())
-        End_AoA_FD = true;
-
-      // --- If Finite Difference mode is ending, reset AoA and calculate Coefficient Gradients --- //
-
-      if (End_AoA_FD)
-      {
-        SetCoefficient_Gradients(config);
-        config->SetAoA(AoA_Prev);
-        return true;
-      }
-    }
-
-    /*---At this point the dCL/dAlpha has been computed and CL driver should be called---*/
-
-  }
-
-  return false;
-
-
-}
-
 bool CEulerSolver::FixedCL_Convergence(CConfig* config, bool convergence) 
 {
   const su2double Target_CL = config->GetTarget_CL();
@@ -4131,24 +4071,87 @@ bool CEulerSolver::FixedCL_Convergence(CConfig* config, bool convergence)
   const auto Iter_dCL_dAlpha = config->GetIter_dCL_dAlpha();
   bool fixed_cl_conv = false;
   AoA_inc = 0.0;
+  
+  if (convergence)
+  {
+    /*---Setup FD---*/
+    
+    if ( curr_iter == config->GetConv_Iter())
+    {
+      Iter_Update_AoA = curr_iter;
+      Start_AoA_FD = true;
+      fixed_cl_conv = false;
+      AoA_inc = 0.001;
+    }
 
-  /*--- if in Fixed CL mode, after finite differencing --- */
+    if (rank == MASTER_NODE)
+    {
+      std::cout << " Conv Iter: " << config->GetConv_Iter() << std::endl;
+    }
 
-  int counter = 0;
+    else
+    {
+      Iter_Update_AoA = config->GetConv_Iter();
+    }
+  
+     
+    if (Start_AoA_FD)
+    {
 
-  if (counter == 1)
+    /* --- Disable history writing --- */
+
+      config->SetHistory_Wrt_Freq(2, 0);
+
+    /* --- End Finite Difference Mode if iteration limit is reached, so simualtion is converged --- */
+
+      End_AoA_FD = ((curr_iter - Iter_Update_AoA - 2) == Iter_dCL_dAlpha ||
+        curr_iter == config->GetnInner_Iter()- 2 );
+
+      if (convergence && (curr_iter - Iter_Update_AoA) > config->GetStartConv_Iter())
+        End_AoA_FD = true;
+
+    /* --- If Finite Difference mode is ending, reset AoA and calculate Coefficient Gradients --- */
+
+      if (End_AoA_FD)
+      {
+        SetCoefficient_Gradients(config);
+        config->SetAoA(AoA_Prev);
+      }
+    }
+  }
+
+
+  /*--- if in Fixed CL mode, before finite differencing --- */
+  int val_count =0;
+  if (val_count == 100)
   {
     if (convergence)
     {
 
+      /* --- C_L and solution are converged, start finite differencing --- */
+
+      if (fabs(TotalCoeff.CL-Target_CL) < (config->GetCauchy_Eps()/2)) {
+
+        /* --- If no finite differencing required --- */
+
+     //   if (Iter_dCL_dAlpha == 0){
+          fixed_cl_conv = true;
+          return fixed_cl_conv;
+     //   }
+
+        /* --- Else, set up finite differencing routine ---*/
+
+     //   Iter_Update_AoA = curr_iter;
+     //   Start_AoA_FD = true;
+     //   fixed_cl_conv = false;
+     //   AoA_inc = 0.001;
+      }
+
       /* --- C_L is not converged to target value and some iterations
           have passed since last update, so update AoA --- */
-      if ((curr_iter - Iter_Update_AoA) > config->GetStartConv_Iter())
+
+      else if ((curr_iter - Iter_Update_AoA) > config->GetStartConv_Iter())
       {
-        if (rank=MASTER_NODE)
-        {
-          std::cout<<"Forward analysis has converged, updating AOA"<<std::endl;
-        }
         Iter_Update_AoA = curr_iter;
         fixed_cl_conv = false;
         if (fabs(TotalCoeff.CL-Target_CL) > (config->GetCauchy_Eps()/2)) 
@@ -4159,21 +4162,40 @@ bool CEulerSolver::FixedCL_Convergence(CConfig* config, bool convergence)
     }
 
     /* --- If the iteration limit between AoA updates is met, so update AoA --- */
+
     else if ((curr_iter - Iter_Update_AoA) == config->GetUpdate_AoA_Iter_Limit()) 
     {
-      if (rank=MASTER_NODE)
-      {
-        std::cout<<"Forward analysis has not converged. but iteration limit between AoA updates is met, updating AOA"<<std::endl;
-      }
       Iter_Update_AoA = curr_iter;
       fixed_cl_conv = false;
-      if (fabs(TotalCoeff.CL-Target_CL) > (config->GetCauchy_Eps()/2)) 
-      {
+      if (fabs(TotalCoeff.CL-Target_CL) > (config->GetCauchy_Eps()/2)) {
         AoA_inc = (1.0/dCL_dAlpha)*(Target_CL - TotalCoeff.CL);
       }
     }
 
+    /* --- If the total iteration limit is reached, start finite differencing --- */
+    /*
+    if (curr_iter == config->GetnInner_Iter() - Iter_dCL_dAlpha)
+    {
+      if (Iter_dCL_dAlpha == 0)
+      {
+        End_AoA_FD = true;
+      }
+
+      Iter_Update_AoA = curr_iter;
+      Start_AoA_FD = true;
+      fixed_cl_conv = false;
+      AoA_inc = 0.001;
+    }*/
   }
+
+  /* --- If Finite Difference Mode has ended, end simulation --- */
+
+  //if (End_AoA_FD){
+    //fixed_cl_conv = true;
+  //  return true;
+ // }
+
+  /* --- If starting Finite Difference Mode --- */
 
   return fixed_cl_conv;
 

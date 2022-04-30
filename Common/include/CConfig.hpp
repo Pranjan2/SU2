@@ -1174,6 +1174,9 @@ private:
  bool Steady_MDO;
  bool Unsteady_MDO;
 
+ unsigned long Conv_Iter;  /*---Iteration at which forward analysis converges---*/
+ int Counter = 0; /*---Multi-utility counter ---*/
+
 
   /*--- brief param is a map from the option name (config file string) to its decoder (the specific child
    class of COptionBase that turns the string into a value) ---*/
@@ -9400,5 +9403,23 @@ public:
   /*---Getter functions for Unsteady and Steady MDO modes---*/
   bool Std_MDO(void)  {return Steady_MDO;}
   bool UStd_MDO(void)  {return Unsteady_MDO;}
+
+  /*---Returns the iteration at which forward analysis converged---*/
+  unsigned long GetConv_Iter(void) {return Conv_Iter;} 
+
+  /*---Sets the value for Conv_Iter---*/
+  void SetConv_Iter(unsigned long iter_val)
+  {
+    Conv_Iter = iter_val;
+  }
+
+  /*---Returns the iteration at which forward analysis converged---*/
+  int GetCounter(void) {return Counter;} 
+
+  /*---Sets the value for Conv_Iter---*/
+  void SetCounter(int counter_val)
+  {
+    Counter = counter_val;
+  }
 
 };

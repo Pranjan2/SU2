@@ -240,6 +240,8 @@ bool CFluidIteration::Monitor(COutput* output, CIntegration**** integration, CGe
   /*--- If convergence was reached --*/
   StopCalc = output->GetConvergence();
 
+
+
   /* --- Checking convergence of Fixed CL mode to target CL, and perform finite differencing if needed  --*/
 
   if (config[val_iZone]->GetFixed_CL_Mode()) 
@@ -271,6 +273,22 @@ bool CFluidIteration::MonitorMDO(COutput* output, CIntegration**** integration, 
 
   /*--- If convergence was reached --*/
   StopCalc = output->GetConvergence();
+
+  /*---Get the iteration at which FA converged---*/
+
+  if (StopCalc)
+  {
+    int counter_val = config[val_iZone]-> GetCounter();
+
+    if (counter_val == 0)
+    {
+      config[val_iZone]->SetConv_Iter(config[val_iZone]->GetInnerIter());
+    }
+    counter_val++;
+    config[val_iZone]-> SetCounter(counter_val);
+  }  
+
+  
 
   /* --- Checking convergence of Fixed CL mode to target CL, and perform finite differencing if needed  --*/
 
@@ -343,9 +361,10 @@ void CFluidIteration::Solve(COutput* output, CIntegration**** integration, CGeom
             INST_0);
 
     /*--- Monitor the pseudo-time ---*/
-    StopCalc = Monitor(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
-                       val_iZone, INST_0);
+    StopCalc = MonitorMDO(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
+                       val_iZone, INST_0, counter);
 
+                  
     /*--- Output files at intermediate iterations if the problem is single zone ---*/
 
     if (singlezone && steady) 
@@ -395,12 +414,10 @@ void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CG
     config[val_iZone]->SetInnerIter(Inner_Iter);
 
     /*---If at the target MDO time for implicit calculations, increase the # of inner Iterations to a high value-----*/
-    if (TimeIter == target_time)
-    {
-      nInner_Iter = 10000;
-    }
-
-   
+   // if (TimeIter == target_time)
+  //  {
+  //    nInner_Iter = 10000;
+  //  }
 
     /*--- Run a single iteration of the solver ---*/
     Iterate(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox, val_iZone,
@@ -649,14 +666,15 @@ void CFluidIteration::InitializeVortexDistribution(unsigned long& nVortex, vecto
 bool CFluidIteration::MonitorFixed_CL(COutput *output, CGeometry *geometry, CSolver **solver, CConfig *config, int counter) 
 {
 
+  
+
+
   CSolver* flow_solver= solver[FLOW_SOL];
 
   /*---If the forward analysis has converged, compute the dCL_dAlha, just once per geometry---*/
 
-  if (output->GetConvergence() && (counter == 0))
-  {
-    bool evaluate_lift_slope =  flow_solver->Compute_dCL_dAlpha(config, output->GetConvergence());
-  }
+  //flow_solver->Compute_dCL_dAlpha(config, output->GetConvergence());
+
 
  
   bool fixed_cl_convergence = flow_solver->FixedCL_Convergence(config, output->GetConvergence());
@@ -671,23 +689,15 @@ bool CFluidIteration::MonitorFixed_CL(COutput *output, CGeometry *geometry, CSol
     {
       std::cout << "I am printing convergence history now " << std::endl;
     }
-
+  
 
     /* --- Print convergence history and volume files since fixed CL mode has converged--- */
     if (rank == MASTER_NODE) output->PrintConvergenceSummary();
 
-   // if (rank == MASTER_NODE)
-   // {
-  //    std::cout << " I am setting result files now " << std::endl;
-  //  }
 
     output->SetResult_Files(geometry, config, solver,
                             config->GetInnerIter(), true);
-
-  //  if (rank == MASTER_NODE)
-  //  {
-  //    std::cout << " I am setting FD mode in config " << std::endl;
-  //  }                        
+                    
 
     /* --- Set finite difference mode in config (disables output) --- */
     config->SetFinite_Difference_Mode(true);
