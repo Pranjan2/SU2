@@ -16,8 +16,7 @@ install_data(['continuous_adjoint.py',
 	     'SU2_CFD.py',
 	     'MDO_NLOPT.py',
            'MDO.py',
-           'meshutil.py',
-           'meshutilShell.py'],
+           'meshutil.py'],
 	     install_dir: join_paths(get_option('bindir')))
 
 install_data(['SU2/__init__.py'], install_dir: join_paths(get_option('bindir'), 'SU2/'))

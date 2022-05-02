@@ -1171,11 +1171,17 @@ private:
  unsigned long precice_numberWetSurfaces; /*!< \brief Number of different wet surfaces */
  string preciceConfigFileName;	/*!< \brief Name of the preCICE configuration file */
  string preciceWetSurfaceMarkerName;	/*!< \brief Name of the wet surface marker (from the mesh file) that the preCICE adapter will use for identification of the wet surface */
+
+
  bool Steady_MDO;
  bool Unsteady_MDO;
+ /*---Boolean to enable/disable CL_Driver during MDO---*/
+ bool enable_CL_driver = true;
 
- unsigned long Conv_Iter;  /*---Iteration at which forward analysis converges---*/
- int Counter = 0; /*---Multi-utility counter ---*/
+ /*---Arbitrary counter---*/
+ int counter = 0;
+
+ 
 
 
   /*--- brief param is a map from the option name (config file string) to its decoder (the specific child
@@ -9404,22 +9410,12 @@ public:
   bool Std_MDO(void)  {return Steady_MDO;}
   bool UStd_MDO(void)  {return Unsteady_MDO;}
 
-  /*---Returns the iteration at which forward analysis converged---*/
-  unsigned long GetConv_Iter(void) {return Conv_Iter;} 
+  
+  bool Get_CL_Driver_Mode(void) {return enable_CL_driver;}
 
-  /*---Sets the value for Conv_Iter---*/
-  void SetConv_Iter(unsigned long iter_val)
+  void Set_CL_Driver_Mode(bool driver_mode)
   {
-    Conv_Iter = iter_val;
-  }
-
-  /*---Returns the iteration at which forward analysis converged---*/
-  int GetCounter(void) {return Counter;} 
-
-  /*---Sets the value for Conv_Iter---*/
-  void SetCounter(int counter_val)
-  {
-    Counter = counter_val;
+    enable_CL_driver = driver_mode;
   }
 
 };

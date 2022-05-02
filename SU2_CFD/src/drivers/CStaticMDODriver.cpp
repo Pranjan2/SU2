@@ -102,8 +102,8 @@ void CStaticMDODriver::StartSolver()
   /*---Get the time at which aero-elastic state must be computed---*/
    target_time = config_container[ZONE_0]->GetTargTimeIter();
 
-    /*---Output counter---*/
-    unsigned long counter = 0;
+  /*---Initialize counter to toggle enble/disable CL_Driver---*/
+  int counter = 0;
 
   /*--- Main external loop of the solver. Runs for the number of time steps required. ---*/
 
@@ -127,9 +127,8 @@ void CStaticMDODriver::StartSolver()
     Preprocess(TimeIter);
 
               
-
     /*---Run implicit iteration---*/
-    RunSMDO(TimeIter);  
+    RunSMDO(counter);  
     
     /*--- Compute tractions baed on current fluid state---*/
     Postprocess();
@@ -162,7 +161,7 @@ void CStaticMDODriver::StartSolver()
 
       if (rank == MASTER_NODE)
       {
-        std::cout << "Write deformed mesh to file" <<std::endl;
+        std::cout << "Writing deformed mesh to file" <<std::endl;
       }
       output_container[ZONE_0]->WriteToFile(config_container[ZONE_0],geometry_container[ZONE_0][INST_0][MESH_0], MESH, config_container[ZONE_0]->GetMesh_Out_FileName());
 
@@ -174,6 +173,9 @@ void CStaticMDODriver::StartSolver()
     {
       /*---Compute surface tractions and recieve displaced surface---*/
       *max_precice_dt = precice->advance(*dt);
+
+      /*---Disable the CL_Driver for remaining implicit iterations---*/
+      config_container[ZONE_0]->Set_CL_Driver_Mode(false);
                
       /*---Stay at the current time---*/
       TimeIter--;      
@@ -261,7 +263,7 @@ void CStaticMDODriver::Preprocess(unsigned long TimeIter) {
   /*--- For the Disc.Adj. of a case with (rigidly) moving grid, the appropriate
           mesh cordinates are read from the restart files. ---*/
  // if (!(config_container[ZONE_0]->GetGrid_Movement() && config_container[ZONE_0]->GetDiscrete_Adjoint()))
- //   DynamicMeshUpdate(TimeIter);
+    DynamicMeshUpdate(TimeIter);
 
 }
 
@@ -276,7 +278,7 @@ void CStaticMDODriver::Run() {
 
 }
 
-void CStaticMDODriver::RunSMDO(unsigned long TimeIter)
+void CStaticMDODriver::RunSMDO(int counter)
 {
 
   unsigned long OuterIter = 0;
@@ -284,7 +286,7 @@ void CStaticMDODriver::RunSMDO(unsigned long TimeIter)
 
     /*--- Iterate the zone as a block, either to convergence or to a max number of inner iterations for Implicit MDA ---*/
     iteration_container[ZONE_0][INST_0]->MDOSolve(output_container[ZONE_0], integration_container, geometry_container, solver_container,
-        numerics_container, config_container, surface_movement, grid_movement, FFDBox, ZONE_0, INST_0, TimeIter);
+        numerics_container, config_container, surface_movement, grid_movement, FFDBox, ZONE_0, INST_0, counter);
 
 }
 
@@ -324,10 +326,18 @@ void CStaticMDODriver::Output(unsigned long TimeIter) {
   bool wrote_files = output_container[ZONE_0]->SetResult_Files(geometry_container[ZONE_0][INST_0][MESH_0],
                                                                config_container[ZONE_0],
                                                                solver_container[ZONE_0][INST_0][MESH_0],
-                                                               0, StopCalc);
+                                                               0, 1);
 
-  if (wrote_files){
 
+
+
+  if (wrote_files)
+  {
+
+    if (rank == MASTER_NODE)
+    {
+      std::cout << " Output files written! " << std::endl;
+    }
     StopTime = SU2_MPI::Wtime();
 
     UsedTimeOutput += StopTime-StartTime;

@@ -209,7 +209,7 @@ def MeshUpdate(Mesh_Name, Nnodes,Nelems,n):
         file.write("VARIABLES = \"x\"\"y\"\"z\"\"Ux\"\"Uy\"\"Uz\"\"Sigma\"")
 
     file.write("\n")
-    file.write("ZONE STRANDID=2, SOLUTIONTIME=0, NODES=" + str(Nnodes) + ", ELEMENTS= " + str(Nelems) + ", DATAPACKING=POINT, ZONETYPE=FETETRAHEDRON")
+    file.write("ZONE STRANDID=2, SOLUTIONTIME=2822, NODES=" + str(Nnodes) + ", ELEMENTS= " + str(Nelems) + ", DATAPACKING=POINT, ZONETYPE=FETETRAHEDRON")
     for i in range(Nnodes):
         if TopOpt:
             file.write("\n" +"{:.5e}" .format(X[i,0]) +'  \t  '+ "{:.5e}".format(Y[i,0]) + ' \t \t ' + "{:.5e}".format(Z[i,0]) + '\t'+ "{:.5e}".format(UX[i,0])+'\t'+ "{:.5e}".format(UY[i,0])+'\t'+ "{:.5e}".format(UZ[i,0]) + ' \t ' +"{:.5e}".format(FX[i,0]) + ' \t ' +"{:.5e}".format(FY[i,0]) + ' \t ' +"{:.5e}".format(FZ[i,0])+ ' \t ' +"{:.5e}".format(Sigma[i,0])+ ' \t ' +"{:.5e}".format(densityinterp_ave[i,0]))

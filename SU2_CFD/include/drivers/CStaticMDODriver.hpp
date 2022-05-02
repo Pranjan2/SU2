@@ -85,7 +85,7 @@ public:
   /*!
   * \brief Run the implicit MDO iteration for ZONE_0.
   */
-  void RunSMDO(unsigned long TimeIter);
+  void RunSMDO(int counter);
 
   /*!
    * \brief Postprocess the iteration for ZONE_0.
