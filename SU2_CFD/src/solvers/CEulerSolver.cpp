@@ -4072,10 +4072,21 @@ bool CEulerSolver::Compute_dCL_dAlpha(CConfig *config, bool convergence)
   const auto Iter_dCL_dAlpha = config->GetIter_dCL_dAlpha();
   bool fixed_cl_conv = false;
   AoA_inc = 0.0;
+<<<<<<< Updated upstream
 
   if (convergence)
   {
     if (Iter_dCL_dAlpha == 0)
+=======
+  
+  bool cond = config->GetSolpeComp();
+
+  if ( convergence && !cond )
+  {
+    /*---Setup FD---*/
+    
+    if (curr_iter == config->GetConv_Iter())
+>>>>>>> Stashed changes
     {
       if (rank=MASTER_NODE)
       {
@@ -4111,16 +4122,39 @@ bool CEulerSolver::Compute_dCL_dAlpha(CConfig *config, bool convergence)
       {
         SetCoefficient_Gradients(config);
         config->SetAoA(AoA_Prev);
+<<<<<<< Updated upstream
         return true;
+=======
+        config->SetSolpeComp(true);
+
+        if (rank==MASTER_NODE)
+        {
+          std::cout << "Exiting dCL_dAlfa_"<<std::endl;
+        }
+>>>>>>> Stashed changes
       }
     }
 
     /*---At this point the dCL/dAlpha has been computed and CL driver should be called---*/
 
+<<<<<<< Updated upstream
   }
+=======
+  /*--- if in Fixed CL mode, before finite differencing --- */
+  if (config->GetSolpeComp())
+  {
+
+    if (convergence)
+    {
+>>>>>>> Stashed changes
 
   return false;
 
+<<<<<<< Updated upstream
+=======
+      if (fabs(TotalCoeff.CL-Target_CL) < (config->GetCauchy_Eps()/2)) 
+      {
+>>>>>>> Stashed changes
 
 }
 
@@ -4179,7 +4213,8 @@ bool CEulerSolver::FixedCL_Convergence(CConfig* config, bool convergence)
 
 }
 
-void CEulerSolver::SetCoefficient_Gradients(CConfig *config) const{
+void CEulerSolver::SetCoefficient_Gradients(CConfig *config) const
+{
 
   const su2double AoA = config->GetAoA();
 
@@ -4201,6 +4236,10 @@ void CEulerSolver::SetCoefficient_Gradients(CConfig *config) const{
   config->SetdCMy_dCL(dCMy_dCL_);
   config->SetdCMz_dCL(dCMz_dCL_);
   config->SetdCL_dAlpha(dCL_dAlpha_);
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 }
 
 void CEulerSolver::UpdateCustomBoundaryConditions(CGeometry **geometry_container, CConfig *config){

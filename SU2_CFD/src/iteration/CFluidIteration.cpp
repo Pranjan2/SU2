@@ -385,6 +385,12 @@ void CFluidIteration::MDOSolve(COutput* output, CIntegration**** integration, CG
   Preprocess(output, integration, geometry, solver, numerics, config, surface_movement, grid_movement, FFDBox,
              val_iZone, INST_0);
 
+  /*---Reset all counters and flags used for CL driver and dCL_dAlpha calculation---*/
+
+  config[val_iZone]->SetConv_Iter(0);
+  config[val_iZone]->SetCounter(0);
+  config[val_iZone]->SetSolpeComp(false);           
+
   int counter = 0;           
 
   /*--------------------------------------------------------------------------------------------------------------*/
@@ -667,20 +673,29 @@ bool CFluidIteration::MonitorFixed_CL(COutput *output, CGeometry *geometry, CSol
   if (flow_solver->GetStart_AoA_FD() && flow_solver->GetIter_Update_AoA() == config->GetInnerIter())
   {
 
+<<<<<<< Updated upstream
     if (rank == MASTER_NODE)
     {
       std::cout << "I am printing convergence history now " << std::endl;
     }
 
+=======
+  //  if (rank == MASTER_NODE)
+  //  {
+  //    std::cout << "I am printing convergence history now " << std::endl;
+  //  }
+  
+>>>>>>> Stashed changes
 
     /* --- Print convergence history and volume files since fixed CL mode has converged--- */
-    if (rank == MASTER_NODE) output->PrintConvergenceSummary();
+  //  if (rank == MASTER_NODE) output->PrintConvergenceSummary();
 
    // if (rank == MASTER_NODE)
    // {
   //    std::cout << " I am setting result files now " << std::endl;
   //  }
 
+<<<<<<< Updated upstream
     output->SetResult_Files(geometry, config, solver,
                             config->GetInnerIter(), true);
 
@@ -688,9 +703,14 @@ bool CFluidIteration::MonitorFixed_CL(COutput *output, CGeometry *geometry, CSol
   //  {
   //    std::cout << " I am setting FD mode in config " << std::endl;
   //  }                        
+=======
+  //  output->SetResult_Files(geometry, config, solver,
+  //                          config->GetInnerIter(), true);
+                    
+>>>>>>> Stashed changes
 
     /* --- Set finite difference mode in config (disables output) --- */
-    config->SetFinite_Difference_Mode(true);
+  //  config->SetFinite_Difference_Mode(true);
   }
 
   /* --- Set convergence based on fixed CL convergence  --- */
