@@ -261,7 +261,7 @@ void CStaticMDODriver::Preprocess(unsigned long TimeIter) {
   /*--- For the Disc.Adj. of a case with (rigidly) moving grid, the appropriate
           mesh cordinates are read from the restart files. ---*/
  // if (!(config_container[ZONE_0]->GetGrid_Movement() && config_container[ZONE_0]->GetDiscrete_Adjoint()))
-    DynamicMeshUpdate(TimeIter);
+ //   DynamicMeshUpdate(TimeIter);
 
 }
 
@@ -324,18 +324,10 @@ void CStaticMDODriver::Output(unsigned long TimeIter) {
   bool wrote_files = output_container[ZONE_0]->SetResult_Files(geometry_container[ZONE_0][INST_0][MESH_0],
                                                                config_container[ZONE_0],
                                                                solver_container[ZONE_0][INST_0][MESH_0],
-                                                               0, 1);
+                                                               0, StopCalc);
 
+  if (wrote_files){
 
-
-
-  if (wrote_files)
-  {
-
-    if (rank == MASTER_NODE)
-    {
-      std::cout << " Output files written! " << std::endl;
-    }
     StopTime = SU2_MPI::Wtime();
 
     UsedTimeOutput += StopTime-StartTime;
